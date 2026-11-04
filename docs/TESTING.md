@@ -75,3 +75,25 @@ Results table (fill in "?" cells). Row H (force stop) is EXPECTED to not fire.
 Also seen: an owner-scheduled alarm at 11:22:08 fired on time over the app in use and was dismissed with Done.
 
 Default to use for FULL_SCREEN and ALARM levels: **setAlarmClock** (owner decision 2026-11-04; the only type that passed all gate rows A to E). NORMAL-level reminders use setExactAndAllowWhileIdle (no status-bar alarm icon).
+
+## Prompt 7: Delivery pipeline and scheduler
+
+How: Home > Debug: reminder engine. Each button creates a test task due in 1 or 2 minutes with one reminder at that level. "Scheduled alarms" lists the alarms set right now; "Reminder log" shows every scheduling and firing with its reason. "Remove test tasks" deletes the test tasks and cancels their alarms.
+
+Check the real AlarmManager from the PC (phone connected):
+```
+adb shell dumpsys alarm | findstr REMINDER_ALARM
+```
+Each pending reminder shows as one `RTC_WAKEUP #n: Alarm{... tag=*walarm*:com.sanjith.betterlife.action.REMINDER_ALARM ...}` line (plus tag lines and possibly a "Next wake from idle" line pointing at the same alarm). `flags 3` = alarm clock (Full and Alarm levels), `flags 9` = exact while idle (Normal). Tapping "Reschedule all" any number of times must not add lines.
+
+| # | Test | Expected | Result |
+|---|---|---|---|
+| 1 | +1 min Normal | Notification on the "Reminders" channel at the minute; log FIRED NORMAL NOTIFICATION_ONLY | **PASS** (AI, 2026-11-04: scheduled 13:25:17.153, delivered 13:25:17.270) |
+| 2 | +2 min Full | Pop-up with the task title over the app in use; log FIRED FULL_SCREEN OVERLAY | **PASS** (AI, 2026-11-04: scheduled 13:26:21.820, delivered 13:26:21.880, screenshot) |
+| 3 | +1 min Alarm, phone on silent | Pop-up plus a loud alarm sound on the alarm stream | |
+| 4 | dumpsys alarm, then Reschedule all 3 times, then dumpsys again | Same number of REMINDER_ALARM alarms, no duplicates | AI: exactly 2 alarms for 2 reminders |
+| 5 | +2 min Full, swipe the app away from recents | Pop-up still appears | |
+| 6 | +2 min Full, restart the phone, unlock and wait | Pop-up still appears (or, if the time passed while off, one "missed" summary notification) | |
+| 7 | +1 min Full, lock the phone | Screen wakes with the pop-up over the lock screen | |
+| 8 | Create a test reminder, then "Remove test tasks" | Its alarm disappears from the list and from dumpsys | |
+| 9 | Change the phone's time zone in Settings and back | Log shows "Reminder engine rescheduled (TIMEZONE_CHANGED)" in Debug: alarm test | |

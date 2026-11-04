@@ -27,6 +27,10 @@ public interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id")
     public suspend fun getAnyById(id: String): TaskEntity?
 
+    /** Includes deleted rows. Callers keep [ids] under SQLite's variable limit (chunks of 500). */
+    @Query("SELECT * FROM tasks WHERE id IN (:ids)")
+    public suspend fun getAnyByIds(ids: List<String>): List<TaskEntity>
+
     @Query("SELECT COUNT(*) FROM tasks WHERE deletedAt IS NULL")
     public fun observeActiveCount(): Flow<Int>
 
@@ -44,6 +48,9 @@ public interface TaskDao {
 
     @Query("UPDATE tasks SET deletedAt = NULL, updatedAt = :now, syncState = 'DIRTY' WHERE id = :id")
     public suspend fun restore(id: String, now: Long)
+
+    @Query("SELECT id FROM tasks WHERE category = :category AND deletedAt IS NULL")
+    public suspend fun getActiveIdsByCategory(category: String): List<String>
 
     /** Debug only: removes seeded rows for good (agent.md allows no hard delete of real data). */
     @Query("DELETE FROM tasks WHERE category = :marker")

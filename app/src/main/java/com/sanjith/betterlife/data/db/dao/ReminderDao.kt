@@ -24,6 +24,36 @@ public interface ReminderDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     public suspend fun insertAll(reminders: List<ReminderEntity>)
 
+    @Query("SELECT * FROM reminders WHERE id = :id")
+    public suspend fun getAnyById(id: String): ReminderEntity?
+
+    /** Reminders the engine may schedule: not deleted and not switched off. */
+    @Query("SELECT * FROM reminders WHERE deletedAt IS NULL AND state != 'CANCELLED'")
+    public suspend fun getSchedulable(): List<ReminderEntity>
+
+    /** Deleted or switched-off reminders that still have an alarm set: their alarms must be cancelled. */
+    @Query("SELECT id FROM reminders WHERE (deletedAt IS NOT NULL OR state = 'CANCELLED') AND scheduledFireAt IS NOT NULL")
+    public suspend fun getIdsToUnschedule(): List<String>
+
+    /** Local schedule state only: does not touch updatedAt or syncState. */
+    @Query("UPDATE reminders SET scheduledFireAt = :fireAt WHERE id = :id")
+    public suspend fun setScheduledFireAt(id: String, fireAt: Long?)
+
+    /**
+     * Records that the alarm for [fireAt] was delivered. Returns 0 if it already was, which is how a
+     * duplicate alarm is ignored (one atomic UPDATE, so two receivers cannot both win).
+     */
+    @Query(
+        """
+        UPDATE reminders SET lastFiredFireAt = :fireAt, state = :state
+        WHERE id = :id AND (lastFiredFireAt IS NULL OR lastFiredFireAt != :fireAt)
+        """,
+    )
+    public suspend fun markFired(id: String, fireAt: Long, state: ReminderState): Int
+
+    @Query("SELECT * FROM reminders WHERE scheduledFireAt IS NOT NULL ORDER BY scheduledFireAt")
+    public fun observeScheduled(): Flow<List<ReminderEntity>>
+
     @Query("UPDATE reminders SET state = :state, updatedAt = :now WHERE id = :id")
     public suspend fun setState(id: String, state: ReminderState, now: Long)
 

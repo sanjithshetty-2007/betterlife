@@ -109,7 +109,9 @@ public data class EventEntity(
 /**
  * One reminder for one item: fires [offsetMinutes] before the item's time (0 = at time).
  * [itemId] points at a task or event (validated in the repository, not by a foreign key) and is
- * null for STANDALONE. [state] is local fire state and is never synced.
+ * null for STANDALONE. [state], [scheduledFireAt] and [lastFiredFireAt] are local fire state and are
+ * never synced. [scheduledFireAt] is the alarm currently set (epoch millis); [lastFiredFireAt] is the
+ * last one delivered, which makes a second delivery of the same alarm a no-op (added in version 2).
  */
 @Entity(
     tableName = "reminders",
@@ -127,6 +129,8 @@ public data class ReminderEntity(
     val deletedAt: Long?,
     @ColumnInfo(defaultValue = "DIRTY") val syncState: SyncState,
     val serverUpdatedAt: Long?,
+    val scheduledFireAt: Long? = null,
+    val lastFiredFireAt: Long? = null,
 )
 
 /** Append-only history of what happened to reminders; never edited, kept 60 days (Prompt 11). */

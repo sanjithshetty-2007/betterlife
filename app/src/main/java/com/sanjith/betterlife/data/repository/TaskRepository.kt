@@ -25,6 +25,8 @@ public class TaskRepository(
 
     public fun observeActiveCount(): Flow<Int> = taskDao.observeActiveCount()
 
+    public suspend fun activeIdsInCategory(category: String): List<String> = taskDao.getActiveIdsByCategory(category)
+
     /** Creates the task and its reminders together; returns the new task id. */
     public suspend fun create(draft: TaskDraft, reminders: List<ReminderDraft> = emptyList()): String {
         val now = nowMillis()

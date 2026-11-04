@@ -11,6 +11,7 @@ import com.sanjith.betterlife.domain.model.EventType
 import com.sanjith.betterlife.domain.model.Importance
 import com.sanjith.betterlife.domain.model.Priority
 import com.sanjith.betterlife.domain.model.ReminderItemType
+import com.sanjith.betterlife.domain.model.ReminderState
 import java.time.Instant
 import java.time.ZoneId
 import kotlin.random.Random
@@ -104,10 +105,13 @@ public class SeedDataGenerator(
         )
     }
 
+    // Seeded reminders are switched off (CANCELLED): the reminder engine never schedules them, so a seed
+    // run can never flood the phone with pop-ups for fake tasks.
     private fun reminderRows(type: ReminderItemType, itemId: String, now: Long, random: Random) =
         List(random.nextInt(1, MAX_REMINDERS_PER_ITEM + 1)) { i ->
             ReminderDraft(offsetMinutes = OFFSETS[(i + random.nextInt(OFFSETS.size)) % OFFSETS.size])
                 .toEntity(newId(), type, itemId, now)
+                .copy(state = ReminderState.CANCELLED)
         }
 
     public companion object {

@@ -8,6 +8,16 @@
     <string name="channel_full_screen">Full-screen reminders</string>
     <string name="channel_normal">Reminders</string>
     <string name="channel_service">Background work</string>
+    <string name="channel_alarm">Alarm reminders (loud)</string>
+    <string name="channel_nudges">Nudges</string>
+    <string name="channel_digest">Summaries</string>
+
+    <!-- Missed-while-off summary: a count only, never titles. -->
+    <plurals name="missed_summary_title">
+        <item quantity="one">%d reminder was missed while your phone was off</item>
+        <item quantity="other">%d reminders were missed while your phone was off</item>
+    </plurals>
+    <string name="missed_summary_text">Open BetterLife to see them.</string>
 
     <!-- Debug-only overlay spike (Prompt 3) -->
     <string name="spike_home_button">Debug: pop-up test</string>

@@ -54,14 +54,22 @@
             android:name=".reminders.alarm.TestAlarmReceiver"
             android:exported="false" />
 
-        <!-- Re-arms alarms after reboot and app updates. These broadcasts are protected (only the system
-             can send them), so exporting the receiver does not let other apps trigger it. -->
+        <!-- Reminder engine alarm target. Not exported: only our own PendingIntent can reach it. -->
+        <receiver
+            android:name=".reminders.engine.ReminderAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Re-arms alarms after reboot, app updates, clock and time-zone changes. These broadcasts are
+             protected (only the system can send them), so exporting the receiver does not let other apps
+             trigger it. All four are allowed for manifest receivers on Android 8+. -->
         <receiver
             android:name=".reminders.alarm.RearmReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>
         </receiver>
     </application>

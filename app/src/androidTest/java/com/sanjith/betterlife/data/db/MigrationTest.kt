@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -17,11 +18,10 @@ import org.junit.runner.RunWith
 import java.io.File
 
 /**
- * Proves stored data survives schema changes. When version 2 arrives (Prompt 14):
- *  1. keep [version1SchemaCreatesAndAcceptsRows] as it is;
- *  2. add a test that calls `helper.runMigrationsAndValidate(DB_NAME, 2, true, MIGRATION_1_2)` after
- *     inserting version-1 rows, then checks the rows with SQL;
- *  3. [allMigrationsOpenOldDataWithRoom] needs no change: it already walks every migration.
+ * Proves stored data survives schema changes. For each new version N: keep the older tests, add a
+ * test that inserts version N-1 rows, runs `helper.runMigrationsAndValidate(DB_NAME, N, true,
+ * MIGRATION_(N-1)_N)` and checks the rows with SQL. [allMigrationsOpenOldDataWithRoom] needs no
+ * change: it already walks every migration from version 1.
  */
 @RunWith(AndroidJUnit4::class)
 public class MigrationTest {
@@ -49,6 +49,28 @@ public class MigrationTest {
             db.query("SELECT title FROM tasks WHERE id = 'task-1'").use { cursor ->
                 cursor.moveToFirst()
                 assertEquals("Written by version 1", cursor.getString(0))
+            }
+        }
+    }
+
+    @Test
+    public fun migration1To2KeepsRemindersAndAddsEmptyScheduleColumns() {
+        helper.createDatabase(DB_NAME, 1).use { db ->
+            db.execSQL(INSERT_V1_TASK)
+            db.execSQL(INSERT_V1_REMINDER)
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME, 2, true, BetterLifeDatabase.MIGRATION_1_2).use { db ->
+            db.query("SELECT offsetMinutes, importance, scheduledFireAt, lastFiredFireAt FROM reminders WHERE id = 'rem-1'").use { c ->
+                c.moveToFirst()
+                assertEquals(60, c.getInt(0))
+                assertEquals("ALARM", c.getString(1))
+                assertTrue(c.isNull(2))
+                assertTrue(c.isNull(3))
+            }
+            db.query("SELECT COUNT(*) FROM tasks").use { c ->
+                c.moveToFirst()
+                assertEquals(1, c.getInt(0))
             }
         }
     }
@@ -82,6 +104,11 @@ public class MigrationTest {
               createdAt, updatedAt, deletedAt, syncState, serverUpdatedAt)
             VALUES ('task-1', 'Written by version 1', NULL, 1800000000000, 'Asia/Kolkata', NULL, 'HIGH', NULL,
               NULL, NULL, NULL, 0, 'NORMAL', NULL, 1, 1, NULL, 'DIRTY', NULL)
+        """
+        const val INSERT_V1_REMINDER = """
+            INSERT INTO reminders (id, itemType, itemId, offsetMinutes, importance, state, createdAt, updatedAt,
+              deletedAt, syncState, serverUpdatedAt)
+            VALUES ('rem-1', 'TASK', 'task-1', 60, 'ALARM', 'SCHEDULED', 1, 1, NULL, 'DIRTY', NULL)
         """
     }
 }

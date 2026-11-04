@@ -25,6 +25,10 @@ public interface EventDao {
     @Query("SELECT * FROM events WHERE id = :id")
     public suspend fun getAnyById(id: String): EventEntity?
 
+    /** Includes deleted rows. Callers keep [ids] under SQLite's variable limit (chunks of 500). */
+    @Query("SELECT * FROM events WHERE id IN (:ids)")
+    public suspend fun getAnyByIds(ids: List<String>): List<EventEntity>
+
     @Query("SELECT COUNT(*) FROM events WHERE deletedAt IS NULL")
     public fun observeActiveCount(): Flow<Int>
 

@@ -22,6 +22,9 @@ public class ReminderRepository(
 
     public fun observeActiveCount(): Flow<Int> = dao.observeActiveCount()
 
+    /** Reminders with an alarm currently set, soonest first. */
+    public fun observeScheduled(): Flow<List<ReminderEntity>> = dao.observeScheduled()
+
     /** Fire state is local only, so this does not mark the row for sync. */
     public suspend fun setState(id: String, state: ReminderState) {
         dao.setState(id, state, nowMillis())

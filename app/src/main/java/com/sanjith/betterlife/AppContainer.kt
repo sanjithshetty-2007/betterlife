@@ -22,6 +22,11 @@ import com.sanjith.betterlife.data.setup.ManualCheckStore
 import com.sanjith.betterlife.data.setup.SetupRepository
 import com.sanjith.betterlife.reminders.alarm.TestAlarmController
 import com.sanjith.betterlife.reminders.alarm.TestAlarmScheduler
+import com.sanjith.betterlife.reminders.engine.AndroidAlarmScheduler
+import com.sanjith.betterlife.reminders.engine.AndroidDeviceState
+import com.sanjith.betterlife.reminders.engine.AndroidReminderPresenter
+import com.sanjith.betterlife.reminders.engine.ReminderEngine
+import com.sanjith.betterlife.reminders.engine.RoomReminderStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,18 +48,19 @@ public class AppContainer(appContext: Context) {
     /** Lives as long as the process. Receivers use it with goAsync for short work. */
     public val appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val systemClock: Clock = SystemClock()
+    /** Real phone time, unaffected by the Time Machine: for real alarms and debug timestamps. */
+    public val realClock: Clock = SystemClock()
 
     /** Present only in debug builds, so the Time Machine cannot exist in a release build. */
-    public val timeMachine: TimeMachineClock? = if (BuildConfig.DEBUG) TimeMachineClock(systemClock) else null
+    public val timeMachine: TimeMachineClock? = if (BuildConfig.DEBUG) TimeMachineClock(realClock) else null
 
     /** "Now" for all app logic. The Time Machine can shift it in debug builds. */
-    public val clock: Clock = timeMachine ?: systemClock
+    public val clock: Clock = timeMachine ?: realClock
 
     private val nowMillis: () -> Long = { clock.millis() }
 
     // Real wall time for things the Time Machine must not move: debug log stamps and real alarms.
-    private val realNowMillis: () -> Long = { systemClock.millis() }
+    private val realNowMillis: () -> Long = { realClock.millis() }
 
     public val debugLog: DebugLog = DebugLog(
         file = File(appContext.filesDir, DEBUG_LOG_FILE),
@@ -94,6 +100,25 @@ public class AppContainer(appContext: Context) {
         log = debugLog,
         nowMillis = realNowMillis,
     )
+
+    /**
+     * The reminder engine runs on the REAL clock, never the Time Machine: shifting app time must not
+     * mark reminders as missed or move real alarms. Its log rows use real time for the same reason.
+     */
+    public val reminderEngine: ReminderEngine by lazy {
+        val realLog = ReminderLogRepository(database, realNowMillis, newId)
+        ReminderEngine(
+            store = RoomReminderStore(database),
+            alarms = AndroidAlarmScheduler(appContext),
+            device = AndroidDeviceState(appContext),
+            presenter = AndroidReminderPresenter(appContext, debugLog),
+            log = { id, status, level, reason, detail, at ->
+                realLog.append(id, status, level, reason, detail, at.toEpochMilli())
+            },
+            clock = realClock,
+            allDayFireTime = { settingsRepository.current().birthdayFireTime },
+        )
+    }
 
     private companion object {
         const val DEBUG_LOG_FILE = "debug_log.txt"

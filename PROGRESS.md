@@ -17,14 +17,14 @@
 
 ## Current position
 - Last completed prompt: 6
-- Open gates: Prompt 3 owner rows (3, 5, 7); Prompt 4 row D (see below). The owner chose to continue to Prompt 5 with row D open (Decisions).
+- Open gates: Prompt 3 owner rows (3, 5, 7). Prompt 4 gate passed 2026-11-04 (row D run after Prompt 6).
 - Phase: 1 (Reminder core)
 
 ## Done
 - Prompt 1, Project scaffold and environment, 2026-11-04. VERIFIED: assembleDebug and testDebugUnitTest succeed; installDebug installed on the V50e; the app cold-starts in about 1.6 s with the themed screen; the merged manifest has no INTERNET and allowBackup=false.
 - Prompt 2, Permissions and the Setup Checklist screen, 2026-11-04. VERIFIED: status mapping tested over all 32 combinations; on the phone the checklist shows 5 detectable + 4 Vivo rows and each Open settings button opens the right page with Back returning to the checklist. OWNER MUST VERIFY: rows turn green after granting, ticks survive a restart (docs/TESTING.md Prompt 2 table).
 - Prompt 3, Overlay spike (GATE), 2026-11-04. VERIFIED: Path A overlay over Chrome and over the app; Back and Done remove it with no window left; Path B wakes the screen and shows the pop-up over the lock screen. OWNER MUST VERIFY: rows 3 (video app), 5 (rotation), 7 (tap within 0.5 s) and the back swipe gesture.
-- Prompt 4, Alarm spike (GATE), 2026-11-04, gate not fully closed. VERIFIED: setExactAndAllowWhileIdle rows B and C; setAlarmClock rows A, B, C (AI over adb) and E (owner rebooted, AI read the log). All fired within 1 s, including after a recents swipe killed the process and after a reboot. MISSING for the gate: row D (screen off 15+ min) for setAlarmClock. Also open: rows A, D to H for setExactAndAllowWhileIdle, F to H for setAlarmClock, and the owner's choice of default alarm type.
+- Prompt 4, Alarm spike (GATE PASSED 2026-11-04 with setAlarmClock). VERIFIED: setAlarmClock rows A, B, C (AI over adb), D (owner, 15 min locked, fired 12:19:04.515 for 12:19:04) and E (owner rebooted); setExactAndAllowWhileIdle rows B and C. All fired within 1 s, including after a recents swipe killed the process and after a reboot. Still open (not needed for the gate): rows F to H for both types, A and D to E for setExactAndAllowWhileIdle, and the owner's choice of default alarm type.
 - Prompt 5, Database foundation, 2026-11-04. VERIFIED: 53 unit tests (PC) and 16 device tests (V50e) pass: soft delete hides rows, restore brings back only the reminders deleted with the item, a failed reminder insert rolls back the whole create, unknown or deleted parent/project references are rejected, writes mark rows DIRTY, the version 1 schema accepts rows and opens through ALL_MIGRATIONS, settings round-trip and fall back to defaults on bad values. On the phone the seed button wrote 1,000 tasks + 200 events + 746 reminders in 213 ms with 1 janky frame of 104 and no ANR; Wipe removed exactly those 1,946 rows. Schema 1.json exported; no destructive migration anywhere.
 
 - Prompt 6, Core domain logic, 2026-11-04. VERIFIED: 132 unit tests (PC) and 16 device tests (V50e) pass; release build compiles; no Android imports in domain/ and no direct system-time calls outside core/Clocks.kt. Covered by tests: every quick-add example from the prompt (fixed clock Thu 2026-10-08 18:00), the AM/PM answer path, emoji / Devanagari / Chinese / Arabic / Kannada / Tamil / empty / punctuation-only / 500-character input; monthly-on-31st through a full year and without drift; leap-day birthday 2026 to 2029; weekly with interval; weekdays; from-due-date vs from-completion; 30-day roll-forward of one overdue instance; rule text round trip and broken text; early reminders (past dropped, exact-now kept, midnight and month ends, all presets + custom, DST wall time, zone change); rollover at 02:59/03:00, month/year ends, leap day. On the phone the Time Machine jumped to Thu 5 Nov 01:00 and showed habit day 4 Nov, then reset. Fixed during testing: tags/projects in Indic scripts were not recognised (vowel signs are combining marks).
@@ -33,10 +33,9 @@
 (none)
 
 ## Next step
-1. Owner runs Prompt 4 row D with setAlarmClock: Debug: alarm test, switch on, "Alarm in 15 min", lock the phone and leave it untouched until it fires; then tell the AI to read the log. Needed before Prompt 7.
-2. Owner re-grants Notifications and Display over other apps in the Setup checklist (the device-test run on 2026-11-04 uninstalled the debug app once before the fix).
-3. Owner tries 3 of their own sentences against the parser (docs/PARSER.md) and reports anything odd.
-4. Prompt 7 (Delivery pipeline and scheduler).
+1. Owner picks the default alarm type for FULL_SCREEN and ALARM levels (AI recommends setAlarmClock: the only type proven on all gate rows).
+2. Owner tries 3 of their own sentences against the parser (docs/PARSER.md) and reports anything odd.
+3. Prompt 7 (Delivery pipeline and scheduler).
 
 ## Decisions (made by the owner)
 - 2026-11-04: Single user (owner only), sideloaded APK, never on the Play Store.

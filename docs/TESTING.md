@@ -66,7 +66,7 @@ Results table (fill in "?" cells). Row H (force stop) is EXPECTED to not fire.
 | A | App open | ? | **PASS** (AI, scheduled 11:35:20, received 11:35:20.189, overlay over the app) |
 | B | App in background, using Chrome | **PASS** (AI, 11:19:18, overlay over Chrome) | **PASS** (AI, scheduled 11:36:55, received 11:36:55.639, overlay over Chrome) |
 | C | App swiped away from recents | **PASS** (AI, process killed, alarm fired 11:20:58 in a fresh process, overlay shown) | **PASS** (AI, card swiped, process killed, not force-stopped; received 11:38:34.617, overlay over the home screen, screenshot) |
-| D | Screen off 15+ minutes (Doze) | ? | ? |
+| D | Screen off 15+ minutes (Doze) | ? | **PASS** (owner; log read by the AI): scheduled 12:04:04 for 12:19:04 with the phone locked, received 12:19:04.515, Path B full-screen pop-up over the lock screen, Done. Note: 15 minutes may not reach Android's deepest idle state; Prompt 13's multi-day real use covers that. |
 | E | Reboot after arming a 5-minute alarm | ? | **PASS** (owner rebooted; log read by the AI): scheduled 11:24:16 for 11:29:16, boot re-armed it at 11:26:18 at the original time, received 11:29:17 while locked, Path B full-screen pop-up shown, Done |
 | F | Battery saver on | ? | ? |
 | G | Phone clock moved forward 1 hour | ? | ? |

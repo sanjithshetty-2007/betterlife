@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.sanjith.betterlife.feature.debug.AlarmSpikeScreen
 import com.sanjith.betterlife.feature.debug.PopupSpikeScreen
 import com.sanjith.betterlife.feature.home.HomeScreen
 import com.sanjith.betterlife.feature.setup.SetupScreen
@@ -13,6 +14,7 @@ internal object Routes {
     const val HOME = "home"
     const val SETUP = "setup"
     const val POPUP_SPIKE = "debug/popup-spike"
+    const val ALARM_SPIKE = "debug/alarm-spike"
 }
 
 /** All screens of the single Activity. NavHost also handles the system (predictive) back gesture. */
@@ -29,6 +31,11 @@ internal fun AppNavHost() {
                 } else {
                     null
                 },
+                onOpenAlarmSpike = if (BuildConfig.DEBUG) {
+                    { navController.navigate(Routes.ALARM_SPIKE) }
+                } else {
+                    null
+                },
             )
         }
         composable(Routes.SETUP) {
@@ -37,6 +44,9 @@ internal fun AppNavHost() {
         if (BuildConfig.DEBUG) {
             composable(Routes.POPUP_SPIKE) {
                 PopupSpikeScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Routes.ALARM_SPIKE) {
+                AlarmSpikeScreen(onBack = { navController.popBackStack() })
             }
         }
     }

@@ -1,6 +1,7 @@
-package com.sanjith.betterlife.feature.debug
+package com.sanjith.betterlife.reminders.popup
 
 import android.app.KeyguardManager
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -23,7 +24,6 @@ import com.sanjith.betterlife.reminders.ReminderNotifier
 import com.sanjith.betterlife.reminders.overlay.OverlayController
 import com.sanjith.betterlife.reminders.overlay.OverlayDismissReason
 import com.sanjith.betterlife.reminders.overlay.OverlayShowResult
-import com.sanjith.betterlife.reminders.popup.ReminderPopup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,36 +34,57 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 /**
- * Prompt 3 spike only: waits 10 seconds, then shows the test pop-up by the path [decidePresentation]
- * picks. A "shortService" foreground service (Android 14+) keeps the process alive for the wait and
- * while the overlay is visible; real triggers come from alarms in Prompt 4.
+ * Shows the test pop-up by the path [decidePresentation] picks, after an optional delay.
+ *
+ * Why a foreground service and not the receiver itself (Prompt 4 decision): a receiver's process may be
+ * killed seconds after onReceive returns, which would take the overlay window with it. The
+ * "systemExempted" type is allowed because the app holds USE_EXACT_ALARM; unlike "shortService" it has
+ * no 3-minute limit, so the overlay can stay up until the owner answers. Starting it from the
+ * background is allowed because an exact alarm just fired.
  */
-public class PopupSpikeService : Service() {
+public class ReminderPopupService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private val container by lazy { (application as BetterLifeApp).container }
-    private val log by lazy { container.debugLog }
+    private val log by lazy { (application as BetterLifeApp).container.debugLog }
     private val overlay by lazy { OverlayController(this) }
     private var pending: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(
-            SERVICE_NOTIFICATION_ID,
-            serviceNotification(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE,
-        )
-        if (pending?.isActive == true || overlay.isShowing) {
-            log.add("Ignored: a test pop-up is already pending or showing")
+        if (!enterForeground()) {
+            stopSelf()
             return START_NOT_STICKY
         }
-        log.add("Scheduled: pop-up in ${DELAY_MILLIS / MILLIS_PER_SECOND} s")
+        if (pending?.isActive == true || overlay.isShowing) {
+            log.add("Ignored: a pop-up is already pending or showing")
+            return START_NOT_STICKY
+        }
+        val delayMillis = intent?.getLongExtra(EXTRA_DELAY_MILLIS, 0L) ?: 0L
+        if (delayMillis > 0) log.add("Scheduled: pop-up in ${delayMillis / MILLIS_PER_SECOND} s")
         pending = scope.launch {
-            delay(DELAY_MILLIS)
+            delay(delayMillis)
             present()
         }
         return START_NOT_STICKY
+    }
+
+    private fun enterForeground(): Boolean = try {
+        startForeground(
+            SERVICE_NOTIFICATION_ID,
+            serviceNotification(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED,
+        )
+        true
+    } catch (e: IllegalStateException) {
+        // ForegroundServiceStartNotAllowedException / ForegroundServiceTypeNotAllowedException both extend it.
+        log.add("Could not enter the foreground (${e.javaClass.simpleName}); posting a full-screen notification")
+        ReminderNotifier(this).postFullScreen(
+            POPUP_NOTIFICATION_ID,
+            getString(R.string.popup_test_title),
+            getString(R.string.alarm_fallback_text),
+        )
+        false
     }
 
     private fun present() {
@@ -123,46 +144,35 @@ public class PopupSpikeService : Service() {
         isInteractive = getSystemService(PowerManager::class.java).isInteractive,
         isKeyguardLocked = getSystemService(KeyguardManager::class.java).isKeyguardLocked,
         canDrawOverlays = Settings.canDrawOverlays(this),
-        canUseFullScreenIntent = getSystemService(android.app.NotificationManager::class.java)
-            .canUseFullScreenIntent(),
+        canUseFullScreenIntent = getSystemService(NotificationManager::class.java).canUseFullScreenIntent(),
         notificationsEnabled = NotificationManagerCompat.from(this).areNotificationsEnabled(),
     )
 
     private fun serviceNotification() = NotificationCompat.Builder(this, NotificationChannels.SERVICE)
         .setSmallIcon(R.drawable.ic_notifications)
-        .setContentTitle(getString(R.string.spike_service_notification))
+        .setContentTitle(getString(R.string.popup_service_notification))
         .setOngoing(true)
         .build()
-
-    // Android 14 short services get about 3 minutes; past that the system calls onTimeout.
-    override fun onTimeout(startId: Int) {
-        handleTimeout()
-    }
-
-    override fun onTimeout(startId: Int, fgsType: Int) {
-        handleTimeout()
-    }
-
-    private fun handleTimeout() {
-        log.add("Short service timed out: removing the overlay and stopping")
-        stopSelf()
-    }
 
     override fun onDestroy() {
         overlay.remove()
         scope.cancel()
-        log.add("Spike service stopped")
+        log.add("Pop-up service stopped")
         super.onDestroy()
     }
 
     public companion object {
-        private const val DELAY_MILLIS = 10_000L
+        private const val EXTRA_DELAY_MILLIS = "delay_millis"
         private const val MILLIS_PER_SECOND = 1_000L
         private const val SERVICE_NOTIFICATION_ID = 9_001
         private const val POPUP_NOTIFICATION_ID = 9_002
 
-        public fun start(context: Context) {
-            ContextCompat.startForegroundService(context, Intent(context, PopupSpikeService::class.java))
+        /** Throws ForegroundServiceStartNotAllowedException if Android refuses a background start. */
+        public fun start(context: Context, delayMillis: Long) {
+            ContextCompat.startForegroundService(
+                context,
+                Intent(context, ReminderPopupService::class.java).putExtra(EXTRA_DELAY_MILLIS, delayMillis),
+            )
         }
     }
 }

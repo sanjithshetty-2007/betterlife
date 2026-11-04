@@ -33,7 +33,11 @@ import kotlinx.coroutines.launch
  * [onOpenPopupSpike] is null in release builds, which hides the debug entry.
  */
 @Composable
-public fun HomeScreen(onOpenSetup: () -> Unit, onOpenPopupSpike: (() -> Unit)? = null) {
+public fun HomeScreen(
+    onOpenSetup: () -> Unit,
+    onOpenPopupSpike: (() -> Unit)? = null,
+    onOpenAlarmSpike: (() -> Unit)? = null,
+) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val snackbarText = stringResource(R.string.home_snackbar)
@@ -79,6 +83,16 @@ public fun HomeScreen(onOpenSetup: () -> Unit, onOpenPopupSpike: (() -> Unit)? =
                         .heightIn(min = Dimens.minTouchTarget),
                 ) {
                     Text(text = stringResource(R.string.spike_home_button))
+                }
+            }
+            onOpenAlarmSpike?.let { openAlarmSpike ->
+                OutlinedButton(
+                    onClick = openAlarmSpike,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = Dimens.minTouchTarget),
+                ) {
+                    Text(text = stringResource(R.string.alarm_spike_home_button))
                 }
             }
         }

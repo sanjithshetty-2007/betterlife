@@ -45,3 +45,33 @@ Design choices:
 | 5 | Rotate the phone while it shows | Pop-up re-lays out; no stuck or duplicate window | |
 | 6 | Press Back | Overlay closes, nothing stuck | PASS (AI over adb, key event): dismissed with BACK, no overlay window left. Owner: also try the back swipe gesture |
 | 7 | Tap Done within the first half second | Tap ignored ("tap ignored (tap guard)" in the log), button works afterwards | |
+
+## Prompt 4: Alarm spike (GATE)
+
+How: Home > Debug: alarm test. Pick the alarm type with the switch (off = setExactAndAllowWhileIdle, on = setAlarmClock), tap "Alarm in 1/5/15 min", then do the test. The log on that screen is saved to a file, so it survives the app being killed; newest lines are on top. Over adb: `adb shell run-as com.sanjith.betterlife.debug tail -n 20 files/debug_log.txt`.
+
+Design decision (asked for by the prompt): the receiver does NOT show the overlay itself. A receiver's process can be killed seconds after onReceive returns, which would remove the window. Instead: exact alarm -> TestAlarmReceiver (logs, starts the service, clears the pending alarm) -> ReminderPopupService, a foreground service of type `systemExempted` -> overlay or full-screen notification. `systemExempted` is allowed because the app holds USE_EXACT_ALARM (Android docs, foreground service types) and has no time limit, unlike `shortService` (~3 minutes). Starting a foreground service from the background is allowed because an exact alarm just fired. If Android refuses anyway, the receiver posts a full-screen notification directly (logged).
+
+Re-arming: the pending alarm is saved in DataStore. RearmReceiver handles BOOT_COMPLETED and MY_PACKAGE_REPLACED; an alarm whose time passed while the phone was off fires 5 seconds after boot and is logged as missed (DEVICE_OFF).
+
+Observations (2026-11-04, checked by the AI over adb):
+- Swiping BetterLife Dev away in Vivo recents kills the process but does NOT force-stop the app (`stopped=false`), so the exact alarm survives.
+- After a force stop, the next app start delivers BOOT_COMPLETED to the app ("Boot: ..." lines with no real reboot). Not documented behaviour we rely on; noted only.
+- Alarms are exact on this phone: fired within 0.1 to 1.0 s of the scheduled second.
+
+Results table (fill in "?" cells). Row H (force stop) is EXPECTED to not fire.
+
+| Row | Test | setExactAndAllowWhileIdle | setAlarmClock |
+|---|---|---|---|
+| A | App open | ? | ? |
+| B | App in background, using Chrome | **PASS** (AI, 11:19:18, overlay over Chrome) | ? |
+| C | App swiped away from recents | **PASS** (AI, process killed, alarm fired 11:20:58 in a fresh process, overlay shown) | ? |
+| D | Screen off 15+ minutes (Doze) | ? | ? |
+| E | Reboot after arming a 5-minute alarm | ? | ? |
+| F | Battery saver on | ? | ? |
+| G | Phone clock moved forward 1 hour | ? | ? |
+| H | Force stop from App info (expected: does not fire) | ? | ? |
+
+Also seen: an owner-scheduled alarm at 11:22:08 fired on time over the app in use and was dismissed with Done.
+
+Default to use for FULL_SCREEN and ALARM levels: (decide after the table is filled in)

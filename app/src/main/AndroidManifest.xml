@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
@@ -41,11 +42,28 @@
             android:theme="@style/Theme.BetterLife.Popup"
             android:turnScreenOn="true" />
 
-        <!-- Prompt 3 spike only. shortService needs no extra permission and is limited to ~3 minutes. -->
+        <!-- Owns the pop-up while it shows. systemExempted is allowed because the app holds USE_EXACT_ALARM,
+             and has no time limit (shortService stops after ~3 minutes). -->
         <service
-            android:name=".feature.debug.PopupSpikeService"
+            android:name=".reminders.popup.ReminderPopupService"
             android:exported="false"
-            android:foregroundServiceType="shortService" />
+            android:foregroundServiceType="systemExempted" />
+
+        <!-- Exact alarm target. Not exported: only our own PendingIntent can reach it. -->
+        <receiver
+            android:name=".reminders.alarm.TestAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Re-arms alarms after reboot and app updates. These broadcasts are protected (only the system
+             can send them), so exporting the receiver does not let other apps trigger it. -->
+        <receiver
+            android:name=".reminders.alarm.RearmReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

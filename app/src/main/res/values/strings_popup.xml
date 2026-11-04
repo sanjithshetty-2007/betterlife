@@ -16,6 +16,20 @@
     <string name="spike_show_button">Show test pop-up in 10 seconds</string>
     <string name="spike_clear_log">Clear log</string>
     <string name="spike_log_title">Log (newest first)</string>
-    <string name="spike_service_notification">Preparing a test reminder…</string>
+    <string name="popup_service_notification">Showing a reminder…</string>
     <string name="popup_test_title">Test reminder</string>
+    <string name="alarm_fallback_text">Your test alarm fired.</string>
+
+    <!-- Debug-only alarm spike (Prompt 4) -->
+    <string name="alarm_spike_home_button">Debug: alarm test</string>
+    <string name="alarm_spike_title">Alarm test</string>
+    <string name="alarm_spike_help">Schedule an alarm, then do the test from the matrix (swipe the app away, lock the phone, reboot…). When it fires, the pop-up should appear. The log below survives the app being killed.</string>
+    <string name="alarm_spike_in_1">Alarm in 1 min</string>
+    <string name="alarm_spike_in_5">Alarm in 5 min</string>
+    <string name="alarm_spike_in_15">Alarm in 15 min</string>
+    <string name="alarm_spike_use_alarm_clock">Use setAlarmClock (off = setExactAndAllowWhileIdle)</string>
+    <string name="alarm_spike_cancel">Cancel pending alarm</string>
+    <string name="alarm_spike_pending">Pending: %1$s at %2$s</string>
+    <string name="alarm_spike_none_pending">No alarm pending.</string>
+    <string name="alarm_spike_exact_denied">Exact alarms are not allowed. Open the Setup checklist and fix \"Exact alarms\" first.</string>
 </resources>

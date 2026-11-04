@@ -34,9 +34,13 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.sanjith.betterlife.BetterLifeApp
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.core.DebugLog
+import com.sanjith.betterlife.reminders.popup.ReminderPopupService
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
 import kotlinx.coroutines.flow.StateFlow
+
+/** Gives the owner time to switch to another app or lock the phone. */
+private const val SPIKE_DELAY_MILLIS = 10_000L
 
 public class PopupSpikeViewModel(private val log: DebugLog) : ViewModel() {
     public val entries: StateFlow<List<String>> = log.entries
@@ -78,7 +82,7 @@ public fun PopupSpikeScreen(
             item {
                 SpikeHeader(
                     onBack = onBack,
-                    onShow = { PopupSpikeService.start(context) },
+                    onShow = { ReminderPopupService.start(context, delayMillis = SPIKE_DELAY_MILLIS) },
                     onClear = viewModel::clear,
                 )
             }

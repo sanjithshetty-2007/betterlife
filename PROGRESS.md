@@ -33,9 +33,8 @@
 (none)
 
 ## Next step
-1. Owner picks the default alarm type for FULL_SCREEN and ALARM levels (AI recommends setAlarmClock: the only type proven on all gate rows).
-2. Owner tries 3 of their own sentences against the parser (docs/PARSER.md) and reports anything odd.
-3. Prompt 7 (Delivery pipeline and scheduler).
+1. Owner tries 3 of their own sentences against the parser (docs/PARSER.md) and reports anything odd.
+2. Prompt 7 (Delivery pipeline and scheduler), using the alarm-type decision above.
 
 ## Decisions (made by the owner)
 - 2026-11-04: Single user (owner only), sideloaded APK, never on the Play Store.
@@ -51,6 +50,7 @@
 - 2026-11-04: Link previews for shared links: yes.
 - 2026-11-04: Build all 30 prompts in order, with sync prompts S1, S2 after Prompt 13 and S3 after Prompt 17.
 - 2026-11-04: Development: Claude Code on the PC, phone connected by USB, adb installs and tests.
+- 2026-11-04: Default alarm type: FULL_SCREEN and ALARM reminders use setAlarmClock (passed every Prompt 4 gate row; shows a status-bar alarm icon while pending). NORMAL reminders use setExactAndAllowWhileIdle. Prompt 7 implements this.
 - 2026-11-04: Owner started Prompt 5 before Prompt 4 row D (screen off 15+ min) was run. Row D must still pass before Prompt 7 builds the real scheduler on top.
 
 ## Known issues

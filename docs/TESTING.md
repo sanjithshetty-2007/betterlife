@@ -74,4 +74,4 @@ Results table (fill in "?" cells). Row H (force stop) is EXPECTED to not fire.
 
 Also seen: an owner-scheduled alarm at 11:22:08 fired on time over the app in use and was dismissed with Done.
 
-Default to use for FULL_SCREEN and ALARM levels: (decide after the table is filled in)
+Default to use for FULL_SCREEN and ALARM levels: **setAlarmClock** (owner decision 2026-11-04; the only type that passed all gate rows A to E). NORMAL-level reminders use setExactAndAllowWhileIdle (no status-bar alarm icon).

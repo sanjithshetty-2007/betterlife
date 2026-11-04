@@ -14,7 +14,7 @@
 - Phone: Vivo V50e, adb model V2428, Android 16, connected over USB.
 
 ## Current position
-- Last completed prompt: 2
+- Last completed prompt: 3 (gate rows 2 and 4 passed; owner still runs rows 3, 5, 7)
 - Current prompt in progress: none
 - Phase: 1 (Reminder core)
 
@@ -26,8 +26,10 @@
 ## Half-done work (exact files and what is missing)
 (none)
 
+- Prompt 3, Overlay spike (GATE), 2026-11-04. VERIFIED: 26 unit tests pass (11 decision-function tests over all 32 input combinations, 6 tap-guard tests); on the V50e, Path A overlay shows over Chrome and over the app itself, Back and Done remove it with no window left; Path B wakes the screen and shows the pop-up over the lock screen, Done closes it and clears the notification. OWNER MUST VERIFY: matrix rows 3 (video app), 5 (rotation), 7 (tap within 0.5 s) and the back swipe gesture in docs/TESTING.md.
+
 ## Next step
-Prompt 3 (GATE: Overlay spike), with the edits in docs/PLAN_CHANGES.md section 3. Before starting, the owner grants Notifications and Display over other apps from the Setup checklist.
+Prompt 4 (GATE: Alarm spike), with the edits in docs/PLAN_CHANGES.md section 3. Prompt 4 must decide how the overlay is started from an alarm receiver in the background (the Prompt 3 service was started from the visible app).
 
 ## Decisions (made by the owner)
 - 2026-11-04: Single user (owner only), sideloaded APK, never on the Play Store.
@@ -50,6 +52,9 @@ Prompt 3 (GATE: Overlay spike), with the edits in docs/PLAN_CHANGES.md section 3
 - Setup checklist: the OriginOS 6 locations of "background pop-ups" and "show on lock screen" were NOT found (not in App info > Permissions). Row text points to Permission manager / Special app access > Turn screen on and says "not confirmed". Prompt 3's gate will show whether these settings matter. Medium.
 - Setup checklist: the recents-lock instruction is not confirmed on OriginOS 6. Low.
 - Setup checklist: Vivo's notification settings page takes about 2 seconds to close after Back. Vivo behaviour, not the app. Low.
+- Pop-up spike: the overlay lives only as long as the shortService (about 3 minutes); after that it is removed. Prompt 4/8 must pick the real service type and the 5-minute timeout. Medium.
+- OriginOS drops Log.d from logcat; use Log.i for anything that must be readable over adb. Low.
+- Path B worked even though the Vivo "background pop-ups" / "show on lock screen" rows are still unticked, so those settings may not be needed for the pop-up on this phone. Recheck after Prompt 4's swipe-away and reboot tests. Info.
 
 ## Verified on the real phone
 - 2026-11-04 (checked by the AI over adb): canScheduleExactAlarms() is true with USE_EXACT_ALARM alone; canUseFullScreenIntent() is true on a fresh USB install; Autostart was already Allowed; battery switch is App info > Battery usage > Background power control > Allow background power usage.
@@ -65,3 +70,4 @@ Prompt 3 (GATE: Overlay spike), with the edits in docs/PLAN_CHANGES.md section 3
 - 2026-11-04: Plan revised for Supabase sync, internet, Android 14+ (agent.md, context.md, docs/PLAN_CHANGES.md).
 - 2026-11-04: Prompt 01: Gradle project (version catalog, wrapper), debug suffix .debug and "BetterLife Dev" label, manifest without INTERNET and allowBackup=false, edge-to-edge MainActivity, BetterLifeApp + empty AppContainer, package folders, dark AMOLED theme from the design tokens, placeholder home screen, TestSetupTest, README, .gitignore, docs/TESTING.md.
 - 2026-11-04: Prompt 02: reminder permissions in the manifest; pure buildSetupStatus mapper (domain/setup) with tests; DeviceCapabilityChecker, ManualCheckStore (DataStore), SetupRepository in AppContainer; Setup checklist screen with status chips, why lines, Vivo directions, Open settings (in-task, App info fallback) and manual ticks; re-check on resume; Navigation (home, setup). Libraries added: DataStore Preferences 1.2.1, Navigation Compose 2.10.2, lifecycle viewmodel-compose and runtime-compose 2.11.0. README: real Developer options path.
+- 2026-11-04: Prompt 03: pure decidePresentation (domain/delivery) and isTapAllowed (700 ms) with tests; shared ReminderPopup composable (fade + scale, reduced-motion variant); OverlayController with its own lifecycle/saved-state owner, single window, Back via OnBackInvokedCallback; FullScreenReminderActivity (showWhenLocked, turnScreenOn); ReminderNotifier; notification channels (full-screen, normal, background work); DebugLog; debug-only Pop-up test screen and PopupSpikeService (shortService); BuildConfig enabled to hide debug entries in release.

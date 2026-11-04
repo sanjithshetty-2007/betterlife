@@ -20,4 +20,7 @@ internal object BetterLifeColors {
     val StatusGood = Color(0xFF7BC67E)
     val StatusWarn = AccentYellow
     val StatusBad = Color(0xFFFF6B5E)
+
+    /** Dims whatever is behind the reminder pop-up. */
+    val Scrim = Background.copy(alpha = 0.82f)
 }

@@ -28,6 +28,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- The pop-up on the lock screen (Path B). Own empty task affinity so it never pulls the main app
+             over the lock screen, and it does not linger in recents. -->
+        <activity
+            android:name=".reminders.fullscreen.FullScreenReminderActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.BetterLife.Popup"
+            android:turnScreenOn="true" />
+
+        <!-- Prompt 3 spike only. shortService needs no extra permission and is limited to ~3 minutes. -->
+        <service
+            android:name=".feature.debug.PopupSpikeService"
+            android:exported="false"
+            android:foregroundServiceType="shortService" />
     </application>
 
 </manifest>

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.sanjith.betterlife.core.DebugLog
 import com.sanjith.betterlife.data.setup.DeviceCapabilityChecker
 import com.sanjith.betterlife.data.setup.ManualCheckStore
 import com.sanjith.betterlife.data.setup.SetupRepository
@@ -20,6 +21,9 @@ private val Context.settingsDataStore: DataStore<Preferences> by preferencesData
 public class AppContainer(appContext: Context) {
 
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+
+    // The injected Clock arrives in Prompt 6; until then the debug log reads wall time here only.
+    public val debugLog: DebugLog = DebugLog(nowMillis = System::currentTimeMillis)
 
     public val setupRepository: SetupRepository = SetupRepository(
         checker = DeviceCapabilityChecker(appContext),

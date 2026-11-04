@@ -28,9 +28,12 @@ import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
-/** Placeholder home screen proving the theme: title, a bordered card, a yellow button and the checklist link. */
+/**
+ * Placeholder home screen proving the theme: title, a bordered card, a yellow button and the checklist link.
+ * [onOpenPopupSpike] is null in release builds, which hides the debug entry.
+ */
 @Composable
-public fun HomeScreen(onOpenSetup: () -> Unit) {
+public fun HomeScreen(onOpenSetup: () -> Unit, onOpenPopupSpike: (() -> Unit)? = null) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val snackbarText = stringResource(R.string.home_snackbar)
@@ -67,6 +70,16 @@ public fun HomeScreen(onOpenSetup: () -> Unit) {
                     .heightIn(min = Dimens.minTouchTarget),
             ) {
                 Text(text = stringResource(R.string.setup_home_button))
+            }
+            onOpenPopupSpike?.let { openSpike ->
+                OutlinedButton(
+                    onClick = openSpike,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = Dimens.minTouchTarget),
+                ) {
+                    Text(text = stringResource(R.string.spike_home_button))
+                }
             }
         }
     }

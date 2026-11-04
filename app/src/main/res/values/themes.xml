@@ -4,4 +4,11 @@
     <style name="Theme.BetterLife" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
     </style>
+
+    <!-- The lock-screen pop-up draws its own dim background, so the window itself is see-through. -->
+    <style name="Theme.BetterLife.Popup" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
 </resources>

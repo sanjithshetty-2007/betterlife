@@ -38,6 +38,8 @@ android {
     }
     buildFeatures {
         compose = true
+        // BuildConfig.DEBUG hides debug-only screens in release builds.
+        buildConfig = true
     }
 }
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Reminder pop-up -->
+    <string name="popup_done">Done</string>
+    <string name="popup_snooze">Snooze</string>
+
+    <!-- Notification channels (names shown in system notification settings) -->
+    <string name="channel_full_screen">Full-screen reminders</string>
+    <string name="channel_normal">Reminders</string>
+    <string name="channel_service">Background work</string>
+
+    <!-- Debug-only overlay spike (Prompt 3) -->
+    <string name="spike_home_button">Debug: pop-up test</string>
+    <string name="spike_title">Pop-up test</string>
+    <string name="spike_help">Tap the button, then within 10 seconds open another app (for example Chrome) or lock the phone. The test pop-up should appear on top.</string>
+    <string name="spike_show_button">Show test pop-up in 10 seconds</string>
+    <string name="spike_clear_log">Clear log</string>
+    <string name="spike_log_title">Log (newest first)</string>
+    <string name="spike_service_notification">Preparing a test reminder…</string>
+    <string name="popup_test_title">Test reminder</string>
+</resources>

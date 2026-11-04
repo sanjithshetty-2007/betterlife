@@ -94,6 +94,34 @@ public class MigrationTest {
     }
 
     @Test
+    public fun migration3To4AddsAnEmptyStandaloneTableAndKeepsReminders() {
+        helper.createDatabase(DB_NAME, 3).use { db ->
+            db.execSQL(INSERT_V1_TASK)
+            db.execSQL(INSERT_V1_REMINDER)
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME, 4, true, BetterLifeDatabase.MIGRATION_3_4).use { db ->
+            db.query("SELECT COUNT(*) FROM standalone_reminders").use { c ->
+                c.moveToFirst()
+                assertEquals(0, c.getInt(0))
+            }
+            db.query("SELECT offsetMinutes FROM reminders WHERE id = 'rem-1'").use { c ->
+                c.moveToFirst()
+                assertEquals(60, c.getInt(0))
+            }
+            // The new table accepts a row with the defaults Room expects.
+            db.execSQL(
+                "INSERT INTO standalone_reminders (id, title, notes, atMillis, zoneId, doneAt, createdAt, updatedAt, deletedAt, serverUpdatedAt) " +
+                    "VALUES ('s-1', 'Call the bank', NULL, 1800000000000, 'Asia/Kolkata', NULL, 1, 1, NULL, NULL)",
+            )
+            db.query("SELECT syncState FROM standalone_reminders WHERE id = 's-1'").use { c ->
+                c.moveToFirst()
+                assertEquals("DIRTY", c.getString(0))
+            }
+        }
+    }
+
+    @Test
     public fun allMigrationsOpenOldDataWithRoom() = runTest {
         helper.createDatabase(DB_NAME, 1).use { db -> db.execSQL(INSERT_V1_TASK) }
 

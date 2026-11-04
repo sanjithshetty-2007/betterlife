@@ -132,7 +132,7 @@ private fun PrioritySection(priority: Priority, onPick: (Priority) -> Unit) {
 }
 
 @Composable
-private fun LevelSection(level: Importance, onPick: (Importance) -> Unit) {
+internal fun LevelSection(level: Importance, onPick: (Importance) -> Unit) {
     SectionLabel(stringResource(R.string.editor_level))
     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
         Importance.entries.forEachIndexed { i, l ->

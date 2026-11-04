@@ -5,6 +5,7 @@ import com.sanjith.betterlife.domain.model.Priority
 import com.sanjith.betterlife.domain.recurrence.RecurrenceEngine
 import com.sanjith.betterlife.domain.recurrence.RecurrenceRule
 import com.sanjith.betterlife.domain.recurrence.RepeatMode
+import com.sanjith.betterlife.domain.reminder.ReminderDefaults
 import com.sanjith.betterlife.domain.reminder.ReminderOffsets
 import java.time.Instant
 import java.time.LocalDate
@@ -86,15 +87,13 @@ public object TaskRules {
     }
 
     /**
-     * Reminders a new task gets unless the owner changes them (owner-editable later): a timed task
-     * gets "1 day before" as a notification and "at the time" as a pop-up; a whole-day task gets one
-     * notification on the day (at the all-day time, 09:00); an undated task gets none.
+     * Reminders a new task gets unless the owner changes them: a timed task is a deadline and gets
+     * the deadline defaults (built in: "1 day before" as a notification and "at the time" as a
+     * pop-up; editable since Prompt 10); a whole-day task gets one notification on the day (at the
+     * all-day time, 09:00); an undated task gets none.
      */
-    public fun defaultReminders(due: TaskDue): List<ReminderPlan> = when (due) {
-        is TaskDue.At -> listOf(
-            ReminderPlan(ReminderOffsets.DAY_1, Importance.NORMAL),
-            ReminderPlan(ReminderOffsets.AT_TIME, Importance.FULL_SCREEN),
-        )
+    public fun defaultReminders(due: TaskDue, defaults: ReminderDefaults = ReminderDefaults()): List<ReminderPlan> = when (due) {
+        is TaskDue.At -> defaults.deadline
         is TaskDue.OnDay -> listOf(ReminderPlan(ReminderOffsets.AT_TIME, Importance.NORMAL))
         TaskDue.None -> emptyList()
     }

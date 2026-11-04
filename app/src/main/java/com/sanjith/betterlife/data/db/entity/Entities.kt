@@ -108,8 +108,8 @@ public data class EventEntity(
 
 /**
  * One reminder for one item: fires [offsetMinutes] before the item's time (0 = at time).
- * [itemId] points at a task or event (validated in the repository, not by a foreign key) and is
- * null for STANDALONE. [state], [scheduledFireAt] and [lastFiredFireAt] are local fire state and are
+ * [itemId] points at a task, event or standalone reminder (validated in the repository, not by a
+ * foreign key). [state], [scheduledFireAt] and [lastFiredFireAt] are local fire state and are
  * never synced. [scheduledFireAt] is the alarm currently set (epoch millis); [lastFiredFireAt] is the
  * last one delivered, which makes a second delivery of the same alarm a no-op (added in version 2).
  */
@@ -135,6 +135,29 @@ public data class ReminderEntity(
     @ColumnInfo(defaultValue = "0") val snoozeCount: Int = 0,
     /** When a snoozed reminder comes back (version 3, local only). */
     val snoozedUntil: Long? = null,
+)
+
+/**
+ * A standalone "remind me" item (Prompt 10): a title and a moment, with no task or event behind it.
+ * Its reminders point at it with itemType STANDALONE. [doneAt] is set when the owner marks it done.
+ * Synced like events (reminder definitions are on the synced list, context.md 11a).
+ */
+@Entity(
+    tableName = "standalone_reminders",
+    indices = [Index("deletedAt"), Index("syncState")],
+)
+public data class StandaloneReminderEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val notes: String?,
+    val atMillis: Long,
+    val zoneId: ZoneId,
+    val doneAt: Long?,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val deletedAt: Long?,
+    @ColumnInfo(defaultValue = "DIRTY") val syncState: SyncState,
+    val serverUpdatedAt: Long?,
 )
 
 /** Append-only history of what happened to reminders; never edited, kept 60 days (Prompt 11). */

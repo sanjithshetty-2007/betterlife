@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Agenda (Prompt 10) -->
+    <string name="agenda_title">Agenda</string>
+    <string name="agenda_empty">Nothing in the next 60 days. Tap + to add an event, a birthday or a reminder.</string>
+    <string name="agenda_new_event">New event</string>
+    <string name="agenda_new_birthday">New birthday</string>
+    <string name="agenda_new_reminder">Remind me</string>
+    <string name="agenda_defaults">Defaults</string>
+    <string name="agenda_all_day">All day</string>
+    <string name="agenda_time_range">%1$s – %2$s</string>
+    <string name="agenda_conflict">Clash</string>
+    <string name="agenda_conflict_description">Overlaps another event</string>
+    <string name="agenda_turns">Turns %1$d</string>
+    <string name="agenda_kind_event">Event</string>
+    <string name="agenda_kind_meeting">Meeting</string>
+    <string name="agenda_kind_birthday">Birthday</string>
+    <string name="agenda_kind_task">Task</string>
+    <string name="agenda_kind_reminder">Reminder</string>
+
+    <!-- Event editor -->
+    <string name="event_new">New event</string>
+    <string name="event_edit">Edit event</string>
+    <string name="birthday_new">New birthday</string>
+    <string name="birthday_edit">Edit birthday</string>
+    <string name="event_type">Type</string>
+    <string name="event_name">Name</string>
+    <string name="event_location">Location</string>
+    <string name="event_when">When</string>
+    <string name="event_all_day">All day</string>
+    <string name="event_starts">Starts</string>
+    <string name="event_ends">Ends</string>
+    <string name="event_no_end">No end time</string>
+    <string name="event_end_date">Until</string>
+    <string name="event_one_day">One day</string>
+    <string name="event_end_before_start">The last day cannot be before the first day.</string>
+    <string name="event_ends_next_day">Ends the next day</string>
+    <string name="event_birthday_date">Birthday</string>
+    <string name="event_year_unknown">I don\'t know the year</string>
+    <string name="event_birth_year_invalid">That year is in the future. Pick the year they were born, or switch on \"I don\'t know the year\".</string>
+    <string name="event_birthday_repeat">Repeats every year. A 29 February birthday falls on 28 February in other years.</string>
+    <string name="event_birthday_time">Birthday reminders fire at %1$s (change it in Defaults).</string>
+    <string name="event_category">Colour category</string>
+    <string name="event_no_category">None</string>
+    <string name="event_new_category">New category</string>
+    <string name="event_category_name">Category name</string>
+    <string name="event_color_n">Colour %1$d</string>
+    <string name="event_repeat_hint">A repeating event only sets an alarm for its next time.</string>
+    <string name="event_delete">Delete</string>
+    <string name="event_delete_confirm_title">Delete \"%1$s\"?</string>
+    <string name="event_delete_confirm_body">Its reminders are cancelled too.</string>
+
+    <!-- Standalone reminder editor -->
+    <string name="remind_new">Remind me</string>
+    <string name="remind_edit">Edit reminder</string>
+    <string name="remind_what">Remind me about</string>
+    <string name="remind_when">At</string>
+    <string name="remind_done">Mark done</string>
+    <string name="remind_is_done">Done. It will not remind you again.</string>
+
+    <!-- Reminder defaults -->
+    <string name="defaults_title">Reminder defaults</string>
+    <string name="defaults_intro">New items start with these reminders. You can still change them on each item.</string>
+    <string name="defaults_birthdays">Birthdays</string>
+    <string name="defaults_deadlines">Tasks with a time (deadlines)</string>
+    <string name="defaults_events">Events and meetings</string>
+    <string name="defaults_standalone">Remind me</string>
+    <string name="defaults_birthday_time">Birthday and all-day reminder time</string>
+</resources>

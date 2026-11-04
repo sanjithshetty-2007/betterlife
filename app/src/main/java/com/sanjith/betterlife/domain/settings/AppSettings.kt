@@ -1,5 +1,6 @@
 package com.sanjith.betterlife.domain.settings
 
+import com.sanjith.betterlife.domain.reminder.ReminderDefaults
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -34,6 +35,8 @@ public data class AppSettings(
     val morningCheckInTime: LocalTime = LocalTime.of(8, 0),
     val eveningWrapUpEnabled: Boolean = false,
     val eveningWrapUpTime: LocalTime = LocalTime.of(21, 0),
+    /** Reminders new items get (Prompt 10); editable in the Reminder defaults screen. */
+    val reminderDefaults: ReminderDefaults = ReminderDefaults(),
 ) {
     init {
         require(rolloverHour in 0..MAX_ROLLOVER_HOUR) { "rolloverHour must be 0 to $MAX_ROLLOVER_HOUR" }

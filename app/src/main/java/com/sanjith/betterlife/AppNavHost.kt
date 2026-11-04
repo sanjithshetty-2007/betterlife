@@ -6,15 +6,21 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.sanjith.betterlife.domain.model.ReminderItemType
+import com.sanjith.betterlife.domain.model.EventType
 import com.sanjith.betterlife.feature.debug.AlarmSpikeScreen
 import com.sanjith.betterlife.feature.debug.DatabaseDebugScreen
 import com.sanjith.betterlife.feature.debug.PopupSpikeScreen
 import com.sanjith.betterlife.feature.debug.ReminderEngineDebugScreen
 import com.sanjith.betterlife.feature.debug.TimeMachineScreen
+import com.sanjith.betterlife.feature.events.AgendaScreen
+import com.sanjith.betterlife.feature.events.AgendaTarget
+import com.sanjith.betterlife.feature.events.EventEditorScreen
+import com.sanjith.betterlife.feature.events.EventEditorViewModel
+import com.sanjith.betterlife.feature.events.ReminderDefaultsScreen
+import com.sanjith.betterlife.feature.events.StandaloneEditorScreen
+import com.sanjith.betterlife.feature.events.StandaloneEditorViewModel
 import com.sanjith.betterlife.feature.home.DebugTool
 import com.sanjith.betterlife.feature.home.HomeScreen
-import com.sanjith.betterlife.feature.item.ItemPlaceholderScreen
 import com.sanjith.betterlife.feature.setup.SetupScreen
 import com.sanjith.betterlife.feature.tasks.CheckInScreen
 import com.sanjith.betterlife.feature.tasks.ProjectsScreen
@@ -26,11 +32,14 @@ import com.sanjith.betterlife.feature.tasks.TaskListScreen
 internal object Routes {
     const val HOME = "home"
     const val SETUP = "setup"
-    const val ITEM = "item"
     const val TASKS = "tasks"
     const val TASK_EDITOR = "task"
     const val PROJECTS = "projects"
     const val CHECK_INS = "check-ins"
+    const val AGENDA = "agenda"
+    const val EVENT_EDITOR = "event"
+    const val REMINDER_EDITOR = "remind"
+    const val REMINDER_DEFAULTS = "reminder-defaults"
     const val POPUP_SPIKE = "debug/popup-spike"
     const val ALARM_SPIKE = "debug/alarm-spike"
     const val DATABASE = "debug/database"
@@ -38,6 +47,11 @@ internal object Routes {
     const val ENGINE = "debug/reminder-engine"
 
     fun taskEditor(id: String?): String = "$TASK_EDITOR/${id ?: TaskEditorViewModel.NEW_TASK}"
+
+    fun eventEditor(id: String?, type: EventType = EventType.EVENT): String =
+        "$EVENT_EDITOR/${type.name}/${id ?: EventEditorViewModel.NEW}"
+
+    fun reminderEditor(id: String?): String = "$REMINDER_EDITOR/${id ?: EventEditorViewModel.NEW}"
 }
 
 /** All screens of the single Activity. NavHost also handles the system (predictive) back gesture. */
@@ -56,6 +70,7 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
             HomeScreen(
                 onOpenTasks = { navController.navigate(Routes.TASKS) },
                 onOpenSetup = { navController.navigate(Routes.SETUP) },
+                onOpenAgenda = { navController.navigate(Routes.AGENDA) },
                 // Debug tools are unreachable in release builds.
                 debugTools = if (BuildConfig.DEBUG) debugTools(navController) else emptyList(),
             )
@@ -72,11 +87,28 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
         composable("${Routes.TASK_EDITOR}/{${TaskEditorViewModel.ARG_TASK_ID}}") { TaskEditorScreen(onClose = back) }
         composable(Routes.PROJECTS) { ProjectsScreen(onBack = back) }
         composable(Routes.CHECK_INS) { CheckInScreen(onBack = back) }
-        composable("${Routes.ITEM}/{type}/{id}") { entry ->
-            val type = entry.arguments?.getString("type")?.let { name -> ReminderItemType.entries.firstOrNull { it.name == name } }
-            val id = entry.arguments?.getString("id")
-            if (type != null && id != null) ItemPlaceholderScreen(type, id, onBack = back)
+        composable(Routes.AGENDA) {
+            AgendaScreen(
+                onBack = back,
+                onOpen = { target ->
+                    navController.navigate(
+                        when (target) {
+                            is AgendaTarget.Event -> Routes.eventEditor(target.id)
+                            is AgendaTarget.Task -> Routes.taskEditor(target.id)
+                            is AgendaTarget.Reminder -> Routes.reminderEditor(target.id)
+                        },
+                    )
+                },
+                onNewEvent = { type -> navController.navigate(Routes.eventEditor(null, type)) },
+                onNewReminder = { navController.navigate(Routes.reminderEditor(null)) },
+                onOpenDefaults = { navController.navigate(Routes.REMINDER_DEFAULTS) },
+            )
         }
+        composable("${Routes.EVENT_EDITOR}/{${EventEditorViewModel.ARG_TYPE}}/{${EventEditorViewModel.ARG_EVENT_ID}}") {
+            EventEditorScreen(onClose = back)
+        }
+        composable("${Routes.REMINDER_EDITOR}/{${StandaloneEditorViewModel.ARG_ID}}") { StandaloneEditorScreen(onClose = back) }
+        composable(Routes.REMINDER_DEFAULTS) { ReminderDefaultsScreen(onBack = back) }
         if (BuildConfig.DEBUG) {
             composable(Routes.POPUP_SPIKE) { PopupSpikeScreen(onBack = back) }
             composable(Routes.ALARM_SPIKE) { AlarmSpikeScreen(onBack = back) }

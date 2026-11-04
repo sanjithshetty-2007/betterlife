@@ -57,6 +57,18 @@ public data class EventDraft(
     }
 }
 
+/** A standalone "remind me": a title and the moment it is about. */
+public data class StandaloneDraft(
+    val title: String,
+    val atMillis: Long,
+    val zoneId: ZoneId,
+    val notes: String? = null,
+) {
+    init {
+        require(title.isNotBlank()) { "A reminder needs a title" }
+    }
+}
+
 /** One early reminder: [offsetMinutes] before the item's time (0 = at time). */
 public data class ReminderDraft(
     val offsetMinutes: Int,

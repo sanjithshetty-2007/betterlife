@@ -51,9 +51,6 @@
     <string name="level_full_screen">Pop-up</string>
     <string name="level_alarm">Alarm</string>
 
-    <string name="item_placeholder_title">Edit item</string>
-    <string name="item_placeholder_missing">This item no longer exists.</string>
-    <string name="item_placeholder_body">The editor arrives with the task screens (Prompt 9) and event screens (Prompt 10). For now this shows which item the reminder belongs to.</string>
 
     <!-- Debug reminder engine screen additions (Prompt 8) -->
     <string name="engine_complete_tests">Complete test tasks</string>

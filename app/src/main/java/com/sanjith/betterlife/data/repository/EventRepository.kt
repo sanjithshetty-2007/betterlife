@@ -37,6 +37,27 @@ public class EventRepository(
         eventDao.update(event.copy(updatedAt = nowMillis(), syncState = SyncState.DIRTY))
     }
 
+    public suspend fun getAnyById(id: String): EventEntity? = eventDao.getAnyById(id)
+
+    /** The event's current (not deleted) reminders. */
+    public suspend fun activeReminders(eventId: String): List<ReminderDraft> =
+        reminderDao.getAllForItemIncludingDeleted(ReminderItemType.EVENT, eventId)
+            .filter { it.deletedAt == null }
+            .map { ReminderDraft(it.offsetMinutes, it.importance) }
+
+    /**
+     * Saves an edited event and replaces its reminders in one transaction. The old reminder rows are
+     * soft-deleted, so the next reschedule cancels their alarms, and the new rows get fresh alarms.
+     */
+    public suspend fun updateWithReminders(event: EventEntity, reminders: List<ReminderDraft>) {
+        val now = nowMillis()
+        db.withTransaction {
+            eventDao.update(event.copy(updatedAt = now, syncState = SyncState.DIRTY))
+            reminderDao.softDeleteForItem(ReminderItemType.EVENT, event.id, now)
+            reminderDao.insertAll(reminders.map { it.toEntity(newId(), ReminderItemType.EVENT, event.id, now) })
+        }
+    }
+
     public suspend fun softDelete(id: String) {
         val now = nowMillis()
         db.withTransaction {

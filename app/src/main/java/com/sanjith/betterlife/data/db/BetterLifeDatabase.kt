@@ -11,12 +11,14 @@ import com.sanjith.betterlife.data.db.dao.EventDao
 import com.sanjith.betterlife.data.db.dao.ProjectDao
 import com.sanjith.betterlife.data.db.dao.ReminderDao
 import com.sanjith.betterlife.data.db.dao.ReminderLogDao
+import com.sanjith.betterlife.data.db.dao.StandaloneReminderDao
 import com.sanjith.betterlife.data.db.dao.SyncCursorDao
 import com.sanjith.betterlife.data.db.dao.TaskDao
 import com.sanjith.betterlife.data.db.entity.EventEntity
 import com.sanjith.betterlife.data.db.entity.ProjectEntity
 import com.sanjith.betterlife.data.db.entity.ReminderEntity
 import com.sanjith.betterlife.data.db.entity.ReminderLogEntity
+import com.sanjith.betterlife.data.db.entity.StandaloneReminderEntity
 import com.sanjith.betterlife.data.db.entity.SyncCursorEntity
 import com.sanjith.betterlife.data.db.entity.TaskEntity
 
@@ -26,7 +28,7 @@ import com.sanjith.betterlife.data.db.entity.TaskEntity
  * Destructive migration is never enabled: a missing migration crashes loudly instead of wiping data.
  */
 @Database(
-    version = 3,
+    version = 4,
     exportSchema = true,
     entities = [
         ProjectEntity::class,
@@ -35,6 +37,7 @@ import com.sanjith.betterlife.data.db.entity.TaskEntity
         ReminderEntity::class,
         ReminderLogEntity::class,
         SyncCursorEntity::class,
+        StandaloneReminderEntity::class,
     ],
 )
 @TypeConverters(Converters::class)
@@ -45,6 +48,7 @@ public abstract class BetterLifeDatabase : RoomDatabase() {
     public abstract fun reminderDao(): ReminderDao
     public abstract fun reminderLogDao(): ReminderLogDao
     public abstract fun syncCursorDao(): SyncCursorDao
+    public abstract fun standaloneReminderDao(): StandaloneReminderDao
 
     public companion object {
         public const val FILE_NAME: String = "betterlife.db"
@@ -65,8 +69,22 @@ public abstract class BetterLifeDatabase : RoomDatabase() {
             }
         }
 
+        /** Version 4 (Prompt 10): standalone "remind me" items. A new, empty table; nothing else changes. */
+        public val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `standalone_reminders` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, " +
+                        "`notes` TEXT, `atMillis` INTEGER NOT NULL, `zoneId` TEXT NOT NULL, `doneAt` INTEGER, " +
+                        "`createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `deletedAt` INTEGER, " +
+                        "`syncState` TEXT NOT NULL DEFAULT 'DIRTY', `serverUpdatedAt` INTEGER, PRIMARY KEY(`id`))",
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_standalone_reminders_deletedAt` ON `standalone_reminders` (`deletedAt`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_standalone_reminders_syncState` ON `standalone_reminders` (`syncState`)")
+            }
+        }
+
         /** Every migration ever written, in order. */
-        public val ALL_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+        public val ALL_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
         public fun build(context: Context): BetterLifeDatabase =
             Room.databaseBuilder(context, BetterLifeDatabase::class.java, FILE_NAME)

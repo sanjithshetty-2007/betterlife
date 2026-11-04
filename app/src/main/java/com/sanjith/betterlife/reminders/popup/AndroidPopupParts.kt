@@ -57,7 +57,7 @@ public class AndroidSoundPlayer(private val context: Context) : SoundPlayer {
     }
 }
 
-/** Watches a card's task or event in Room, so the pop-up closes or updates when it changes elsewhere. */
+/** Watches a card's task, event or standalone item in Room, so the pop-up closes or updates when it changes elsewhere. */
 public class RoomItemWatcher(private val db: BetterLifeDatabase) : ItemWatcher {
     override fun watch(card: PopupCard): Flow<WatchedItem?> {
         val id = card.itemId ?: return flowOf(WatchedItem(card.title))
@@ -66,7 +66,10 @@ public class RoomItemWatcher(private val db: BetterLifeDatabase) : ItemWatcher {
                 task?.takeIf { it.completedAt == null }?.let { WatchedItem(it.title) }
             }
             ReminderItemType.EVENT -> db.eventDao().observeById(id).map { event -> event?.let { WatchedItem(it.title) } }
-            ReminderItemType.STANDALONE, null -> flowOf(WatchedItem(card.title))
+            ReminderItemType.STANDALONE -> db.standaloneReminderDao().observeById(id).map { item ->
+                item?.takeIf { it.doneAt == null }?.let { WatchedItem(it.title) }
+            }
+            null -> flowOf(WatchedItem(card.title))
         }
     }
 }

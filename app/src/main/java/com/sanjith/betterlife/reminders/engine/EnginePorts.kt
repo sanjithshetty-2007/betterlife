@@ -52,7 +52,7 @@ public interface ReminderStore {
     /** Ends the reminder's current round (clears any snooze) in [state]. */
     public suspend fun finish(reminderId: String, state: ReminderState)
 
-    /** Marks the task behind a reminder done (Done on the pop-up). Does nothing for events. */
+    /** Marks the task or standalone item behind a reminder done (Done on the pop-up). Does nothing for events. */
     public suspend fun completeTask(reminderId: String)
 }
 

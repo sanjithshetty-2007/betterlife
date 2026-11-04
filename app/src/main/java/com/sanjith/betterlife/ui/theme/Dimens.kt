@@ -19,4 +19,8 @@ public object Dimens {
     public val popupMaxWidth = 480.dp
     public val smallIconSize = 16.dp
     public val numberFieldWidth = 96.dp
+
+    /** The colour dot of an event category, and the stripe on an agenda row. */
+    public val categoryDot = 12.dp
+    public val categoryStripe = 4.dp
 }

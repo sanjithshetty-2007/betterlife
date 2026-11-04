@@ -9,6 +9,7 @@ import com.sanjith.betterlife.data.repository.TaskRepository
 import com.sanjith.betterlife.data.repository.due
 import com.sanjith.betterlife.data.repository.withDue
 import com.sanjith.betterlife.domain.parser.QuickAddResult
+import com.sanjith.betterlife.domain.reminder.ReminderDefaults
 import com.sanjith.betterlife.domain.task.TaskDue
 import com.sanjith.betterlife.domain.task.toQuickAddTask
 import com.sanjith.betterlife.domain.time.Clock
@@ -23,12 +24,13 @@ public class TaskService(
     private val tasks: TaskRepository,
     private val projects: ProjectRepository,
     private val clock: Clock,
+    private val defaults: suspend () -> ReminderDefaults = { ReminderDefaults() },
     private val reschedule: suspend () -> Unit,
 ) {
 
     /** Saves a parsed quick-add line; an unknown "@project" is created. Returns the new task id. */
     public suspend fun quickAdd(result: QuickAddResult): String {
-        val parsed = result.toQuickAddTask(clock.zone)
+        val parsed = result.toQuickAddTask(clock.zone, defaults())
         val projectId = parsed.projectName?.let { projects.findOrCreate(it) }
         val id = tasks.create(
             draftFor(parsed.title, parsed.due).copy(priority = parsed.priority, projectId = projectId),

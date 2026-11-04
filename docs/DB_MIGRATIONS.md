@@ -49,3 +49,12 @@ gradlew.bat connectedDebugAndroidTest
 ```
 
 This installs a small test app next to BetterLife Dev and runs the tests on the phone against throwaway databases. Your real `betterlife.db` is never touched. The project sets `android.injected.androidTest.leaveApksInstalledAfterRun=true` in `gradle.properties`, so the debug app stays installed afterwards (otherwise Android Gradle uninstalls it, wiping its data and granted permissions).
+
+## Version history
+
+| Version | Prompt | Change |
+|---|---|---|
+| 1 | 5 | Projects, tasks, events, reminders, reminder log, sync cursors |
+| 2 | 7 | reminders.scheduledFireAt, lastFiredFireAt |
+| 3 | 8 | reminders.snoozeCount, snoozedUntil |
+| 4 | 10 | New table standalone_reminders ("remind me" items) |

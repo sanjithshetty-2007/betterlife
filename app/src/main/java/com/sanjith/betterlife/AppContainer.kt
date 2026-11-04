@@ -17,9 +17,12 @@ import com.sanjith.betterlife.data.repository.EventRepository
 import com.sanjith.betterlife.data.repository.ProjectRepository
 import com.sanjith.betterlife.data.repository.ReminderLogRepository
 import com.sanjith.betterlife.data.repository.ReminderRepository
+import com.sanjith.betterlife.data.repository.StandaloneReminderRepository
 import com.sanjith.betterlife.data.repository.TaskRepository
+import com.sanjith.betterlife.data.settings.EventCategoryStore
 import com.sanjith.betterlife.data.settings.SettingsRepository
 import com.sanjith.betterlife.data.settings.TopTasksStore
+import com.sanjith.betterlife.feature.events.EventService
 import com.sanjith.betterlife.feature.tasks.TaskService
 import com.sanjith.betterlife.reminders.daily.DailyPrompts
 import com.sanjith.betterlife.reminders.engine.RescheduleTrigger
@@ -99,13 +102,27 @@ public class AppContainer(appContext: Context) {
         ReminderLogRepository(database, nowMillis, newId)
     }
 
+    public val standaloneReminderRepository: StandaloneReminderRepository by lazy {
+        StandaloneReminderRepository(database, nowMillis, newId)
+    }
+
+    /** Event and "remind me" actions plus the alarm reschedule after each. */
+    public val eventService: EventService by lazy {
+        EventService(eventRepository, standaloneReminderRepository) { reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL) }
+    }
+
+    /** The owner's colour categories for events. */
+    public val eventCategoryStore: EventCategoryStore = EventCategoryStore(appContext.settingsDataStore)
+
     public val projectRepository: ProjectRepository by lazy { ProjectRepository(database, nowMillis, newId) }
 
     public val topTasksStore: TopTasksStore = TopTasksStore(appContext.settingsDataStore)
 
     /** Task actions plus the alarm reschedule after each (screens use this, not the repository). */
     public val taskService: TaskService by lazy {
-        TaskService(taskRepository, projectRepository, clock) { reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL) }
+        TaskService(taskRepository, projectRepository, clock, { settingsRepository.current().reminderDefaults }) {
+            reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL)
+        }
     }
 
     /** Morning check-in and evening wrap-up nudges, on the real clock like all real alarms. */

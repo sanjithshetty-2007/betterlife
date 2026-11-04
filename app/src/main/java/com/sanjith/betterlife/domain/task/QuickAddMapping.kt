@@ -2,6 +2,7 @@ package com.sanjith.betterlife.domain.task
 
 import com.sanjith.betterlife.domain.model.Priority
 import com.sanjith.betterlife.domain.parser.QuickAddResult
+import com.sanjith.betterlife.domain.reminder.ReminderDefaults
 import java.time.ZoneId
 
 /** What quick-add saves, before ids and project lookup. */
@@ -19,7 +20,7 @@ public data class QuickAddTask(
  *
  * Example: "report 17:30 #work @projectx" -> title "report #work", due tomorrow 17:30, project "projectx".
  */
-public fun QuickAddResult.toQuickAddTask(zone: ZoneId): QuickAddTask {
+public fun QuickAddResult.toQuickAddTask(zone: ZoneId, defaults: ReminderDefaults = ReminderDefaults()): QuickAddTask {
     require(isReadyToSave) { "Quick-add text is not ready to save (no title or an open AM/PM question)" }
     val due = when {
         date != null && time != null -> TaskDue.At(date.atTime(time).atZone(zone).toInstant(), zone)
@@ -27,5 +28,5 @@ public fun QuickAddResult.toQuickAddTask(zone: ZoneId): QuickAddTask {
         else -> TaskDue.None
     }
     val fullTitle = (listOf(title) + tags.map { "#$it" }).joinToString(" ")
-    return QuickAddTask(fullTitle, due, priority, project, TaskRules.defaultReminders(due))
+    return QuickAddTask(fullTitle, due, priority, project, TaskRules.defaultReminders(due, defaults))
 }

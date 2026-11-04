@@ -6,6 +6,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.sanjith.betterlife.domain.reminder.ReminderDefaults
 import com.sanjith.betterlife.domain.settings.AppSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -54,6 +56,12 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 morningCheckInTime = prefs.time(MORNING_TIME, d.morningCheckInTime),
                 eveningWrapUpEnabled = prefs[EVENING_ENABLED] ?: d.eveningWrapUpEnabled,
                 eveningWrapUpTime = prefs.time(EVENING_TIME, d.eveningWrapUpTime),
+                reminderDefaults = ReminderDefaults(
+                    birthday = ReminderDefaults.decode(prefs[DEFAULTS_BIRTHDAY]) ?: d.reminderDefaults.birthday,
+                    deadline = ReminderDefaults.decode(prefs[DEFAULTS_DEADLINE]) ?: d.reminderDefaults.deadline,
+                    event = ReminderDefaults.decode(prefs[DEFAULTS_EVENT]) ?: d.reminderDefaults.event,
+                    standalone = ReminderDefaults.decode(prefs[DEFAULTS_STANDALONE]) ?: d.reminderDefaults.standalone,
+                ),
             )
         }.getOrDefault(d)
     }
@@ -80,6 +88,10 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         prefs[MORNING_TIME] = s.morningCheckInTime.toMinuteOfDay()
         prefs[EVENING_ENABLED] = s.eveningWrapUpEnabled
         prefs[EVENING_TIME] = s.eveningWrapUpTime.toMinuteOfDay()
+        prefs[DEFAULTS_BIRTHDAY] = ReminderDefaults.encode(s.reminderDefaults.birthday)
+        prefs[DEFAULTS_DEADLINE] = ReminderDefaults.encode(s.reminderDefaults.deadline)
+        prefs[DEFAULTS_EVENT] = ReminderDefaults.encode(s.reminderDefaults.event)
+        prefs[DEFAULTS_STANDALONE] = ReminderDefaults.encode(s.reminderDefaults.standalone)
     }
 
     private fun Preferences.time(key: Preferences.Key<Int>, default: LocalTime): LocalTime =
@@ -110,5 +122,9 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val MORNING_TIME = intPreferencesKey("morning_check_in_minute")
         val EVENING_ENABLED = booleanPreferencesKey("evening_wrap_up_enabled")
         val EVENING_TIME = intPreferencesKey("evening_wrap_up_minute")
+        val DEFAULTS_BIRTHDAY = stringPreferencesKey("reminder_defaults_birthday")
+        val DEFAULTS_DEADLINE = stringPreferencesKey("reminder_defaults_deadline")
+        val DEFAULTS_EVENT = stringPreferencesKey("reminder_defaults_event")
+        val DEFAULTS_STANDALONE = stringPreferencesKey("reminder_defaults_standalone")
     }
 }

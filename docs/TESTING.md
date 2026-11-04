@@ -144,3 +144,24 @@ Defaults chosen (change per task in the editor): a dated, timed task gets "1 day
 | 14 | Check-ins: turn on the morning nudge 2 minutes from now | A "Good morning" notification opens Check-ins | |
 | 15 | Evening wrap-up "Move all to tomorrow" | Today's and overdue tasks move one day, same time | |
 | 16 | Reschedule on a task pop-up | Opens the task editor for that task | |
+
+## Prompt 10: Events, meetings, birthdays and early reminders
+
+How: Home > Agenda. The + adds an event, a birthday or a "Remind me"; Defaults sets the reminders new items start with and the birthday time. Tap a row to edit it. Check scheduled alarms with `adb shell dumpsys alarm | findstr REMINDER_ALARM`.
+
+Defaults chosen (editable in Agenda > Defaults): birthdays and timed tasks get "1 day before" (Reminder) + "on the day / at the time" (Pop-up); events, meetings and "Remind me" get "at the time" (Pop-up). A new birthday starts with "I don't know the year" on.
+
+| # | Test | Expected | Result |
+|---|---|---|---|
+| 1 | Add a birthday for tomorrow | Reminders today 09:00 (1 day before) and tomorrow 09:00 | **PASS** (AI 2026-11-04 at 16:00: tomorrow 09:00 alarm set; today 09:00 had passed so it was correctly skipped; a unit test covers both) |
+| 2 | Edit an event's time | Old alarm disappears, new one appears | **PASS** (AI: 17:00 -> 19:00, one alarm per time in dumpsys) |
+| 3 | Two overlapping events and an overlapping task | Clash badge on both events, not on the task | **PASS** (AI, screenshot) |
+| 4 | Weekly meeting | Agenda lists every week; dumpsys shows only the next one | **PASS** (AI: one alarm) |
+| 5 | Birthday for tomorrow added before 09:00 (or set the birthday time 2 minutes ahead in Defaults) | The "1 day before" reminder fires as a notification | |
+| 6 | Birthday with a known year | Agenda shows "Turns N" | |
+| 7 | Birthday on 29 February, year unknown | Shows on 28 Feb 2027 (60-day agenda: check in Prompt 18's calendar, or trust the unit test) | |
+| 8 | Remind me in 3 minutes, "at the time" | Pop-up shows its title; Done removes it from the agenda | |
+| 9 | Event with a new colour category | Coloured stripe on the agenda row, category name in the details | |
+| 10 | Change a default in Agenda > Defaults, then add a new event | The new event starts with your default | |
+| 11 | Reschedule on an event pop-up | Opens the event editor for that event | |
+| 12 | Delete an event | Gone from the agenda; its alarms gone from dumpsys | |

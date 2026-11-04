@@ -52,6 +52,7 @@ Apply these when pasting each prompt. Where a prompt says something these edits 
 - **Prompt 4**: Add a matrix row: "I) Android 15+ background foreground-service start from the exact alarm". Note in TESTING.md which FGS type was used.
 - **Prompt 5**: Every entity on the synced list (context.md 11a) gets syncState (default DIRTY) and serverUpdatedAt columns from version 1, so no migration is needed later. Add a SyncCursor table (tableName, lastPulledAt). Repository writes to synced tables set DIRTY in the same transaction.
 - **Prompt 7**: Add "after a sync pull" to the reschedule triggers (wired up in S2).
+- **Prompt 10 (done)**: standalone "remind me" items live in their own table, standalone_reminders (title, notes, atMillis, zoneId, doneAt, plus the usual columns including syncState and serverUpdatedAt). Their reminder rows point at it with itemType STANDALONE. It syncs with the reminder definitions.
 - **Prompt 13**: Regression checklist adds "airplane mode for a full day: everything works".
 - **Prompt 14**: Habit, HabitLog and PauseRange get syncState and serverUpdatedAt in the version 2 migration. HabitLog gets a unique index on (habitId, localDate).
 - **Prompt 21**: The 30-day purge must skip synced rows whose tombstone has not been pushed yet.
@@ -75,7 +76,7 @@ GOAL: Connect the app to my Supabase project and let me sign in with email and p
 FIRST: ask me for the Mumbai project's ref. Write it into PROGRESS.md.
 
 BUILD (context.md section 11a, agent.md sections 4, 10, 12):
-1. supabase/migrations/ with SQL creating the synced tables (tasks, projects, events, reminders, habits, habit_logs, pause_ranges) mirroring the Room columns, plus user_id uuid default auth.uid(), updated_at, deleted_at, a unique (user_id, habit_id, local_date) on habit_logs, and indexes on (user_id, updated_at). A trigger sets updated_at to now() on the server for the pull cursor (server_updated_at); the phone's own updatedAt is kept in a separate column for last-write-wins.
+1. supabase/migrations/ with SQL creating the synced tables (tasks, projects, events, reminders, standalone_reminders, habits, habit_logs, pause_ranges) mirroring the Room columns, plus user_id uuid default auth.uid(), updated_at, deleted_at, a unique (user_id, habit_id, local_date) on habit_logs, and indexes on (user_id, updated_at). A trigger sets updated_at to now() on the server for the pull cursor (server_updated_at); the phone's own updatedAt is kept in a separate column for last-write-wins.
 2. Enable row-level security on every table with select/insert/update policies "user_id = auth.uid()". No delete policy. Run the Supabase security advisor and fix every warning.
 3. An SQL test proving a second user cannot select, insert or update the owner's rows.
 4. Add INTERNET and ACCESS_NETWORK_STATE to the manifest. Add supabase-kt (BOM, auth-kt, postgrest-kt) and the Ktor OkHttp engine, with versions looked up in the official docs.
@@ -88,7 +89,7 @@ Follow the response format in agent.md section 9.
 ```
 
 Your checklist:
-- [ ] In the Supabase dashboard, the 7 tables exist and each shows "RLS enabled".
+- [ ] In the Supabase dashboard, the 8 tables exist and each shows "RLS enabled".
 - [ ] Security advisor shows no warnings.
 - [ ] Sign up, confirm your email, sign in on the phone; close and reopen the app: still signed in.
 - [ ] Airplane mode on: the app opens and reminders still fire.

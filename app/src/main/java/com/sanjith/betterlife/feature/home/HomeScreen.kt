@@ -42,6 +42,7 @@ public data class DebugTool(@StringRes val label: Int, val onOpen: () -> Unit)
 public fun HomeScreen(
     onOpenTasks: () -> Unit,
     onOpenSetup: () -> Unit,
+    onOpenAgenda: () -> Unit = {},
     debugTools: List<DebugTool> = emptyList(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -81,6 +82,14 @@ public fun HomeScreen(
                     .heightIn(min = Dimens.minTouchTarget),
             ) {
                 Text(text = stringResource(R.string.tasks_title))
+            }
+            Button(
+                onClick = onOpenAgenda,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.minTouchTarget),
+            ) {
+                Text(text = stringResource(R.string.agenda_title))
             }
             OutlinedButton(
                 onClick = onOpenSetup,

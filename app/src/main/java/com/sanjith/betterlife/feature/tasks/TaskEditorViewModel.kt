@@ -15,6 +15,7 @@ import com.sanjith.betterlife.data.repository.TaskRepository
 import com.sanjith.betterlife.data.repository.due
 import com.sanjith.betterlife.data.repository.withDue
 import com.sanjith.betterlife.domain.recurrence.RecurrenceRuleText
+import com.sanjith.betterlife.domain.reminder.ReminderDefaults
 import com.sanjith.betterlife.domain.task.ReminderPlan
 import com.sanjith.betterlife.domain.task.TaskDue
 import com.sanjith.betterlife.domain.task.TaskRules
@@ -35,6 +36,7 @@ public class TaskEditorViewModel(
     private val tasks: TaskRepository,
     private val projects: ProjectRepository,
     private val clock: Clock,
+    private val defaults: suspend () -> ReminderDefaults = { ReminderDefaults() },
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TaskEditorState(id = taskId))
@@ -81,12 +83,19 @@ public class TaskEditorViewModel(
         }
     }
 
+    // Loaded once; the owner edits them in the Reminder defaults screen.
+    private var reminderDefaults = ReminderDefaults()
+
+    init {
+        viewModelScope.launch { reminderDefaults = defaults() }
+    }
+
     public fun edit(change: (TaskEditorState) -> TaskEditorState) {
         _state.update { before ->
             val after = change(before)
             // A brand-new task that just got its first date gets the default reminders.
             val firstDate = before.dueDate == null && after.dueDate != null && before.id == null && before.reminders.isEmpty()
-            if (firstDate) after.copy(reminders = TaskRules.defaultReminders(after.due(clock.zone))) else after
+            if (firstDate) after.copy(reminders = TaskRules.defaultReminders(after.due(clock.zone), reminderDefaults)) else after
         }
     }
 
@@ -159,7 +168,9 @@ public class TaskEditorViewModel(
             initializer {
                 val c = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as BetterLifeApp).container
                 val id = createSavedStateHandle().get<String>(ARG_TASK_ID)?.takeIf { it != NEW_TASK }
-                TaskEditorViewModel(id, c.taskService, c.taskRepository, c.projectRepository, c.clock)
+                TaskEditorViewModel(id, c.taskService, c.taskRepository, c.projectRepository, c.clock) {
+                    c.settingsRepository.current().reminderDefaults
+                }
             }
         }
 

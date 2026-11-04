@@ -90,7 +90,8 @@ public interface ReminderDao {
         """
         DELETE FROM reminders WHERE
         (itemType = 'TASK' AND itemId NOT IN (SELECT id FROM tasks)) OR
-        (itemType = 'EVENT' AND itemId NOT IN (SELECT id FROM events))
+        (itemType = 'EVENT' AND itemId NOT IN (SELECT id FROM events)) OR
+        (itemType = 'STANDALONE' AND (itemId IS NULL OR itemId NOT IN (SELECT id FROM standalone_reminders)))
         """,
     )
     public suspend fun hardDeleteOrphans(): Int

@@ -63,7 +63,8 @@ public class MainActivity : ComponentActivity() {
             val route = when {
                 id == null || type == null -> Routes.HOME
                 type == ReminderItemType.TASK -> Routes.taskEditor(id)
-                else -> "${Routes.ITEM}/${type.name}/$id"
+                type == ReminderItemType.EVENT -> Routes.eventEditor(id)
+                else -> Routes.reminderEditor(id)
             }
             return openRouteIntent(context, route)
         }

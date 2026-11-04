@@ -47,22 +47,8 @@ public data class TaskEditorState(
         EditorError.REPEAT_NEEDS_DATE.takeIf { repeat != RepeatKind.NONE && dueDate == null },
     )
 
-    /**
-     * The rule for the chosen repeat. Monthly and yearly repeat on the due date's day (so "the 31st"
-     * keeps falling on the last day of short months); weekly uses the picked days, or the due weekday.
-     */
-    public fun rule(): RecurrenceRule? {
-        val date = dueDate ?: return null
-        val every = interval.coerceAtLeast(1)
-        return when (repeat) {
-            RepeatKind.NONE -> null
-            RepeatKind.DAILY -> RecurrenceRule.Daily(every)
-            RepeatKind.WEEKDAYS -> RecurrenceRule.Weekdays
-            RepeatKind.WEEKLY -> RecurrenceRule.Weekly(weekdays.ifEmpty { setOf(date.dayOfWeek) }, every)
-            RepeatKind.MONTHLY -> RecurrenceRule.Monthly(date.dayOfMonth, every)
-            RepeatKind.YEARLY -> RecurrenceRule.Yearly(date.month, date.dayOfMonth, every)
-        }
-    }
+    /** The rule for the chosen repeat, anchored on the due date (see [repeatRule]). */
+    public fun rule(): RecurrenceRule? = repeatRule(repeat, interval, weekdays, dueDate)
 
     public companion object {
         /** The editor fields for a stored rule. */
@@ -74,5 +60,23 @@ public data class TaskEditorState(
             is RecurrenceRule.Monthly -> Triple(RepeatKind.MONTHLY, rule.interval, emptySet())
             is RecurrenceRule.Yearly -> Triple(RepeatKind.YEARLY, rule.interval, emptySet())
         }
+    }
+}
+
+/**
+ * The rule for a repeat choice, anchored on [date]. Monthly and yearly repeat on [date]'s day (so
+ * "the 31st" keeps falling on the last day of short months); weekly uses [weekdays], or [date]'s
+ * weekday. Null for no repeat or no date. Shared by the task and event editors.
+ */
+public fun repeatRule(repeat: RepeatKind, interval: Int, weekdays: Set<DayOfWeek>, date: LocalDate?): RecurrenceRule? {
+    date ?: return null
+    val every = interval.coerceAtLeast(1)
+    return when (repeat) {
+        RepeatKind.NONE -> null
+        RepeatKind.DAILY -> RecurrenceRule.Daily(every)
+        RepeatKind.WEEKDAYS -> RecurrenceRule.Weekdays
+        RepeatKind.WEEKLY -> RecurrenceRule.Weekly(weekdays.ifEmpty { setOf(date.dayOfWeek) }, every)
+        RepeatKind.MONTHLY -> RecurrenceRule.Monthly(date.dayOfMonth, every)
+        RepeatKind.YEARLY -> RecurrenceRule.Yearly(date.month, date.dayOfMonth, every)
     }
 }

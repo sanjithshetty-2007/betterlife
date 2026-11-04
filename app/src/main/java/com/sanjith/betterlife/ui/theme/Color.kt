@@ -21,6 +21,21 @@ internal object BetterLifeColors {
     val StatusWarn = AccentYellow
     val StatusBad = Color(0xFFFF6B5E)
 
+    /**
+     * Swatches for the owner's event colour categories (Prompt 10), picked by index. Bright enough to
+     * read as a dot or stripe on the dark background; the category name is always shown with it.
+     */
+    val CategoryPalette: List<Color> = listOf(
+        Color(0xFFFF6B5E),
+        Color(0xFFE0A800),
+        Color(0xFF7BC67E),
+        Color(0xFF5EC4D6),
+        Color(0xFF7E8CFF),
+        Color(0xFFC77DFF),
+        Color(0xFFFF8FB8),
+        Color(0xFFB0A49C),
+    )
+
     /** Dims whatever is behind the reminder pop-up. */
     val Scrim = Background.copy(alpha = 0.82f)
 }

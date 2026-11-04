@@ -5,6 +5,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.sanjith.betterlife.core.DebugLog
+import com.sanjith.betterlife.core.SystemClock
+import com.sanjith.betterlife.core.TimeMachineClock
+import com.sanjith.betterlife.domain.time.Clock
+import com.sanjith.betterlife.domain.time.millis
 import com.sanjith.betterlife.data.alarm.PendingAlarmStore
 import com.sanjith.betterlife.data.db.BetterLifeDatabase
 import com.sanjith.betterlife.data.debug.SeedDataGenerator
@@ -39,12 +43,22 @@ public class AppContainer(appContext: Context) {
     /** Lives as long as the process. Receivers use it with goAsync for short work. */
     public val appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    // The injected Clock arrives in Prompt 6; until then the spikes read wall time here only.
-    private val nowMillis: () -> Long = System::currentTimeMillis
+    private val systemClock: Clock = SystemClock()
+
+    /** Present only in debug builds, so the Time Machine cannot exist in a release build. */
+    public val timeMachine: TimeMachineClock? = if (BuildConfig.DEBUG) TimeMachineClock(systemClock) else null
+
+    /** "Now" for all app logic. The Time Machine can shift it in debug builds. */
+    public val clock: Clock = timeMachine ?: systemClock
+
+    private val nowMillis: () -> Long = { clock.millis() }
+
+    // Real wall time for things the Time Machine must not move: debug log stamps and real alarms.
+    private val realNowMillis: () -> Long = { systemClock.millis() }
 
     public val debugLog: DebugLog = DebugLog(
         file = File(appContext.filesDir, DEBUG_LOG_FILE),
-        nowMillis = nowMillis,
+        nowMillis = realNowMillis,
         scope = appScope,
         ioDispatcher = ioDispatcher.limitedParallelism(1),
     )
@@ -78,7 +92,7 @@ public class AppContainer(appContext: Context) {
         scheduler = TestAlarmScheduler(appContext),
         store = pendingAlarmStore,
         log = debugLog,
-        nowMillis = nowMillis,
+        nowMillis = realNowMillis,
     )
 
     private companion object {

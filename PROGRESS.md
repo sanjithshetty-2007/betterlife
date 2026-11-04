@@ -16,7 +16,7 @@
 - Phone: Vivo V50e, adb model V2428, Android 16, connected over USB.
 
 ## Current position
-- Last completed prompt: 5
+- Last completed prompt: 6
 - Open gates: Prompt 3 owner rows (3, 5, 7); Prompt 4 row D (see below). The owner chose to continue to Prompt 5 with row D open (Decisions).
 - Phase: 1 (Reminder core)
 
@@ -27,13 +27,16 @@
 - Prompt 4, Alarm spike (GATE), 2026-11-04, gate not fully closed. VERIFIED: setExactAndAllowWhileIdle rows B and C; setAlarmClock rows A, B, C (AI over adb) and E (owner rebooted, AI read the log). All fired within 1 s, including after a recents swipe killed the process and after a reboot. MISSING for the gate: row D (screen off 15+ min) for setAlarmClock. Also open: rows A, D to H for setExactAndAllowWhileIdle, F to H for setAlarmClock, and the owner's choice of default alarm type.
 - Prompt 5, Database foundation, 2026-11-04. VERIFIED: 53 unit tests (PC) and 16 device tests (V50e) pass: soft delete hides rows, restore brings back only the reminders deleted with the item, a failed reminder insert rolls back the whole create, unknown or deleted parent/project references are rejected, writes mark rows DIRTY, the version 1 schema accepts rows and opens through ALL_MIGRATIONS, settings round-trip and fall back to defaults on bad values. On the phone the seed button wrote 1,000 tasks + 200 events + 746 reminders in 213 ms with 1 janky frame of 104 and no ANR; Wipe removed exactly those 1,946 rows. Schema 1.json exported; no destructive migration anywhere.
 
+- Prompt 6, Core domain logic, 2026-11-04. VERIFIED: 132 unit tests (PC) and 16 device tests (V50e) pass; release build compiles; no Android imports in domain/ and no direct system-time calls outside core/Clocks.kt. Covered by tests: every quick-add example from the prompt (fixed clock Thu 2026-10-08 18:00), the AM/PM answer path, emoji / Devanagari / Chinese / Arabic / Kannada / Tamil / empty / punctuation-only / 500-character input; monthly-on-31st through a full year and without drift; leap-day birthday 2026 to 2029; weekly with interval; weekdays; from-due-date vs from-completion; 30-day roll-forward of one overdue instance; rule text round trip and broken text; early reminders (past dropped, exact-now kept, midnight and month ends, all presets + custom, DST wall time, zone change); rollover at 02:59/03:00, month/year ends, leap day. On the phone the Time Machine jumped to Thu 5 Nov 01:00 and showed habit day 4 Nov, then reset. Fixed during testing: tags/projects in Indic scripts were not recognised (vowel signs are combining marks).
+
 ## Half-done work (exact files and what is missing)
 (none)
 
 ## Next step
-1. Owner runs Prompt 4 row D with setAlarmClock: Debug: alarm test, switch on, "Alarm in 15 min", lock the phone and leave it untouched until it fires; then tell the AI to read the log.
+1. Owner runs Prompt 4 row D with setAlarmClock: Debug: alarm test, switch on, "Alarm in 15 min", lock the phone and leave it untouched until it fires; then tell the AI to read the log. Needed before Prompt 7.
 2. Owner re-grants Notifications and Display over other apps in the Setup checklist (the device-test run on 2026-11-04 uninstalled the debug app once before the fix).
-3. Prompt 6 (Core domain logic: recurrence, early reminders, rollover, quick-add parser).
+3. Owner tries 3 of their own sentences against the parser (docs/PARSER.md) and reports anything odd.
+4. Prompt 7 (Delivery pipeline and scheduler).
 
 ## Decisions (made by the owner)
 - 2026-11-04: Single user (owner only), sideloaded APK, never on the Play Store.
@@ -59,6 +62,7 @@
 - Setup checklist: Vivo's notification settings page takes about 2 seconds to close after Back. Vivo behaviour. Low.
 - After a force stop, the app receives BOOT_COMPLETED on its next start (seen on OriginOS 6). Not relied on; may be useful in Prompt 7. Info.
 - OriginOS drops Log.d from logcat; use Log.i for anything that must be readable over adb. Low.
+- Quick-add reads `sun`, `sat` and `wed` as weekdays ("buy sun cream" gets a Sunday date); the preview shows it. Revisit if it annoys in real use. Low.
 - Repositories expose Room entities directly to callers for now; map to domain models when screens arrive (Prompt 9) if it keeps the UI cleaner. Low.
 
 ## Verified on the real phone
@@ -81,3 +85,4 @@
 - 2026-11-04: Prompt 03: pure decidePresentation and isTapAllowed (700 ms) with tests; shared ReminderPopup composable; OverlayController (own lifecycle owner, single window, predictive back); FullScreenReminderActivity; ReminderNotifier; notification channels; DebugLog; debug Pop-up test screen; BuildConfig enabled.
 - 2026-11-04: Prompt 04: pure triggerAfterMinutes/planRearm with tests; exact alarm scheduler for both kinds; alarm receiver -> systemExempted ReminderPopupService; boot and app-update re-arm with overdue handling; pending alarm in DataStore; DebugLog saved to a file; debug Alarm test screen.
 - 2026-11-04: Prompt 05: Room 2.8.5 + KSP with exported schema v1; entities Project, Task, Event, Reminder, ReminderLog, SyncCursor (synced tables carry syncState/serverUpdatedAt from v1); LocalDate/ZoneId converters; DAOs with soft delete/restore; Task/Event/Reminder/ReminderLog repositories with transactions, DIRTY marking and reference validation; typed AppSettings + SettingsRepository with context.md defaults; debug SeedDataGenerator and Database screen; home debug entries as one list; unit and device tests; docs/DB_MIGRATIONS.md. Fixed during testing: unknown project/parent ids were accepted (null?.deletedAt == null).
+- 2026-11-04: Prompt 06: Clock interface + FixedClock (domain/time), SystemClock and debug-only TimeMachineClock (core); habitDay rollover; RecurrenceRule (daily, weekdays, weekly, monthly, yearly, all with interval) + RecurrenceEngine (next, between with a 1,000 cap, skip, nextDue by RepeatMode, 30-day overdue roll-forward) + RecurrenceRuleText for the recurrenceRule column; EarlyReminderCalculator with ReminderOffsets presets; QuickAddParser (QuickAddWords, QuickAddResult) with AM/PM question; docs/PARSER.md; debug Time Machine screen; AppContainer now injects the clock into repositories while the debug log and test alarms keep real time.

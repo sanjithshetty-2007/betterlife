@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug-only Time Machine (Prompt 6) -->
+    <string name="time_machine_home_button">Debug: time machine</string>
+    <string name="time_machine_title">Time Machine</string>
+    <string name="time_machine_warning">Moves the app\'s idea of \"now\" only. Real alarms (AlarmManager) still fire at real times. Restarting the app switches the Time Machine off.</string>
+    <string name="time_machine_status">Real time: %1$s\nApp time: %2$s\nHabit day: %3$s (rollover %4$d:00)</string>
+    <string name="time_machine_minus_day">−1 day</string>
+    <string name="time_machine_plus_day">+1 day</string>
+    <string name="time_machine_minus_hour">−1 hour</string>
+    <string name="time_machine_plus_hour">+1 hour</string>
+    <string name="time_machine_jump_0100">Jump to 01:00 tonight</string>
+    <string name="time_machine_reset">Back to real time</string>
+</resources>

@@ -15,4 +15,9 @@ internal object BetterLifeColors {
 
     /** The soft 1 dp border drawn around cards. */
     val SoftBorder = Text.copy(alpha = 0.12f)
+
+    // Traffic-light status colors, kept warm to fit the palette. Always paired with an icon or word.
+    val StatusGood = Color(0xFF7BC67E)
+    val StatusWarn = AccentYellow
+    val StatusBad = Color(0xFFFF6B5E)
 }

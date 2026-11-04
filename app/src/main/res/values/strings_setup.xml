@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">Setup checklist</string>
+    <string name="setup_subtitle">Reminders only work when every row is green. Come back here after changing a setting.</string>
+    <string name="setup_open_settings">Open settings</string>
+    <string name="setup_manual_tick">I\'ve done this</string>
+    <string name="setup_back">Back</string>
+    <string name="setup_loading">Checking your phone…</string>
+    <string name="setup_home_button">Setup checklist</string>
+
+    <!-- Status chip words: the chip never relies on color alone. -->
+    <string name="setup_level_green">OK</string>
+    <string name="setup_level_yellow">Check</string>
+    <string name="setup_level_red">Fix</string>
+    <string name="setup_symbol_green" translatable="false">✓</string>
+    <string name="setup_symbol_yellow" translatable="false">!</string>
+    <string name="setup_symbol_red" translatable="false">✕</string>
+
+    <!-- Row titles -->
+    <string name="setup_notifications_title">Notifications</string>
+    <string name="setup_exact_alarms_title">Exact alarms</string>
+    <string name="setup_overlay_title">Display over other apps</string>
+    <string name="setup_full_screen_title">Full-screen notifications</string>
+    <string name="setup_battery_title">Background battery use</string>
+    <string name="setup_vivo_autostart_title">Autostart (Vivo)</string>
+    <string name="setup_vivo_popups_title">Background pop-ups (Vivo)</string>
+    <string name="setup_vivo_lock_screen_title">Show on lock screen (Vivo)</string>
+    <string name="setup_vivo_recents_title">Lock in recent apps (Vivo)</string>
+
+    <!-- Why each row matters -->
+    <string name="setup_notifications_why">Every reminder is delivered as a notification, even when it also pops up.</string>
+    <string name="setup_exact_alarms_why">Lets reminders fire at the exact minute instead of being batched later.</string>
+    <string name="setup_overlay_why">Lets the full-screen pop-up appear on top of the app you are using.</string>
+    <string name="setup_full_screen_why">Lets the pop-up wake the screen when the phone is locked.</string>
+    <string name="setup_battery_why">Stops the phone from putting the app to sleep and delaying reminders.</string>
+    <string name="setup_vivo_autostart_why">Lets reminders come back after a restart.</string>
+    <string name="setup_vivo_popups_why">Vivo blocks pop-ups from apps in the background unless this is on.</string>
+    <string name="setup_vivo_lock_screen_why">Vivo hides pop-ups on the lock screen unless this is on.</string>
+    <string name="setup_vivo_recents_why">Stops \"clear all\" in recent apps from killing the app and its reminders.</string>
+
+    <!-- Where to find each setting (OriginOS 6 wording checked on a Vivo V50e) -->
+    <string name="setup_battery_how">Open settings, then Battery usage → Background power control → Allow background power usage.</string>
+    <string name="setup_vivo_autostart_how">Phone Settings → Apps → Special app access → Autostart → turn on BetterLife.</string>
+    <string name="setup_vivo_popups_how">Not confirmed on OriginOS 6: try phone Settings → Security &amp; privacy → Permission manager, and look for a background pop-up option for BetterLife.</string>
+    <string name="setup_vivo_lock_screen_how">Not confirmed on OriginOS 6: try phone Settings → Apps → Special app access → Turn screen on, and allow BetterLife. Also check Permission manager for a lock screen option.</string>
+    <string name="setup_vivo_recents_how">Open recent apps, then pull down on the BetterLife card (or long-press it) and tap Lock. Not confirmed on OriginOS 6.</string>
+
+    <!-- Reasons -->
+    <string name="setup_reason_granted">Allowed.</string>
+    <string name="setup_reason_notifications_off">Notifications are off for this app.</string>
+    <string name="setup_reason_exact_alarms_denied">Exact alarms are not allowed.</string>
+    <string name="setup_reason_overlay_denied">Drawing over other apps is not allowed.</string>
+    <string name="setup_reason_full_screen_denied">Full-screen notifications are not allowed.</string>
+    <string name="setup_reason_battery_restricted">The phone may restrict this app in the background.</string>
+    <string name="setup_reason_confirmed">You confirmed this.</string>
+    <string name="setup_reason_not_confirmed">The app can\'t check this. Tick it once you\'ve turned it on.</string>
+</resources>

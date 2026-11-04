@@ -14,18 +14,20 @@
 - Phone: Vivo V50e, adb model V2428, Android 16, connected over USB.
 
 ## Current position
-- Last completed prompt: 1
+- Last completed prompt: 2
 - Current prompt in progress: none
-- Phase: 0 complete
+- Phase: 1 (Reminder core)
 
 ## Done
 - Prompt 1, Project scaffold and environment, 2026-11-04. VERIFIED: assembleDebug and testDebugUnitTest succeed (1 test, 0 failures); installDebug installed on the V50e (Android 16); the app cold-starts in about 1.6 s and shows the themed screen; the snackbar appears; the merged manifest has no INTERNET and allowBackup=false.
+
+- Prompt 2, Permissions and the Setup Checklist screen, 2026-11-04. VERIFIED: 9 unit tests pass (8 for the status mapping, covering all 32 combinations of detectable results); on the phone, the checklist shows 5 detectable + 4 Vivo rows; Notifications, Exact alarms, Display over other apps, Full-screen notifications and App info buttons open the right pages and Back returns to the checklist. OWNER MUST VERIFY: rows turn green after granting, ticks survive a restart (docs/TESTING.md Prompt 2 table).
 
 ## Half-done work (exact files and what is missing)
 (none)
 
 ## Next step
-Prompt 2 (Permissions and the Setup Checklist screen), with the edits in docs/PLAN_CHANGES.md section 3.
+Prompt 3 (GATE: Overlay spike), with the edits in docs/PLAN_CHANGES.md section 3. Before starting, the owner grants Notifications and Display over other apps from the Setup checklist.
 
 ## Decisions (made by the owner)
 - 2026-11-04: Single user (owner only), sideloaded APK, never on the Play Store.
@@ -45,9 +47,12 @@ Prompt 2 (Permissions and the Setup Checklist screen), with the edits in docs/PL
 ## Known issues
 - Tooling: the Git Bash shell used by the AI collapses double backslashes inside heredocs. Write files that contain backslashes (local.properties, regexes) with the file editor, not shell heredocs. Low.
 - Launcher icon is a placeholder (yellow antenna bulb) until the mascot is drawn (Prompt 16). Low.
+- Setup checklist: the OriginOS 6 locations of "background pop-ups" and "show on lock screen" were NOT found (not in App info > Permissions). Row text points to Permission manager / Special app access > Turn screen on and says "not confirmed". Prompt 3's gate will show whether these settings matter. Medium.
+- Setup checklist: the recents-lock instruction is not confirmed on OriginOS 6. Low.
+- Setup checklist: Vivo's notification settings page takes about 2 seconds to close after Back. Vivo behaviour, not the app. Low.
 
 ## Verified on the real phone
-(what the owner confirmed, with date)
+- 2026-11-04 (checked by the AI over adb): canScheduleExactAlarms() is true with USE_EXACT_ALARM alone; canUseFullScreenIntent() is true on a fresh USB install; Autostart was already Allowed; battery switch is App info > Battery usage > Background power control > Allow background power usage.
 
 ## Commands
 - Build: gradlew.bat assembleDebug
@@ -59,3 +64,4 @@ Prompt 2 (Permissions and the Setup Checklist screen), with the edits in docs/PL
 ## Changelog
 - 2026-11-04: Plan revised for Supabase sync, internet, Android 14+ (agent.md, context.md, docs/PLAN_CHANGES.md).
 - 2026-11-04: Prompt 01: Gradle project (version catalog, wrapper), debug suffix .debug and "BetterLife Dev" label, manifest without INTERNET and allowBackup=false, edge-to-edge MainActivity, BetterLifeApp + empty AppContainer, package folders, dark AMOLED theme from the design tokens, placeholder home screen, TestSetupTest, README, .gitignore, docs/TESTING.md.
+- 2026-11-04: Prompt 02: reminder permissions in the manifest; pure buildSetupStatus mapper (domain/setup) with tests; DeviceCapabilityChecker, ManualCheckStore (DataStore), SetupRepository in AppContainer; Setup checklist screen with status chips, why lines, Vivo directions, Open settings (in-task, App info fallback) and manual ticks; re-check on resume; Navigation (home, setup). Libraries added: DataStore Preferences 1.2.1, Navigation Compose 2.10.2, lifecycle viewmodel-compose and runtime-compose 2.11.0. README: real Developer options path.

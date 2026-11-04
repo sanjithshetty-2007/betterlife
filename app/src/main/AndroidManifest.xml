@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- No permissions yet. INTERNET arrives in Prompt S1, the rest in Prompt 2. -->
+    <!-- Reminder permissions (context.md section 10). INTERNET arrives in Prompt S1;
+         microphone, camera and biometrics in later prompts. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Sideloaded app, so USE_EXACT_ALARM is allowed. Still verified at runtime with canScheduleExactAlarms(). -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:name=".BetterLifeApp"

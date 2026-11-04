@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.sanjith.betterlife.feature.home.HomeScreen
 import com.sanjith.betterlife.ui.theme.BetterLifeTheme
 
 /** The single Activity. Every screen is a Composable inside it. */
@@ -16,7 +15,7 @@ public class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BetterLifeTheme {
-                HomeScreen()
+                AppNavHost()
             }
         }
     }

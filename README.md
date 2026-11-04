@@ -23,7 +23,7 @@ The rules for building it are in [agent.md](agent.md), what to build is in [cont
 ## Phone setup (Vivo V50e, OriginOS 6)
 
 1. **Developer options:** Settings > About phone (on some versions: Settings > System > About phone) > tap **Software version** 7 times until it says you are a developer. If the wording is different, look for "Build number" or "Version" in the same screen.
-2. **USB debugging:** Settings > System > Developer options > turn on **USB debugging**. While there, turn on **Install via USB** if your phone shows it (Vivo can block USB installs without it).
+2. **USB debugging:** Settings > System management > Developer options > turn on **USB debugging** (path checked on OriginOS 6). While there, turn on **Install via USB** if your phone shows it (Vivo can block USB installs without it).
 3. Connect the phone to the PC with a data USB cable. On the phone, choose **File transfer** if asked, and tap **Allow** on the "Allow USB debugging?" prompt (tick "Always allow from this computer").
 4. Check the PC sees the phone:
    ```

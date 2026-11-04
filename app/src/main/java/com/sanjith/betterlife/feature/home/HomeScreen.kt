@@ -11,6 +11,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -27,9 +28,9 @@ import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
-/** Placeholder home screen proving the theme: title, a bordered card and a yellow button. */
+/** Placeholder home screen proving the theme: title, a bordered card, a yellow button and the checklist link. */
 @Composable
-public fun HomeScreen() {
+public fun HomeScreen(onOpenSetup: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val snackbarText = stringResource(R.string.home_snackbar)
@@ -58,6 +59,14 @@ public fun HomeScreen() {
                     .heightIn(min = Dimens.minTouchTarget),
             ) {
                 Text(text = stringResource(R.string.home_button))
+            }
+            OutlinedButton(
+                onClick = onOpenSetup,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.minTouchTarget),
+            ) {
+                Text(text = stringResource(R.string.setup_home_button))
             }
         }
     }
@@ -92,5 +101,5 @@ private fun WelcomeCard() {
 @Preview
 @Composable
 private fun HomeScreenPreview() {
-    BetterLifeTheme { HomeScreen() }
+    BetterLifeTheme { HomeScreen(onOpenSetup = {}) }
 }

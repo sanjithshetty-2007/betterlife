@@ -9,6 +9,7 @@ import com.sanjith.betterlife.core.SystemClock
 import com.sanjith.betterlife.core.TimeMachineClock
 import com.sanjith.betterlife.domain.time.Clock
 import com.sanjith.betterlife.domain.time.millis
+import com.sanjith.betterlife.domain.time.today
 import com.sanjith.betterlife.data.alarm.PendingAlarmStore
 import com.sanjith.betterlife.data.db.BetterLifeDatabase
 import com.sanjith.betterlife.data.debug.SeedDataGenerator
@@ -129,7 +130,8 @@ public class AppContainer(appContext: Context) {
     public val reminderEngine: ReminderEngine by lazy {
         val realLog = ReminderLogRepository(database, realNowMillis, newId)
         ReminderEngine(
-            store = RoomReminderStore(database, realClock),
+            // Done on a pop-up completes the task like the Tasks screen does (next instance included).
+            store = RoomReminderStore(database, realClock) { taskId -> taskRepository.completeWithNext(taskId, clock.today()) },
             alarms = AndroidAlarmScheduler(appContext),
             device = AndroidDeviceState(appContext),
             presenter = AndroidReminderPresenter(appContext, debugLog, { popupCoordinator }, realClock),

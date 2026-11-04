@@ -15,9 +15,16 @@ import com.sanjith.betterlife.domain.time.Clock
 import com.sanjith.betterlife.domain.time.millis
 import java.time.Instant
 
-/** [ReminderStore] backed by Room: joins each reminder with its task or event. */
-/** [clock] must be the real clock (see ReminderEngine). */
-public class RoomReminderStore(private val db: BetterLifeDatabase, private val clock: Clock) : ReminderStore {
+/**
+ * [ReminderStore] backed by Room: joins each reminder with its task or event. [clock] must be the real
+ * clock (see ReminderEngine). [completeTaskById] is how a pop-up's Done completes a task; the app
+ * passes the same call the Tasks screen uses, so a repeating task gets its next instance either way.
+ */
+public class RoomReminderStore(
+    private val db: BetterLifeDatabase,
+    private val clock: Clock,
+    private val completeTaskById: suspend (String) -> Unit = { db.taskDao().complete(it, clock.millis()) },
+) : ReminderStore {
 
     private val reminderDao = db.reminderDao()
 
@@ -88,7 +95,7 @@ public class RoomReminderStore(private val db: BetterLifeDatabase, private val c
 
     override suspend fun completeTask(reminderId: String) {
         val reminder = reminderDao.getAnyById(reminderId) ?: return
-        if (reminder.itemType == ReminderItemType.TASK) reminder.itemId?.let { db.taskDao().complete(it, clock.millis()) }
+        if (reminder.itemType == ReminderItemType.TASK) reminder.itemId?.let { completeTaskById(it) }
     }
 
     override suspend fun markFired(reminderId: String, fireAt: Instant, state: ReminderState): Boolean =

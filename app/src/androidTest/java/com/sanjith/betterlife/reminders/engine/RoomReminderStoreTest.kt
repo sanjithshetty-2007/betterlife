@@ -16,6 +16,7 @@ import com.sanjith.betterlife.domain.model.ReminderState
 import com.sanjith.betterlife.domain.recurrence.RecurrenceRule
 import com.sanjith.betterlife.domain.recurrence.RecurrenceRuleText
 import com.sanjith.betterlife.domain.reminder.ItemTime
+import com.sanjith.betterlife.domain.time.FixedClock
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -42,7 +43,7 @@ public class RoomReminderStoreTest {
     @Before
     public fun setUp() {
         db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), BetterLifeDatabase::class.java).build()
-        store = RoomReminderStore(db, com.sanjith.betterlife.domain.time.FixedClock(Instant.parse("2026-10-09T10:00:00Z"), zone))
+        store = RoomReminderStore(db, FixedClock(Instant.parse("2026-10-09T10:00:00Z"), zone))
         val newId = { "id-${++idCounter}" }
         tasks = TaskRepository(db, { 1L }, newId)
         events = EventRepository(db, { 1L }, newId)
@@ -95,6 +96,18 @@ public class RoomReminderStoreTest {
         assertEquals(listOf(reminderId), store.idsToUnschedule())
         assertEquals(ItemStatus.DELETED, store.fireContext(reminderId)?.itemStatus)
         assertTrue(store.loadTargets().isEmpty())
+    }
+
+    @Test
+    public fun popupDoneUsesTheInjectedCompletionSoRepeatsContinue() = runTest {
+        val completed = mutableListOf<String>()
+        val withHook = RoomReminderStore(db, FixedClock(Instant.parse("2026-10-09T10:00:00Z"), zone)) { completed += it }
+        val taskId = tasks.create(TaskDraft("Pills", dueAtMillis = due.toEpochMilli(), dueZoneId = zone), listOf(ReminderDraft(0)))
+        val reminderId = withHook.loadTargets().single().reminderId
+
+        withHook.completeTask(reminderId)
+
+        assertEquals(listOf(taskId), completed)
     }
 
     @Test

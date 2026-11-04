@@ -17,4 +17,6 @@ public object Dimens {
     public val minTouchTarget = 48.dp
     public val iconSize = 24.dp
     public val popupMaxWidth = 480.dp
+    public val smallIconSize = 16.dp
+    public val numberFieldWidth = 96.dp
 }

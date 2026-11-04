@@ -6,73 +6,83 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.sanjith.betterlife.domain.model.ReminderItemType
 import com.sanjith.betterlife.feature.debug.AlarmSpikeScreen
 import com.sanjith.betterlife.feature.debug.DatabaseDebugScreen
 import com.sanjith.betterlife.feature.debug.PopupSpikeScreen
 import com.sanjith.betterlife.feature.debug.ReminderEngineDebugScreen
 import com.sanjith.betterlife.feature.debug.TimeMachineScreen
-import com.sanjith.betterlife.domain.model.ReminderItemType
 import com.sanjith.betterlife.feature.home.DebugTool
 import com.sanjith.betterlife.feature.home.HomeScreen
 import com.sanjith.betterlife.feature.item.ItemPlaceholderScreen
 import com.sanjith.betterlife.feature.setup.SetupScreen
+import com.sanjith.betterlife.feature.tasks.CheckInScreen
+import com.sanjith.betterlife.feature.tasks.ProjectsScreen
+import com.sanjith.betterlife.feature.tasks.TaskEditorScreen
+import com.sanjith.betterlife.feature.tasks.TaskEditorViewModel
+import com.sanjith.betterlife.feature.tasks.TaskListScreen
 
-/** Screen routes. Plain strings until a screen needs arguments. */
+/** Screen routes. Plain strings with path arguments. */
 internal object Routes {
     const val HOME = "home"
     const val SETUP = "setup"
     const val ITEM = "item"
+    const val TASKS = "tasks"
+    const val TASK_EDITOR = "task"
+    const val PROJECTS = "projects"
+    const val CHECK_INS = "check-ins"
     const val POPUP_SPIKE = "debug/popup-spike"
     const val ALARM_SPIKE = "debug/alarm-spike"
     const val DATABASE = "debug/database"
     const val TIME_MACHINE = "debug/time-machine"
     const val ENGINE = "debug/reminder-engine"
+
+    fun taskEditor(id: String?): String = "$TASK_EDITOR/${id ?: TaskEditorViewModel.NEW_TASK}"
 }
 
 /** All screens of the single Activity. NavHost also handles the system (predictive) back gesture. */
 @Composable
-internal fun AppNavHost(itemToOpen: ItemRef?, onItemOpened: () -> Unit) {
+internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
     val navController = rememberNavController()
-    // A pop-up's Reschedule button asks to open an item's editor.
-    LaunchedEffect(itemToOpen) {
-        itemToOpen ?: return@LaunchedEffect
-        navController.navigate("${Routes.ITEM}/${itemToOpen.type.name}/${itemToOpen.id}")
-        onItemOpened()
+    // Another part of the app (a pop-up's Reschedule, a daily nudge) asked to open a screen.
+    LaunchedEffect(routeToOpen) {
+        val route = routeToOpen ?: return@LaunchedEffect
+        if (route != Routes.HOME) navController.navigate(route)
+        onRouteOpened()
     }
+    val back: () -> Unit = { navController.popBackStack() }
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
             HomeScreen(
+                onOpenTasks = { navController.navigate(Routes.TASKS) },
                 onOpenSetup = { navController.navigate(Routes.SETUP) },
                 // Debug tools are unreachable in release builds.
                 debugTools = if (BuildConfig.DEBUG) debugTools(navController) else emptyList(),
             )
         }
-        composable(Routes.SETUP) {
-            SetupScreen(onBack = { navController.popBackStack() })
+        composable(Routes.SETUP) { SetupScreen(onBack = back) }
+        composable(Routes.TASKS) {
+            TaskListScreen(
+                onBack = back,
+                onOpenTask = { id -> navController.navigate(Routes.taskEditor(id)) },
+                onOpenProjects = { navController.navigate(Routes.PROJECTS) },
+                onOpenCheckIns = { navController.navigate(Routes.CHECK_INS) },
+            )
         }
+        composable("${Routes.TASK_EDITOR}/{${TaskEditorViewModel.ARG_TASK_ID}}") { TaskEditorScreen(onClose = back) }
+        composable(Routes.PROJECTS) { ProjectsScreen(onBack = back) }
+        composable(Routes.CHECK_INS) { CheckInScreen(onBack = back) }
         composable("${Routes.ITEM}/{type}/{id}") { entry ->
             val type = entry.arguments?.getString("type")?.let { name -> ReminderItemType.entries.firstOrNull { it.name == name } }
             val id = entry.arguments?.getString("id")
-            if (type != null && id != null) {
-                ItemPlaceholderScreen(type, id, onBack = { navController.popBackStack() })
-            }
+            if (type != null && id != null) ItemPlaceholderScreen(type, id, onBack = back)
         }
         if (BuildConfig.DEBUG) {
-            composable(Routes.POPUP_SPIKE) {
-                PopupSpikeScreen(onBack = { navController.popBackStack() })
-            }
-            composable(Routes.ALARM_SPIKE) {
-                AlarmSpikeScreen(onBack = { navController.popBackStack() })
-            }
-            composable(Routes.DATABASE) {
-                DatabaseDebugScreen(onBack = { navController.popBackStack() })
-            }
-            composable(Routes.TIME_MACHINE) {
-                TimeMachineScreen(onBack = { navController.popBackStack() })
-            }
-            composable(Routes.ENGINE) {
-                ReminderEngineDebugScreen(onBack = { navController.popBackStack() })
-            }
+            composable(Routes.POPUP_SPIKE) { PopupSpikeScreen(onBack = back) }
+            composable(Routes.ALARM_SPIKE) { AlarmSpikeScreen(onBack = back) }
+            composable(Routes.DATABASE) { DatabaseDebugScreen(onBack = back) }
+            composable(Routes.TIME_MACHINE) { TimeMachineScreen(onBack = back) }
+            composable(Routes.ENGINE) { ReminderEngineDebugScreen(onBack = back) }
         }
     }
 }

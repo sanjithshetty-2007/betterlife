@@ -13,13 +13,11 @@ import com.sanjith.betterlife.reminders.engine.RescheduleTrigger
 import com.sanjith.betterlife.ui.theme.BetterLifeTheme
 import kotlinx.coroutines.launch
 
-/** An item to open on launch, from a pop-up's Reschedule button. */
-public data class ItemRef(val type: ReminderItemType, val id: String)
-
 /** The single Activity. Every screen is a Composable inside it. */
 public class MainActivity : ComponentActivity() {
 
-    private val itemToOpen = mutableStateOf<ItemRef?>(null)
+    /** A screen another part of the app asked to open (a pop-up's Reschedule, a nudge). */
+    private val routeToOpen = mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,46 +25,47 @@ public class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         if (savedInstanceState == null) {
             onAppLaunch()
-            itemToOpen.value = itemRefFrom(intent)
+            routeToOpen.value = intent?.getStringExtra(EXTRA_ROUTE)
         }
         setContent {
             BetterLifeTheme {
-                AppNavHost(itemToOpen = itemToOpen.value, onItemOpened = { itemToOpen.value = null })
+                AppNavHost(routeToOpen = routeToOpen.value, onRouteOpened = { routeToOpen.value = null })
             }
         }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        itemRefFrom(intent)?.let { itemToOpen.value = it }
+        intent.getStringExtra(EXTRA_ROUTE)?.let { routeToOpen.value = it }
     }
 
     // Opening the app repairs the alarm schedule (agent.md section 5), off the main thread.
     private fun onAppLaunch() {
         val container = (application as BetterLifeApp).container
-        container.appScope.launch { container.reminderEngine.rescheduleAll(RescheduleTrigger.APP_LAUNCH) }
+        container.appScope.launch {
+            container.reminderEngine.rescheduleAll(RescheduleTrigger.APP_LAUNCH)
+            container.dailyPrompts.rescheduleAll()
+        }
         DailyTopUpWorker.enqueue(this)
     }
 
-    private fun itemRefFrom(intent: Intent?): ItemRef? {
-        val type = intent?.getStringExtra(EXTRA_ITEM_TYPE)?.let { name -> ReminderItemType.entries.firstOrNull { it.name == name } }
-        val id = intent?.getStringExtra(EXTRA_ITEM_ID)
-        return if (type != null && id != null) ItemRef(type, id) else null
-    }
-
     public companion object {
-        private const val EXTRA_ITEM_TYPE = "open_item_type"
-        private const val EXTRA_ITEM_ID = "open_item_id"
+        private const val EXTRA_ROUTE = "open_route"
+        public const val ROUTE_CHECK_INS: String = Routes.CHECK_INS
 
-        /** Opens the app on an item's editor (or just the app when there is no item). */
-        public fun openItemIntent(context: Context, type: ReminderItemType?, id: String?): Intent =
+        public fun openRouteIntent(context: Context, route: String): Intent =
             Intent(context, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .apply {
-                    if (type != null && id != null) {
-                        putExtra(EXTRA_ITEM_TYPE, type.name)
-                        putExtra(EXTRA_ITEM_ID, id)
-                    }
-                }
+                .putExtra(EXTRA_ROUTE, route)
+
+        /** Opens the app on an item's editor (or just the app when there is no item). */
+        public fun openItemIntent(context: Context, type: ReminderItemType?, id: String?): Intent {
+            val route = when {
+                id == null || type == null -> Routes.HOME
+                type == ReminderItemType.TASK -> Routes.taskEditor(id)
+                else -> "${Routes.ITEM}/${type.name}/$id"
+            }
+            return openRouteIntent(context, route)
+        }
     }
 }

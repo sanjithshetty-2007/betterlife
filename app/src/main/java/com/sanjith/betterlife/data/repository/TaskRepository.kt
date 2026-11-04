@@ -5,11 +5,16 @@ import com.sanjith.betterlife.data.db.BetterLifeDatabase
 import com.sanjith.betterlife.data.db.entity.SyncState
 import com.sanjith.betterlife.data.db.entity.TaskEntity
 import com.sanjith.betterlife.domain.model.ReminderItemType
+import com.sanjith.betterlife.domain.task.TaskRules
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
+
+/** What completing a task changed: the task, and the next instance a repeating task got. */
+public data class CompletionResult(val taskId: String, val nextInstanceId: String?)
 
 /**
  * Tasks and their reminders. Every change that touches both runs in one transaction, and every write
- * marks the row DIRTY for sync. Alarm scheduling is wired in Prompt 7.
+ * marks the row DIRTY for sync. Callers reschedule alarms afterwards (TaskService does).
  */
 public class TaskRepository(
     private val db: BetterLifeDatabase,
@@ -46,9 +51,63 @@ public class TaskRepository(
         }
     }
 
+    public suspend fun getAnyById(id: String): TaskEntity? = taskDao.getAnyById(id)
+
+    /** The task's current (not deleted) reminders. */
+    public suspend fun activeReminders(taskId: String): List<ReminderDraft> =
+        reminderDao.getAllForItemIncludingDeleted(ReminderItemType.TASK, taskId)
+            .filter { it.deletedAt == null }
+            .map { ReminderDraft(it.offsetMinutes, it.importance) }
+
+    /** Saves an edited task and replaces its reminders, all in one transaction. */
+    public suspend fun updateWithReminders(task: TaskEntity, reminders: List<ReminderDraft>) {
+        val now = nowMillis()
+        db.withTransaction {
+            validateReferences(task)
+            taskDao.update(task.copy(updatedAt = now, syncState = SyncState.DIRTY))
+            reminderDao.softDeleteForItem(ReminderItemType.TASK, task.id, now)
+            reminderDao.insertAll(reminders.map { it.toEntity(newId(), ReminderItemType.TASK, task.id, now) })
+        }
+    }
+
     /** Marks the task done. Its reminders stop at the next reschedule (the item is no longer active). */
     public suspend fun complete(id: String) {
         taskDao.complete(id, nowMillis())
+    }
+
+    /**
+     * Completes a task; a repeating task also gets its next instance (with the same reminders) in the
+     * same transaction. The result is what [undoComplete] needs to put everything back.
+     */
+    public suspend fun completeWithNext(id: String, completedOn: LocalDate): CompletionResult = db.withTransaction {
+        val task = taskDao.getAnyById(id) ?: return@withTransaction CompletionResult(id, nextInstanceId = null)
+        val now = nowMillis()
+        taskDao.complete(id, now)
+        val nextDue = TaskRules.nextInstanceDue(task.due, task.facts.recurrence, completedOn, task.repeatMode)
+            ?: return@withTransaction CompletionResult(id, nextInstanceId = null)
+        val next = task.withDue(nextDue).copy(
+            id = newId(),
+            completedAt = null,
+            createdAt = now,
+            updatedAt = now,
+            syncState = SyncState.DIRTY,
+            serverUpdatedAt = null,
+        )
+        taskDao.insert(next)
+        reminderDao.insertAll(activeReminders(id).map { it.toEntity(newId(), ReminderItemType.TASK, next.id, now) })
+        CompletionResult(id, next.id)
+    }
+
+    /** Undo of [completeWithNext]: the task is open again and the next instance is removed. */
+    public suspend fun undoComplete(result: CompletionResult) {
+        val now = nowMillis()
+        db.withTransaction {
+            taskDao.uncomplete(result.taskId, now)
+            result.nextInstanceId?.let { nextId ->
+                taskDao.softDelete(nextId, now)
+                reminderDao.softDeleteForItem(ReminderItemType.TASK, nextId, now)
+            }
+        }
     }
 
     /** Soft-deletes the task and its reminders (agent.md section 4: deleting cancels reminders). */

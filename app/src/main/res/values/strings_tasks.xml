@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tasks (Prompt 9) -->
+    <string name="tasks_title">Tasks</string>
+    <string name="projects_title">Projects</string>
+    <string name="check_ins_short">Check-ins</string>
+    <string name="task_new">New task</string>
+    <string name="task_tab">%1$s (%2$d)</string>
+    <string name="tab_today">Today</string>
+    <string name="tab_upcoming">Upcoming</string>
+    <string name="tab_overdue">Overdue</string>
+    <string name="tab_inbox">Inbox</string>
+    <string name="empty_today">Nothing due today. Add something above, or enjoy the space.</string>
+    <string name="empty_upcoming">Nothing coming up yet.</string>
+    <string name="empty_overdue">Nothing overdue. Nice.</string>
+    <string name="empty_inbox">Inbox is empty. Tasks without a date or project land here.</string>
+    <string name="task_completed_snack">Done: %1$s</string>
+    <string name="task_deleted_snack">Deleted: %1$s</string>
+    <string name="undo">Undo</string>
+    <string name="task_delete">Delete task</string>
+    <string name="task_top">★ Top 3</string>
+    <string name="task_repeats">Repeats</string>
+    <string name="task_subtasks">%1$d/%2$d subtasks</string>
+    <string name="due_today">Today</string>
+    <string name="due_tomorrow">Tomorrow</string>
+    <string name="due_yesterday">Yesterday</string>
+
+    <string name="quick_add_hint">Add a task: call mom tomorrow 5pm</string>
+    <string name="quick_add_button">Add</string>
+    <string name="quick_add_am_pm">%1$d:%2$02d in the morning or evening?</string>
+    <string name="am">AM</string>
+    <string name="pm">PM</string>
+    <string name="chip_date">📅 %1$s</string>
+    <string name="chip_time">⏰ %1$s</string>
+    <string name="chip_inbox">Inbox (no date)</string>
+    <string name="warning_moved_to_tomorrow">That time has passed today, so it is set for tomorrow.</string>
+    <string name="warning_moved_to_next_year">That date has passed this year, so it is set for next year.</string>
+    <string name="warning_time_passed">That time today has already passed.</string>
+    <string name="warning_empty_title">Add a few words for the title.</string>
+
+    <string name="priority_none">None</string>
+    <string name="priority_low">Low</string>
+    <string name="priority_medium">Medium</string>
+    <string name="priority_high">High</string>
+
+    <string name="editor_edit_title">Edit task</string>
+    <string name="editor_save">Save</string>
+    <string name="editor_title">Title</string>
+    <string name="editor_notes">Notes</string>
+    <string name="editor_category">Category</string>
+    <string name="editor_due">Due</string>
+    <string name="editor_no_date">No date</string>
+    <string name="editor_all_day">All day</string>
+    <string name="editor_clear">Clear</string>
+    <string name="editor_priority">Priority</string>
+    <string name="editor_level">Reminder level</string>
+    <string name="editor_project">Project</string>
+    <string name="editor_no_project">No project</string>
+    <string name="editor_new_project">New project</string>
+    <string name="editor_repeat">Repeat</string>
+    <string name="editor_repeat_vs_habit">A repeating task makes a new task each time, with its own due date (\"Submit weekly report\"). To track a daily routine on a grid, like creatine or meditation, use a habit instead.</string>
+    <string name="editor_repeat_needs_date">Set a due date to repeat this task.</string>
+    <string name="editor_every">Every</string>
+    <string name="editor_repeat_from_completion">Repeat from when I finish it (not from the due date)</string>
+    <string name="repeat_none">Never</string>
+    <string name="repeat_daily">Daily</string>
+    <string name="repeat_weekdays">Weekdays</string>
+    <string name="repeat_weekly">Weekly</string>
+    <string name="repeat_monthly">Monthly</string>
+    <string name="repeat_yearly">Yearly</string>
+    <string name="editor_reminders">Reminders</string>
+    <string name="editor_remove">Remove</string>
+    <string name="editor_custom_minutes">Custom: minutes before</string>
+    <string name="editor_add">Add</string>
+    <string name="editor_subtasks">Subtasks</string>
+    <string name="editor_subtasks_save_first">Save the task first, then add subtasks.</string>
+    <string name="editor_subtask_hint">New subtask</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="project_progress">%1$d of %2$d done</string>
+
+    <string name="check_ins_title">Check-ins</string>
+    <string name="morning_title">Morning: pick today\'s top %2$d (%1$d picked)</string>
+    <string name="morning_empty">Nothing due today or overdue to pick from.</string>
+    <string name="evening_title">Evening wrap-up</string>
+    <string name="evening_done_today">Done today: %1$d. Anything left can move to tomorrow, no guilt.</string>
+    <string name="evening_tomorrow">Tomorrow</string>
+    <string name="evening_move_all">Move all to tomorrow</string>
+    <string name="nudges_title">Daily nudges</string>
+    <string name="nudge_morning_setting">Morning check-in</string>
+    <string name="nudge_evening_setting">Evening wrap-up</string>
+    <string name="nudge_morning_title">Good morning</string>
+    <string name="nudge_morning_text">Pick your top 3 for today.</string>
+    <string name="nudge_evening_title">Evening wrap-up</string>
+    <string name="nudge_evening_text">See what you did today and move the rest.</string>
+</resources>

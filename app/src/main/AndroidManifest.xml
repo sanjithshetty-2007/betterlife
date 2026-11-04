@@ -59,6 +59,11 @@
             android:name=".reminders.engine.ReminderAlarmReceiver"
             android:exported="false" />
 
+        <!-- Morning check-in and evening wrap-up nudges. Not exported: only our own alarm reaches it. -->
+        <receiver
+            android:name=".reminders.daily.DailyPromptReceiver"
+            android:exported="false" />
+
         <!-- Re-arms alarms after reboot, app updates, clock and time-zone changes. These broadcasts are
              protected (only the system can send them), so exporting the receiver does not let other apps
              trigger it. All four are allowed for manifest receivers on Android 8+. -->

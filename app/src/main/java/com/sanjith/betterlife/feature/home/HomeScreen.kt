@@ -40,6 +40,7 @@ public data class DebugTool(@StringRes val label: Int, val onOpen: () -> Unit)
  */
 @Composable
 public fun HomeScreen(
+    onOpenTasks: () -> Unit,
     onOpenSetup: () -> Unit,
     debugTools: List<DebugTool> = emptyList(),
 ) {
@@ -72,6 +73,14 @@ public fun HomeScreen(
                     .heightIn(min = Dimens.minTouchTarget),
             ) {
                 Text(text = stringResource(R.string.home_button))
+            }
+            Button(
+                onClick = onOpenTasks,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.minTouchTarget),
+            ) {
+                Text(text = stringResource(R.string.tasks_title))
             }
             OutlinedButton(
                 onClick = onOpenSetup,
@@ -124,5 +133,5 @@ private fun WelcomeCard() {
 @Preview
 @Composable
 private fun HomeScreenPreview() {
-    BetterLifeTheme { HomeScreen(onOpenSetup = {}) }
+    BetterLifeTheme { HomeScreen(onOpenTasks = {}, onOpenSetup = {}) }
 }

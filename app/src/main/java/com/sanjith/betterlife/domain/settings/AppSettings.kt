@@ -29,6 +29,11 @@ public data class AppSettings(
     val weekStart: DayOfWeek = DayOfWeek.MONDAY,
     /** Lock-screen privacy: pop-ups and their notification show "Reminder" instead of the title. */
     val hideTitleOnLockScreen: Boolean = false,
+    /** Morning check-in (pick today's top 3) and evening wrap-up nudges; both off by default (Prompt 9). */
+    val morningCheckInEnabled: Boolean = false,
+    val morningCheckInTime: LocalTime = LocalTime.of(8, 0),
+    val eveningWrapUpEnabled: Boolean = false,
+    val eveningWrapUpTime: LocalTime = LocalTime.of(21, 0),
 ) {
     init {
         require(rolloverHour in 0..MAX_ROLLOVER_HOUR) { "rolloverHour must be 0 to $MAX_ROLLOVER_HOUR" }

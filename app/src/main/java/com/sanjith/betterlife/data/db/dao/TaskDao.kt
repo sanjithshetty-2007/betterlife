@@ -46,6 +46,9 @@ public interface TaskDao {
     @Query("UPDATE tasks SET completedAt = :now, updatedAt = :now, syncState = 'DIRTY' WHERE id = :id AND completedAt IS NULL")
     public suspend fun complete(id: String, now: Long)
 
+    @Query("UPDATE tasks SET completedAt = NULL, updatedAt = :now, syncState = 'DIRTY' WHERE id = :id")
+    public suspend fun uncomplete(id: String, now: Long)
+
     @Query("UPDATE tasks SET deletedAt = :now, updatedAt = :now, syncState = 'DIRTY' WHERE id = :id")
     public suspend fun softDelete(id: String, now: Long)
 

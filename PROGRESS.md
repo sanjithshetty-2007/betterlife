@@ -16,7 +16,7 @@
 - Phone: Vivo V50e, adb model V2428, Android 16, connected over USB.
 
 ## Current position
-- Last completed prompt: 8
+- Last completed prompt: 9
 - Open gates: Prompt 3 owner rows (3, 5, 7). Prompt 4 gate passed 2026-11-04 (row D run after Prompt 6).
 - Phase: 1 (Reminder core)
 
@@ -32,13 +32,14 @@
 
 - Prompt 8, Production pop-up, 2026-11-04. VERIFIED: 214 unit tests (PC) and 29 device tests (V50e) pass: snooze options (fixed, Tonight after 20:00 disallowed, Tomorrow after midnight = this morning, event-end limit, picked time), 3-snooze suggestion, escalation timeline (0.4/0.6/0.8/1.0/1.0 each minute, nothing at the timeout, ALARM loops), stack reducer, offset wording, coordinator in virtual time (5-minute timeout, escalation, sound stops at once, alarm ring resumes for the alarm left, one stack for several reminders, closes when the item is completed elsewhere, renamed item updates), engine Done/Snooze/Dismiss/Reschedule/timeout, snooze count reset on a normal firing, planner snooze, 2->3 migration, 7 Compose UI tests on the real card (buttons, 700 ms guard, snooze panel, suggestion, Why panel, privacy, stacked list). On the phone: database 2->3 upgraded; a Full reminder showed the production card (screenshot) and Snooze 10 min logged SNOOZED count 1 and set a new alarm. OWNER MUST VERIFY: docs/TESTING.md Prompt 8 rows 3 to 15 (sound, Alarm on silent, timeout, stacking, lock-screen privacy, reduced motion).
 
+- Prompt 9, Tasks, 2026-11-04. VERIFIED: 235 unit tests (PC) and 41 device tests (V50e) pass: task buckets, overdue roll-forward display, next instance (time kept, monthly 31st, late completion, from completion), default reminders, quick-add mapping, tab building and sorting (top 3, priority, time, subtasks counted), editor rule building and round trip, editor errors; TaskService on real SQLite (quick-add with project create/reuse and reminders, complete repeating with reminders copied, undo complete, delete/undo, move to tomorrow, editor save replaces reminders, reschedule after every action); quick-add preview UI (chips, warning, AM/PM question, Inbox). On the phone: quick-add "call mom tomorrow 5pm !high" previewed and saved to Upcoming with 2 alarms; tick removed it and its alarms; Undo restored task and alarms; delete removed alarms. Fixed during testing: tab labels were cut off (now a scrollable tab row). OWNER MUST VERIFY: docs/TESTING.md Prompt 9 rows 7 to 16.
+
 ## Half-done work (exact files and what is missing)
 (none)
 
 ## Next step
-1. Owner runs docs/TESTING.md Prompt 7 rows 5 to 9 and Prompt 8 rows 3 to 15, then "Remove test tasks".
-2. Owner tries 3 of their own sentences against the parser (docs/PARSER.md) and reports anything odd.
-3. Prompt 9 (Tasks: quick-add, Today / Upcoming / Overdue / Inbox).
+1. Owner runs docs/TESTING.md Prompt 9 rows 7 to 16 (and the open rows of Prompts 7 and 8).
+2. Prompt 10 (Events, meetings, birthdays and early reminders).
 
 ## Decisions (made by the owner)
 - 2026-11-04: Single user (owner only), sideloaded APK, never on the Play Store.
@@ -67,7 +68,11 @@
 - OriginOS drops Log.d from logcat; use Log.i for anything that must be readable over adb. Low.
 - Reminder engine: because OriginOS sends BOOT_COMPLETED after a force stop, reminders missed while the app was force-stopped are logged with DEVICE_OFF instead of a "stopped" reason. Low.
 - RESOLVED in Prompt 8: pop-ups stack in one window; ALARM rings in a loop through the pop-up's own sound player.
-- Pop-up: Done on a recurring task marks it completed but does not create the next instance yet (Prompt 9). Low until Prompt 9.
+- Pop-up: Done on a repeating task completes it but does not yet create the next instance (the Tasks screen does, through TaskService.complete). Wire the pop-up's Done through the same path. Medium.
+- Tasks: #tags stay in the title until the Tag table exists (Prompt 21 should move them into tags). Info.
+- Tasks: editing a task replaces its reminder rows, so a snooze in progress is lost when the task is edited. Low.
+- Tasks: an unknown "@project" in quick-add creates the project automatically. Info.
+- Device UI tests that type text must hide the keyboard before checking what is displayed (it covers the test window on this phone). Info.
 - Pop-up: lock-screen title hiding defaults to OFF (no owner decision yet); switch on the Debug: reminder engine screen until Settings exists (Prompt 27). Info.
 - Pop-up: if the screen locks while an overlay is showing, a NEW reminder brings the lock-screen activity, but the already-showing cards are only visible after unlocking or with that next reminder. Low.
 - Reminder engine: STANDALONE reminders have no time or title yet, so they never fire (Prompt 10 adds them). Low.
@@ -97,3 +102,4 @@
 - 2026-11-04: Prompt 06: Clock interface + FixedClock (domain/time), SystemClock and debug-only TimeMachineClock (core); habitDay rollover; RecurrenceRule (daily, weekdays, weekly, monthly, yearly, all with interval) + RecurrenceEngine (next, between with a 1,000 cap, skip, nextDue by RepeatMode, 30-day overdue roll-forward) + RecurrenceRuleText for the recurrenceRule column; EarlyReminderCalculator with ReminderOffsets presets; QuickAddParser (QuickAddWords, QuickAddResult) with AM/PM question; docs/PARSER.md; debug Time Machine screen; AppContainer now injects the clock into repositories while the debug log and test alarms keep real time.
 - 2026-11-04: Prompt 07: pure DeliveryPipeline (7 named steps in context.md order; pause/quiet hours/fatigue pass through until Prompt 12); pure SchedulePlanner (30-day window, 400-alarm cap, alarm kind per level per owner decision, recurring next occurrence only, missed vs 2-minute grace); ReminderEngine behind ports (store, alarms, device, presenter, log) with one lock, real clock only; RoomReminderStore; AndroidAlarmScheduler (one alarm per reminder via betterlife://reminder/<id> URI, inexact fallback when exact is denied); ReminderAlarmReceiver; RearmReceiver now also handles TIME_SET and TIMEZONE_CHANGED and reschedules the engine; DailyTopUpWorker (WorkManager 2.10.0); reschedule on app launch; channels Normal, Full-screen, Alarm (alarm stream), Nudges, Digest; missed summary notification; ReminderPopupService takes title/level; database version 2 (reminders.scheduledFireAt, lastFiredFireAt) with migration test; seeded reminders stored CANCELLED so they never fire; home screen scrolls; debug Reminder engine screen.
 - 2026-11-04: Prompt 08: pure SnoozeRules, Escalation, PopupStack reducer and describeOffset; PopupCoordinator (one stack per app, per-card timeout, escalating sound, item watching) with AndroidSoundPlayer and RoomItemWatcher; production pop-up UI (Blip placeholder mascot with blink, level badge, due time, notes, Snooze panel with Pick time, Why panel, 3-snooze suggestion, enter/exit animation with reduced-motion variant, stacked cards); ReminderPopupService and FullScreenReminderActivity now show the shared stack; silent full-screen notification with lock-screen privacy; engine actions complete/snooze/dismiss/openedEditor/timedOut; database version 3 (reminders.snoozeCount, snoozedUntil); hideTitleOnLockScreen setting; item editor placeholder reached by Reschedule; Compose UI test libraries.
+- 2026-11-04: Prompt 09: pure TaskRules (buckets, overdue display date, next instance, default reminders) and quick-add mapping; ProjectRepository (find-or-create, progress); TaskRepository save-with-reminders, complete-with-next and undo; TaskService (every task action then an alarm reschedule); task list (scrollable tabs Today / Upcoming / Overdue / Inbox, quick-add bar with live preview and AM/PM question, rows with priority flag and word, subtasks count, repeat icon, 6-second Undo for complete and delete); full task editor (due date/time pickers, priority, project with create, category, repeat with interval/weekdays/from completion and the habit-vs-task note, level, early reminders with presets/custom/per-offset level, subtasks); Projects screen; Check-ins screen (top 3, wrap-up, morning/evening nudges via DailyPrompts alarms, off by default); pop-up Reschedule opens the task editor; Home has a Tasks button.

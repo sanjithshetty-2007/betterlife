@@ -50,6 +50,10 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 pauseExemptsEventsAndAlarms = prefs[PAUSE_EXEMPTS] ?: d.pauseExemptsEventsAndAlarms,
                 weekStart = prefs[WEEK_START]?.let(DayOfWeek::of) ?: d.weekStart,
                 hideTitleOnLockScreen = prefs[HIDE_TITLE_LOCKED] ?: d.hideTitleOnLockScreen,
+                morningCheckInEnabled = prefs[MORNING_ENABLED] ?: d.morningCheckInEnabled,
+                morningCheckInTime = prefs.time(MORNING_TIME, d.morningCheckInTime),
+                eveningWrapUpEnabled = prefs[EVENING_ENABLED] ?: d.eveningWrapUpEnabled,
+                eveningWrapUpTime = prefs.time(EVENING_TIME, d.eveningWrapUpTime),
             )
         }.getOrDefault(d)
     }
@@ -72,6 +76,10 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         prefs[PAUSE_EXEMPTS] = s.pauseExemptsEventsAndAlarms
         prefs[WEEK_START] = s.weekStart.value
         prefs[HIDE_TITLE_LOCKED] = s.hideTitleOnLockScreen
+        prefs[MORNING_ENABLED] = s.morningCheckInEnabled
+        prefs[MORNING_TIME] = s.morningCheckInTime.toMinuteOfDay()
+        prefs[EVENING_ENABLED] = s.eveningWrapUpEnabled
+        prefs[EVENING_TIME] = s.eveningWrapUpTime.toMinuteOfDay()
     }
 
     private fun Preferences.time(key: Preferences.Key<Int>, default: LocalTime): LocalTime =
@@ -98,5 +106,9 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val PAUSE_EXEMPTS = booleanPreferencesKey("pause_exempts_events_and_alarms")
         val WEEK_START = intPreferencesKey("week_start_iso_day")
         val HIDE_TITLE_LOCKED = booleanPreferencesKey("hide_title_on_lock_screen")
+        val MORNING_ENABLED = booleanPreferencesKey("morning_check_in_enabled")
+        val MORNING_TIME = intPreferencesKey("morning_check_in_minute")
+        val EVENING_ENABLED = booleanPreferencesKey("evening_wrap_up_enabled")
+        val EVENING_TIME = intPreferencesKey("evening_wrap_up_minute")
     }
 }

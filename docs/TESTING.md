@@ -119,3 +119,28 @@ How: Home > Debug: reminder engine, "+1 min Full" (or Alarm). "Complete test tas
 | 13 | Hide titles ON, lock the phone, +1 min Full | Lock screen shows "Reminder", not the title | |
 | 14 | Developer options > animator duration scale off | Pop-up appears and closes instantly, still usable; Blip does not blink | |
 | 15 | Back gesture on the pop-up | Top card closes (log DISMISSED) | |
+
+## Prompt 9: Tasks
+
+How: Home > Tasks. Quick-add on top, tabs Today / Upcoming / Overdue / Inbox, the + opens the full editor, Projects and Check-ins in the header. Check scheduled alarms with `adb shell dumpsys alarm | findstr REMINDER_ALARM`.
+
+Defaults chosen (change per task in the editor): a dated, timed task gets "1 day before" (notification) and "at the time" (pop-up); a whole-day task gets one notification at 09:00 on the day. `#tags` stay in the title until the Tag table exists (Prompt 21).
+
+| # | Test | Expected | Result |
+|---|---|---|---|
+| 1 | Type "call mom tomorrow 5pm !high" | Preview chips Tomorrow, 5:00 PM, High above the keyboard; Add enabled | **PASS** (AI 2026-11-04, screenshot) |
+| 2 | Tap Add | Task in Upcoming with a red High flag and "Tomorrow 5:00 PM"; 2 reminder alarms | **PASS** (AI: Upcoming (1), 2 alarms) |
+| 3 | Tick it | Strikes through, leaves the list, "Done: call mom" with Undo; its alarms disappear | **PASS** (AI: alarms 2 -> 0, snackbar screenshot) |
+| 4 | Tap Undo within 6 seconds | Task back in Upcoming, alarms back | **PASS** (AI: Upcoming (1), alarms 2) |
+| 5 | Bin icon | Task deleted with Undo; alarms gone | **PASS** (AI: alarms 0). Owner: try Undo after delete |
+| 6 | "meeting at 5" | Asks AM or PM inline; Add only after answering | UI test passes on the phone |
+| 7 | Your own 5 real tasks by quick-add | Parsed as you meant (report anything odd) | |
+| 8 | + > new task with a date, "1 day before" + "at time", save | Both alarms appear in dumpsys | |
+| 9 | Repeating task (Daily), tick it | Next one appears with tomorrow's date; Undo removes it and reopens the first | Device test passes; owner: try in the app |
+| 10 | Edit a task's time | Old alarms replaced by new ones (dumpsys) | |
+| 11 | Projects > add a project, assign tasks, complete one | "1 of N done" with a progress bar | |
+| 12 | Subtasks: save a task, add 2 subtasks, tick one | Row shows "1/2 subtasks" | |
+| 13 | Check-ins: pick 3 top tasks | They show first in Today with ★ Top 3; a 4th cannot be picked | |
+| 14 | Check-ins: turn on the morning nudge 2 minutes from now | A "Good morning" notification opens Check-ins | |
+| 15 | Evening wrap-up "Move all to tomorrow" | Today's and overdue tasks move one day, same time | |
+| 16 | Reschedule on a task pop-up | Opens the task editor for that task | |

@@ -13,10 +13,15 @@ import com.sanjith.betterlife.data.alarm.PendingAlarmStore
 import com.sanjith.betterlife.data.db.BetterLifeDatabase
 import com.sanjith.betterlife.data.debug.SeedDataGenerator
 import com.sanjith.betterlife.data.repository.EventRepository
+import com.sanjith.betterlife.data.repository.ProjectRepository
 import com.sanjith.betterlife.data.repository.ReminderLogRepository
 import com.sanjith.betterlife.data.repository.ReminderRepository
 import com.sanjith.betterlife.data.repository.TaskRepository
 import com.sanjith.betterlife.data.settings.SettingsRepository
+import com.sanjith.betterlife.data.settings.TopTasksStore
+import com.sanjith.betterlife.feature.tasks.TaskService
+import com.sanjith.betterlife.reminders.daily.DailyPrompts
+import com.sanjith.betterlife.reminders.engine.RescheduleTrigger
 import com.sanjith.betterlife.data.setup.DeviceCapabilityChecker
 import com.sanjith.betterlife.data.setup.ManualCheckStore
 import com.sanjith.betterlife.data.setup.SetupRepository
@@ -92,6 +97,18 @@ public class AppContainer(appContext: Context) {
     public val reminderLogRepository: ReminderLogRepository by lazy {
         ReminderLogRepository(database, nowMillis, newId)
     }
+
+    public val projectRepository: ProjectRepository by lazy { ProjectRepository(database, nowMillis, newId) }
+
+    public val topTasksStore: TopTasksStore = TopTasksStore(appContext.settingsDataStore)
+
+    /** Task actions plus the alarm reschedule after each (screens use this, not the repository). */
+    public val taskService: TaskService by lazy {
+        TaskService(taskRepository, projectRepository, clock) { reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL) }
+    }
+
+    /** Morning check-in and evening wrap-up nudges, on the real clock like all real alarms. */
+    public val dailyPrompts: DailyPrompts by lazy { DailyPrompts(appContext, settingsRepository, realClock) }
 
     /** Debug screens only. */
     public val seedDataGenerator: SeedDataGenerator by lazy { SeedDataGenerator(database, nowMillis, newId) }

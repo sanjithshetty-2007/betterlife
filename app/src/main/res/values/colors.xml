@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors the background design token (ui/theme/Color.kt) for the window and launcher icon. -->
+    <color name="window_background">#FF1A0A0D</color>
+    <color name="launcher_foreground">#FFE0A800</color>
+</resources>

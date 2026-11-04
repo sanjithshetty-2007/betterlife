@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BetterLife</string>
+    <string name="home_title">BetterLife</string>
+    <string name="home_card_title">Welcome</string>
+    <string name="home_card_body">The foundation is ready. Reminders come next.</string>
+    <string name="home_button">Say hi</string>
+    <string name="home_snackbar">Hi! The theme works.</string>
+</resources>

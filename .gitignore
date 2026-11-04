@@ -1,0 +1,23 @@
+# Build outputs
+build/
+.gradle/
+.kotlin/
+*.apk
+*.aab
+
+# Machine-specific settings and secrets (Supabase keys live in local.properties)
+local.properties
+*.jks
+*.keystore
+keystore.properties
+
+# IDE caches
+.idea/
+*.iml
+.cxx/
+captures/
+.externalNativeBuild/
+
+# OS files
+.DS_Store
+Thumbs.db

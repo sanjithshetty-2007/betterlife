@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug builds show "Dev" so they are never confused with the real app. -->
+    <string name="app_name">BetterLife Dev</string>
+</resources>

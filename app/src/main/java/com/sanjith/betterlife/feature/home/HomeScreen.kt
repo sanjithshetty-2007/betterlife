@@ -1,5 +1,6 @@
 package com.sanjith.betterlife.feature.home
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,15 +29,17 @@ import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
+/** A debug-only shortcut shown on the home screen. */
+public data class DebugTool(@StringRes val label: Int, val onOpen: () -> Unit)
+
 /**
  * Placeholder home screen proving the theme: title, a bordered card, a yellow button and the checklist link.
- * [onOpenPopupSpike] is null in release builds, which hides the debug entry.
+ * [debugTools] is empty in release builds, which hides every debug entry.
  */
 @Composable
 public fun HomeScreen(
     onOpenSetup: () -> Unit,
-    onOpenPopupSpike: (() -> Unit)? = null,
-    onOpenAlarmSpike: (() -> Unit)? = null,
+    debugTools: List<DebugTool> = emptyList(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -75,24 +78,14 @@ public fun HomeScreen(
             ) {
                 Text(text = stringResource(R.string.setup_home_button))
             }
-            onOpenPopupSpike?.let { openSpike ->
+            debugTools.forEach { tool ->
                 OutlinedButton(
-                    onClick = openSpike,
+                    onClick = tool.onOpen,
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = Dimens.minTouchTarget),
                 ) {
-                    Text(text = stringResource(R.string.spike_home_button))
-                }
-            }
-            onOpenAlarmSpike?.let { openAlarmSpike ->
-                OutlinedButton(
-                    onClick = openAlarmSpike,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = Dimens.minTouchTarget),
-                ) {
-                    Text(text = stringResource(R.string.alarm_spike_home_button))
+                    Text(text = stringResource(tool.label))
                 }
             }
         }

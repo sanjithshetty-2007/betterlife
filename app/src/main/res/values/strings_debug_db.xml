@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug-only database screen (Prompt 5) -->
+    <string name="db_debug_home_button">Debug: database</string>
+    <string name="db_debug_title">Database</string>
+    <string name="db_debug_counts">Tasks: %1$d\nEvents: %2$d\nReminders: %3$d\nReminder log: %4$d</string>
+    <string name="db_debug_seed">Seed 1,000 tasks and 200 events</string>
+    <string name="db_debug_wipe">Wipe seeded data</string>
+    <string name="db_debug_working">Working…</string>
+</resources>

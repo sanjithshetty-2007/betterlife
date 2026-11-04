@@ -1,11 +1,14 @@
 package com.sanjith.betterlife
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sanjith.betterlife.feature.debug.AlarmSpikeScreen
+import com.sanjith.betterlife.feature.debug.DatabaseDebugScreen
 import com.sanjith.betterlife.feature.debug.PopupSpikeScreen
+import com.sanjith.betterlife.feature.home.DebugTool
 import com.sanjith.betterlife.feature.home.HomeScreen
 import com.sanjith.betterlife.feature.setup.SetupScreen
 
@@ -15,6 +18,7 @@ internal object Routes {
     const val SETUP = "setup"
     const val POPUP_SPIKE = "debug/popup-spike"
     const val ALARM_SPIKE = "debug/alarm-spike"
+    const val DATABASE = "debug/database"
 }
 
 /** All screens of the single Activity. NavHost also handles the system (predictive) back gesture. */
@@ -26,16 +30,7 @@ internal fun AppNavHost() {
             HomeScreen(
                 onOpenSetup = { navController.navigate(Routes.SETUP) },
                 // Debug tools are unreachable in release builds.
-                onOpenPopupSpike = if (BuildConfig.DEBUG) {
-                    { navController.navigate(Routes.POPUP_SPIKE) }
-                } else {
-                    null
-                },
-                onOpenAlarmSpike = if (BuildConfig.DEBUG) {
-                    { navController.navigate(Routes.ALARM_SPIKE) }
-                } else {
-                    null
-                },
+                debugTools = if (BuildConfig.DEBUG) debugTools(navController) else emptyList(),
             )
         }
         composable(Routes.SETUP) {
@@ -48,6 +43,15 @@ internal fun AppNavHost() {
             composable(Routes.ALARM_SPIKE) {
                 AlarmSpikeScreen(onBack = { navController.popBackStack() })
             }
+            composable(Routes.DATABASE) {
+                DatabaseDebugScreen(onBack = { navController.popBackStack() })
+            }
         }
     }
 }
+
+private fun debugTools(navController: NavController): List<DebugTool> = listOf(
+    DebugTool(R.string.spike_home_button) { navController.navigate(Routes.POPUP_SPIKE) },
+    DebugTool(R.string.alarm_spike_home_button) { navController.navigate(Routes.ALARM_SPIKE) },
+    DebugTool(R.string.db_debug_home_button) { navController.navigate(Routes.DATABASE) },
+)

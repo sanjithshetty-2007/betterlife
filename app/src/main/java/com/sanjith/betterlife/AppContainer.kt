@@ -6,6 +6,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.sanjith.betterlife.core.DebugLog
 import com.sanjith.betterlife.data.alarm.PendingAlarmStore
+import com.sanjith.betterlife.data.db.BetterLifeDatabase
+import com.sanjith.betterlife.data.debug.SeedDataGenerator
+import com.sanjith.betterlife.data.repository.EventRepository
+import com.sanjith.betterlife.data.repository.ReminderLogRepository
+import com.sanjith.betterlife.data.repository.ReminderRepository
+import com.sanjith.betterlife.data.repository.TaskRepository
+import com.sanjith.betterlife.data.settings.SettingsRepository
 import com.sanjith.betterlife.data.setup.DeviceCapabilityChecker
 import com.sanjith.betterlife.data.setup.ManualCheckStore
 import com.sanjith.betterlife.data.setup.SetupRepository
@@ -16,6 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import java.io.File
+import java.util.UUID
 
 // One DataStore file per process; the delegate guarantees a single instance.
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -46,6 +54,23 @@ public class AppContainer(appContext: Context) {
         manualChecks = ManualCheckStore(appContext.settingsDataStore),
         ioDispatcher = ioDispatcher,
     )
+
+    private val newId: () -> String = { UUID.randomUUID().toString() }
+
+    /** Opened lazily: Room creates or migrates the file on first use, off the main thread. */
+    public val database: BetterLifeDatabase by lazy { BetterLifeDatabase.build(appContext) }
+
+    public val settingsRepository: SettingsRepository = SettingsRepository(appContext.settingsDataStore)
+
+    public val taskRepository: TaskRepository by lazy { TaskRepository(database, nowMillis, newId) }
+    public val eventRepository: EventRepository by lazy { EventRepository(database, nowMillis, newId) }
+    public val reminderRepository: ReminderRepository by lazy { ReminderRepository(database, nowMillis) }
+    public val reminderLogRepository: ReminderLogRepository by lazy {
+        ReminderLogRepository(database, nowMillis, newId)
+    }
+
+    /** Debug screens only. */
+    public val seedDataGenerator: SeedDataGenerator by lazy { SeedDataGenerator(database, nowMillis, newId) }
 
     public val pendingAlarmStore: PendingAlarmStore = PendingAlarmStore(appContext.settingsDataStore)
 

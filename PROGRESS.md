@@ -9,31 +9,31 @@
 
 ## Build environment (verified 2026-11-04)
 - JDK: Android Studio's bundled JBR 25 (C:\Program Files\Android\Android Studio\jbr). JAVA_HOME is not set system-wide; set it per terminal (see README.md).
-- Gradle 9.6.0 wrapper, AGP 9.4.1 (built-in Kotlin, so no kotlin-android plugin), Kotlin compose plugin 2.4.21, Compose BOM 2026.09.00.
+- Gradle 9.6.0 wrapper, AGP 9.4.1 (built-in Kotlin, so no kotlin-android plugin), Kotlin compose plugin 2.4.21, KSP 2.3.12, Compose BOM 2026.09.00, Room 2.8.5 (Room Gradle plugin exports schemas to app/schemas).
+- kotlinx-coroutines 1.11.0 and kotlinx-serialization-json 1.12.0 are declared in the app on purpose: device tests fail if the app ships older copies.
+- `android.injected.androidTest.leaveApksInstalledAfterRun=true` keeps BetterLife Dev installed after device tests (otherwise its data and permissions are wiped).
 - compileSdk 37, targetSdk 36, minSdk 34.
 - Phone: Vivo V50e, adb model V2428, Android 16, connected over USB.
 
 ## Current position
-- Last completed prompt: 3 (gate rows 2 and 4 passed; owner still runs rows 3, 5, 7)
-- Current prompt in progress: 4 (code done and committed; GATE waits for the owner's matrix rows, especially E reboot)
-- Current prompt in progress: none
+- Last completed prompt: 5
+- Open gates: Prompt 3 owner rows (3, 5, 7); Prompt 4 row D (see below). The owner chose to continue to Prompt 5 with row D open (Decisions).
 - Phase: 1 (Reminder core)
 
 ## Done
-- Prompt 1, Project scaffold and environment, 2026-11-04. VERIFIED: assembleDebug and testDebugUnitTest succeed (1 test, 0 failures); installDebug installed on the V50e (Android 16); the app cold-starts in about 1.6 s and shows the themed screen; the snackbar appears; the merged manifest has no INTERNET and allowBackup=false.
-
-- Prompt 2, Permissions and the Setup Checklist screen, 2026-11-04. VERIFIED: 9 unit tests pass (8 for the status mapping, covering all 32 combinations of detectable results); on the phone, the checklist shows 5 detectable + 4 Vivo rows; Notifications, Exact alarms, Display over other apps, Full-screen notifications and App info buttons open the right pages and Back returns to the checklist. OWNER MUST VERIFY: rows turn green after granting, ticks survive a restart (docs/TESTING.md Prompt 2 table).
+- Prompt 1, Project scaffold and environment, 2026-11-04. VERIFIED: assembleDebug and testDebugUnitTest succeed; installDebug installed on the V50e; the app cold-starts in about 1.6 s with the themed screen; the merged manifest has no INTERNET and allowBackup=false.
+- Prompt 2, Permissions and the Setup Checklist screen, 2026-11-04. VERIFIED: status mapping tested over all 32 combinations; on the phone the checklist shows 5 detectable + 4 Vivo rows and each Open settings button opens the right page with Back returning to the checklist. OWNER MUST VERIFY: rows turn green after granting, ticks survive a restart (docs/TESTING.md Prompt 2 table).
+- Prompt 3, Overlay spike (GATE), 2026-11-04. VERIFIED: Path A overlay over Chrome and over the app; Back and Done remove it with no window left; Path B wakes the screen and shows the pop-up over the lock screen. OWNER MUST VERIFY: rows 3 (video app), 5 (rotation), 7 (tap within 0.5 s) and the back swipe gesture.
+- Prompt 4, Alarm spike (GATE), 2026-11-04, gate not fully closed. VERIFIED: setExactAndAllowWhileIdle rows B and C; setAlarmClock rows A, B, C (AI over adb) and E (owner rebooted, AI read the log). All fired within 1 s, including after a recents swipe killed the process and after a reboot. MISSING for the gate: row D (screen off 15+ min) for setAlarmClock. Also open: rows A, D to H for setExactAndAllowWhileIdle, F to H for setAlarmClock, and the owner's choice of default alarm type.
+- Prompt 5, Database foundation, 2026-11-04. VERIFIED: 53 unit tests (PC) and 16 device tests (V50e) pass: soft delete hides rows, restore brings back only the reminders deleted with the item, a failed reminder insert rolls back the whole create, unknown or deleted parent/project references are rejected, writes mark rows DIRTY, the version 1 schema accepts rows and opens through ALL_MIGRATIONS, settings round-trip and fall back to defaults on bad values. On the phone the seed button wrote 1,000 tasks + 200 events + 746 reminders in 213 ms with 1 janky frame of 104 and no ANR; Wipe removed exactly those 1,946 rows. Schema 1.json exported; no destructive migration anywhere.
 
 ## Half-done work (exact files and what is missing)
 (none)
 
-- Prompt 3, Overlay spike (GATE), 2026-11-04. VERIFIED: 26 unit tests pass (11 decision-function tests over all 32 input combinations, 6 tap-guard tests); on the V50e, Path A overlay shows over Chrome and over the app itself, Back and Done remove it with no window left; Path B wakes the screen and shows the pop-up over the lock screen, Done closes it and clears the notification. OWNER MUST VERIFY: matrix rows 3 (video app), 5 (rotation), 7 (tap within 0.5 s) and the back swipe gesture in docs/TESTING.md.
-
-## Half-done: Prompt 4 gate
-Code complete: TestAlarmScheduler (both alarm kinds), TestAlarmReceiver, RearmReceiver (boot + app update), PendingAlarmStore, TestAlarmController, file-backed DebugLog, ReminderPopupService (systemExempted), Debug: alarm test screen. VERIFIED by the AI over adb with setExactAndAllowWhileIdle: row B (Chrome) and row C (swiped away, process killed) both fire on time and show the overlay. VERIFIED 2026-11-04 (owner rebooted, AI read the log): row E with setAlarmClock, re-armed at boot and fired on time over the lock screen. VERIFIED 2026-11-04 by the AI over adb: rows A, B, C with setAlarmClock (all on time, overlay shown; C after the process was killed by a recents swipe). So setAlarmClock has A, B, C, E passing; only row D (screen off 15+ min) is missing for the gate. Also open: rows A, D, E, F, G, H for setExactAndAllowWhileIdle, F, G, H for setAlarmClock, and the owner's choice of default alarm type.
-
 ## Next step
-Owner runs row D with setAlarmClock: switch on, "Alarm in 15 min", lock the phone and leave it untouched until it fires. When it passes, the Prompt 4 gate is passed; then Prompt 5 (Database foundation).
+1. Owner runs Prompt 4 row D with setAlarmClock: Debug: alarm test, switch on, "Alarm in 15 min", lock the phone and leave it untouched until it fires; then tell the AI to read the log.
+2. Owner re-grants Notifications and Display over other apps in the Setup checklist (the device-test run on 2026-11-04 uninstalled the debug app once before the fix).
+3. Prompt 6 (Core domain logic: recurrence, early reminders, rollover, quick-add parser).
 
 ## Decisions (made by the owner)
 - 2026-11-04: Single user (owner only), sideloaded APK, never on the Play Store.
@@ -49,20 +49,22 @@ Owner runs row D with setAlarmClock: switch on, "Alarm in 15 min", lock the phon
 - 2026-11-04: Link previews for shared links: yes.
 - 2026-11-04: Build all 30 prompts in order, with sync prompts S1, S2 after Prompt 13 and S3 after Prompt 17.
 - 2026-11-04: Development: Claude Code on the PC, phone connected by USB, adb installs and tests.
+- 2026-11-04: Owner started Prompt 5 before Prompt 4 row D (screen off 15+ min) was run. Row D must still pass before Prompt 7 builds the real scheduler on top.
 
 ## Known issues
 - Tooling: the Git Bash shell used by the AI collapses double backslashes inside heredocs. Write files that contain backslashes (local.properties, regexes) with the file editor, not shell heredocs. Low.
 - Launcher icon is a placeholder (yellow antenna bulb) until the mascot is drawn (Prompt 16). Low.
-- Setup checklist: the OriginOS 6 locations of "background pop-ups" and "show on lock screen" were NOT found (not in App info > Permissions). Row text points to Permission manager / Special app access > Turn screen on and says "not confirmed". Prompt 3's gate will show whether these settings matter. Medium.
+- Setup checklist: the OriginOS 6 locations of "background pop-ups" and "show on lock screen" were NOT found. Row text says "not confirmed". The lock-screen pop-up and swipe-away/reboot alarms all worked with these rows unticked, so they may not be needed on this phone. Medium.
 - Setup checklist: the recents-lock instruction is not confirmed on OriginOS 6. Low.
-- Setup checklist: Vivo's notification settings page takes about 2 seconds to close after Back. Vivo behaviour, not the app. Low.
-- RESOLVED in Prompt 4: the pop-up service is now systemExempted (no time limit) instead of shortService.
-- Prompt 4: after a force stop, the app receives BOOT_COMPLETED on its next start (seen on OriginOS 6). Not relied on; may be useful in Prompt 7. Info.
+- Setup checklist: Vivo's notification settings page takes about 2 seconds to close after Back. Vivo behaviour. Low.
+- After a force stop, the app receives BOOT_COMPLETED on its next start (seen on OriginOS 6). Not relied on; may be useful in Prompt 7. Info.
 - OriginOS drops Log.d from logcat; use Log.i for anything that must be readable over adb. Low.
-- Path B worked even though the Vivo "background pop-ups" / "show on lock screen" rows are still unticked, so those settings may not be needed for the pop-up on this phone. Recheck after Prompt 4's swipe-away and reboot tests. Info.
+- Repositories expose Room entities directly to callers for now; map to domain models when screens arrive (Prompt 9) if it keeps the UI cleaner. Low.
 
 ## Verified on the real phone
-- 2026-11-04 (checked by the AI over adb): canScheduleExactAlarms() is true with USE_EXACT_ALARM alone; canUseFullScreenIntent() is true on a fresh USB install; Autostart was already Allowed; battery switch is App info > Battery usage > Background power control > Allow background power usage.
+- 2026-11-04 (AI over adb): canScheduleExactAlarms() is true with USE_EXACT_ALARM alone; canUseFullScreenIntent() is true on a fresh USB install; Autostart was already Allowed; battery switch is App info > Battery usage > Background power control > Allow background power usage.
+- 2026-11-04: recents swipe kills the process but does not force-stop the app (stopped=false), so exact alarms survive it.
+- 2026-11-04: an alarm-clock alarm armed before a reboot was re-armed at boot and fired on time (owner rebooted).
 
 ## Commands
 - Build: gradlew.bat assembleDebug
@@ -70,10 +72,12 @@ Owner runs row D with setAlarmClock: switch on, "Alarm in 15 min", lock the phon
 - Unit tests: gradlew.bat testDebugUnitTest
 - Device tests (phone connected): gradlew.bat connectedDebugAndroidTest
 - Scheduled alarms: adb shell dumpsys alarm | findstr betterlife
+- Debug log: adb shell run-as com.sanjith.betterlife.debug tail -n 20 files/debug_log.txt
 
 ## Changelog
 - 2026-11-04: Plan revised for Supabase sync, internet, Android 14+ (agent.md, context.md, docs/PLAN_CHANGES.md).
 - 2026-11-04: Prompt 01: Gradle project (version catalog, wrapper), debug suffix .debug and "BetterLife Dev" label, manifest without INTERNET and allowBackup=false, edge-to-edge MainActivity, BetterLifeApp + empty AppContainer, package folders, dark AMOLED theme from the design tokens, placeholder home screen, TestSetupTest, README, .gitignore, docs/TESTING.md.
-- 2026-11-04: Prompt 02: reminder permissions in the manifest; pure buildSetupStatus mapper (domain/setup) with tests; DeviceCapabilityChecker, ManualCheckStore (DataStore), SetupRepository in AppContainer; Setup checklist screen with status chips, why lines, Vivo directions, Open settings (in-task, App info fallback) and manual ticks; re-check on resume; Navigation (home, setup). Libraries added: DataStore Preferences 1.2.1, Navigation Compose 2.10.2, lifecycle viewmodel-compose and runtime-compose 2.11.0. README: real Developer options path.
-- 2026-11-04: Prompt 03: pure decidePresentation (domain/delivery) and isTapAllowed (700 ms) with tests; shared ReminderPopup composable (fade + scale, reduced-motion variant); OverlayController with its own lifecycle/saved-state owner, single window, Back via OnBackInvokedCallback; FullScreenReminderActivity (showWhenLocked, turnScreenOn); ReminderNotifier; notification channels (full-screen, normal, background work); DebugLog; debug-only Pop-up test screen and PopupSpikeService (shortService); BuildConfig enabled to hide debug entries in release.
-- 2026-11-04: Prompt 04 (gate pending owner rows): pure triggerAfterMinutes/planRearm with tests; exact alarm scheduler for setExactAndAllowWhileIdle and setAlarmClock; alarm receiver -> systemExempted ReminderPopupService (moved from the debug package, now also used by the Prompt 3 test with a 10 s delay); boot and app-update re-arm with overdue handling; pending alarm in DataStore; DebugLog saved to a file; Debug: alarm test screen; FOREGROUND_SERVICE_SYSTEM_EXEMPTED permission.
+- 2026-11-04: Prompt 02: reminder permissions in the manifest; pure buildSetupStatus mapper with tests; DeviceCapabilityChecker, ManualCheckStore (DataStore), SetupRepository; Setup checklist screen with status chips, why lines, Vivo directions, Open settings (in-task, App info fallback) and manual ticks; Navigation. Libraries: DataStore Preferences 1.2.1, Navigation Compose 2.10.2, lifecycle compose 2.11.0.
+- 2026-11-04: Prompt 03: pure decidePresentation and isTapAllowed (700 ms) with tests; shared ReminderPopup composable; OverlayController (own lifecycle owner, single window, predictive back); FullScreenReminderActivity; ReminderNotifier; notification channels; DebugLog; debug Pop-up test screen; BuildConfig enabled.
+- 2026-11-04: Prompt 04: pure triggerAfterMinutes/planRearm with tests; exact alarm scheduler for both kinds; alarm receiver -> systemExempted ReminderPopupService; boot and app-update re-arm with overdue handling; pending alarm in DataStore; DebugLog saved to a file; debug Alarm test screen.
+- 2026-11-04: Prompt 05: Room 2.8.5 + KSP with exported schema v1; entities Project, Task, Event, Reminder, ReminderLog, SyncCursor (synced tables carry syncState/serverUpdatedAt from v1); LocalDate/ZoneId converters; DAOs with soft delete/restore; Task/Event/Reminder/ReminderLog repositories with transactions, DIRTY marking and reference validation; typed AppSettings + SettingsRepository with context.md defaults; debug SeedDataGenerator and Database screen; home debug entries as one list; unit and device tests; docs/DB_MIGRATIONS.md. Fixed during testing: unknown project/parent ids were accepted (null?.deletedAt == null).

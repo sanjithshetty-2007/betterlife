@@ -26,7 +26,7 @@ import com.sanjith.betterlife.data.db.entity.TaskEntity
  * Destructive migration is never enabled: a missing migration crashes loudly instead of wiping data.
  */
 @Database(
-    version = 2,
+    version = 3,
     exportSchema = true,
     entities = [
         ProjectEntity::class,
@@ -57,8 +57,16 @@ public abstract class BetterLifeDatabase : RoomDatabase() {
             }
         }
 
+        /** Version 3 (Prompt 8): snooze state for the pop-up. Existing reminders start never snoozed. */
+        public val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reminders ADD COLUMN snoozeCount INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE reminders ADD COLUMN snoozedUntil INTEGER")
+            }
+        }
+
         /** Every migration ever written, in order. */
-        public val ALL_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2)
+        public val ALL_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
 
         public fun build(context: Context): BetterLifeDatabase =
             Room.databaseBuilder(context, BetterLifeDatabase::class.java, FILE_NAME)

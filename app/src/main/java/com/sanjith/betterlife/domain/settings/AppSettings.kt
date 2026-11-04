@@ -27,6 +27,8 @@ public data class AppSettings(
     /** Calendar events, birthdays and ALARM level keep firing during Pause unless this is turned off. */
     val pauseExemptsEventsAndAlarms: Boolean = true,
     val weekStart: DayOfWeek = DayOfWeek.MONDAY,
+    /** Lock-screen privacy: pop-ups and their notification show "Reminder" instead of the title. */
+    val hideTitleOnLockScreen: Boolean = false,
 ) {
     init {
         require(rolloverHour in 0..MAX_ROLLOVER_HOUR) { "rolloverHour must be 0 to $MAX_ROLLOVER_HOUR" }

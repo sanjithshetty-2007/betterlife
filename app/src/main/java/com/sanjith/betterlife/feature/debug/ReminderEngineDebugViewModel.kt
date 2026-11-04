@@ -13,6 +13,7 @@ import com.sanjith.betterlife.data.repository.ReminderLogRepository
 import com.sanjith.betterlife.data.repository.ReminderRepository
 import com.sanjith.betterlife.data.repository.TaskDraft
 import com.sanjith.betterlife.data.repository.TaskRepository
+import com.sanjith.betterlife.data.settings.SettingsRepository
 import com.sanjith.betterlife.domain.model.Importance
 import com.sanjith.betterlife.reminders.engine.ReminderEngine
 import com.sanjith.betterlife.reminders.engine.RescheduleTrigger
@@ -28,6 +29,7 @@ import java.time.ZoneId
 public data class ReminderEngineDebugUiState(
     val scheduled: List<ReminderEntity> = emptyList(),
     val log: List<ReminderLogEntity> = emptyList(),
+    val hideTitles: Boolean = false,
 )
 
 /** Debug-only: creates test reminders through the real repositories and engine. */
@@ -36,13 +38,26 @@ public class ReminderEngineDebugViewModel(
     reminders: ReminderRepository,
     reminderLog: ReminderLogRepository,
     private val engine: ReminderEngine,
+    private val settings: SettingsRepository,
     private val realNow: () -> Instant,
 ) : ViewModel() {
 
     public val uiState: StateFlow<ReminderEngineDebugUiState> =
-        combine(reminders.observeScheduled(), reminderLog.observeRecent(LOG_ROWS)) { scheduled, log ->
-            ReminderEngineDebugUiState(scheduled, log)
+        combine(reminders.observeScheduled(), reminderLog.observeRecent(LOG_ROWS), settings.settings) { scheduled, log, s ->
+            ReminderEngineDebugUiState(scheduled, log, s.hideTitleOnLockScreen)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), ReminderEngineDebugUiState())
+
+    /** Completes the test tasks from outside the pop-up: a showing pop-up for them must close. */
+    public fun completeTests() {
+        viewModelScope.launch {
+            tasks.activeIdsInCategory(TEST_MARKER).forEach { tasks.complete(it) }
+            engine.rescheduleAll(RescheduleTrigger.MANUAL)
+        }
+    }
+
+    public fun setHideTitles(hide: Boolean) {
+        viewModelScope.launch { settings.update { it.copy(hideTitleOnLockScreen = hide) } }
+    }
 
     /** A task due in [minutes] (real time) with one at-time reminder of [level]. */
     public fun createTest(minutes: Long, level: Importance) {
@@ -87,6 +102,7 @@ public class ReminderEngineDebugViewModel(
                     c.reminderRepository,
                     c.reminderLogRepository,
                     c.reminderEngine,
+                    c.settingsRepository,
                     realNow = { c.realClock.now() },
                 )
             }

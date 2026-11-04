@@ -97,3 +97,25 @@ Each pending reminder shows as one `RTC_WAKEUP #n: Alarm{... tag=*walarm*:com.sa
 | 7 | +1 min Full, lock the phone | Screen wakes with the pop-up over the lock screen | |
 | 8 | Create a test reminder, then "Remove test tasks" | Its alarm disappears from the list and from dumpsys | |
 | 9 | Change the phone's time zone in Settings and back | Log shows "Reminder engine rescheduled (TIMEZONE_CHANGED)" in Debug: alarm test | |
+
+## Prompt 8: Production pop-up
+
+How: Home > Debug: reminder engine, "+1 min Full" (or Alarm). "Complete test tasks" completes them from outside the pop-up; the "Hide titles on the lock screen" switch is the privacy setting until the Settings screen exists (Prompt 27).
+
+| # | Test | Expected | Result |
+|---|---|---|---|
+| 1 | +1 min Full, wait | Pop-up with Blip, "Pop-up" badge, ⓘ, due time, title, Snooze / Done / Reschedule; card fades and scales in | **PASS** (AI 2026-11-04, screenshot; fired 13:45:55.941) |
+| 2 | Snooze > 10 min | Pop-up closes; log SNOOZED count 1; new alarm 10 minutes later | **PASS** (AI: SNOOZED count 1 until 13:56:28, ALARM_CLOCK alarm set) |
+| 3 | Let the snoozed one come back, snooze it twice more, let it come back | Card says "You have snoozed this 3 times. Move it to tomorrow instead?" with a button | |
+| 4 | Snooze options at 21:00 | "Tonight" is greyed out | |
+| 5 | Snooze > Pick time, enter a time | Comes back at that time | |
+| 6 | Tap ⓘ | Item, due time, rule ("At the time"), level, Edit button | UI test passes on the phone; live tap: owner |
+| 7 | Done | Task completed, no further alarm for it, log COMPLETED | |
+| 8 | Reschedule | App opens on "Edit item" showing the task title; log RESCHEDULED | |
+| 9 | Full: leave it unanswered | One gentle sound, a little louder each minute; after 5 minutes it closes, log MISSED, one quiet notification | |
+| 10 | Alarm with the phone on silent | Rings in a loop on the alarm stream and vibrates; stops the instant any button is tapped | |
+| 11 | Two reminders in the same minute (+1 Full and +1 Alarm) | ONE window with "2 reminders" and two cards | |
+| 12 | Pop-up showing, tap "Complete test tasks" in the app behind it (or wait for a completion) | The card closes by itself | |
+| 13 | Hide titles ON, lock the phone, +1 min Full | Lock screen shows "Reminder", not the title | |
+| 14 | Developer options > animator duration scale off | Pop-up appears and closes instantly, still usable; Blip does not blink | |
+| 15 | Back gesture on the pop-up | Top card closes (log DISMISSED) | |

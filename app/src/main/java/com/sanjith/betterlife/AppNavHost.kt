@@ -1,6 +1,7 @@
 package com.sanjith.betterlife
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -10,14 +11,17 @@ import com.sanjith.betterlife.feature.debug.DatabaseDebugScreen
 import com.sanjith.betterlife.feature.debug.PopupSpikeScreen
 import com.sanjith.betterlife.feature.debug.ReminderEngineDebugScreen
 import com.sanjith.betterlife.feature.debug.TimeMachineScreen
+import com.sanjith.betterlife.domain.model.ReminderItemType
 import com.sanjith.betterlife.feature.home.DebugTool
 import com.sanjith.betterlife.feature.home.HomeScreen
+import com.sanjith.betterlife.feature.item.ItemPlaceholderScreen
 import com.sanjith.betterlife.feature.setup.SetupScreen
 
 /** Screen routes. Plain strings until a screen needs arguments. */
 internal object Routes {
     const val HOME = "home"
     const val SETUP = "setup"
+    const val ITEM = "item"
     const val POPUP_SPIKE = "debug/popup-spike"
     const val ALARM_SPIKE = "debug/alarm-spike"
     const val DATABASE = "debug/database"
@@ -27,8 +31,14 @@ internal object Routes {
 
 /** All screens of the single Activity. NavHost also handles the system (predictive) back gesture. */
 @Composable
-internal fun AppNavHost() {
+internal fun AppNavHost(itemToOpen: ItemRef?, onItemOpened: () -> Unit) {
     val navController = rememberNavController()
+    // A pop-up's Reschedule button asks to open an item's editor.
+    LaunchedEffect(itemToOpen) {
+        itemToOpen ?: return@LaunchedEffect
+        navController.navigate("${Routes.ITEM}/${itemToOpen.type.name}/${itemToOpen.id}")
+        onItemOpened()
+    }
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
             HomeScreen(
@@ -39,6 +49,13 @@ internal fun AppNavHost() {
         }
         composable(Routes.SETUP) {
             SetupScreen(onBack = { navController.popBackStack() })
+        }
+        composable("${Routes.ITEM}/{type}/{id}") { entry ->
+            val type = entry.arguments?.getString("type")?.let { name -> ReminderItemType.entries.firstOrNull { it.name == name } }
+            val id = entry.arguments?.getString("id")
+            if (type != null && id != null) {
+                ItemPlaceholderScreen(type, id, onBack = { navController.popBackStack() })
+            }
         }
         if (BuildConfig.DEBUG) {
             composable(Routes.POPUP_SPIKE) {

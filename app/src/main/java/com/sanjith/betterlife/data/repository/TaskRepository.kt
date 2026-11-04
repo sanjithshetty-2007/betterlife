@@ -46,6 +46,11 @@ public class TaskRepository(
         }
     }
 
+    /** Marks the task done. Its reminders stop at the next reschedule (the item is no longer active). */
+    public suspend fun complete(id: String) {
+        taskDao.complete(id, nowMillis())
+    }
+
     /** Soft-deletes the task and its reminders (agent.md section 4: deleting cancels reminders). */
     public suspend fun softDelete(id: String) {
         val now = nowMillis()

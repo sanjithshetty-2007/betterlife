@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import com.sanjith.betterlife.BetterLifeApp
 import com.sanjith.betterlife.R
+import com.sanjith.betterlife.domain.model.Importance
 import com.sanjith.betterlife.reminders.ReminderNotifier
 import com.sanjith.betterlife.reminders.popup.ReminderPopupService
 import kotlinx.coroutines.launch
@@ -24,14 +25,14 @@ public class TestAlarmReceiver : BroadcastReceiver() {
         log.add("Alarm received (${intent.getStringExtra(EXTRA_KIND)})")
 
         try {
-            ReminderPopupService.start(context, delayMillis = 0L)
+            ReminderPopupService.showTest(context, delayMillis = 0L)
             log.add("Pop-up service start requested from the receiver")
         } catch (e: ForegroundServiceStartNotAllowedException) {
             log.add("Service start refused (${e.javaClass.simpleName}); posting a full-screen notification instead")
-            ReminderNotifier(context).postFullScreen(
-                FALLBACK_NOTIFICATION_ID,
+            ReminderNotifier(context).postPopupStack(
                 context.getString(R.string.popup_test_title),
-                context.getString(R.string.alarm_fallback_text),
+                Importance.FULL_SCREEN,
+                hideTitle = false,
             )
         }
 
@@ -49,6 +50,5 @@ public class TestAlarmReceiver : BroadcastReceiver() {
     public companion object {
         public const val ACTION_FIRE: String = "com.sanjith.betterlife.action.TEST_ALARM"
         public const val EXTRA_KIND: String = "kind"
-        private const val FALLBACK_NOTIFICATION_ID = 9_003
     }
 }

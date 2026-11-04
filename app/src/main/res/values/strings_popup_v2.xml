@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Production pop-up (Prompt 8) -->
+    <string name="popup_reschedule">Reschedule</string>
+    <string name="popup_back">Back</string>
+    <string name="popup_why">Why am I seeing this?</string>
+    <string name="popup_hidden_title">Reminder</string>
+    <string name="popup_mascot_description">Blip, curious</string>
+    <string name="popup_snoozed_many">You have snoozed this %1$d times. Move it to tomorrow instead?</string>
+    <string name="popup_move_to_tomorrow">Move to tomorrow</string>
+    <plurals name="popup_stack_header">
+        <item quantity="one">%d reminder</item>
+        <item quantity="other">%d reminders</item>
+    </plurals>
+
+    <string name="snooze_10_min">10 min</string>
+    <string name="snooze_30_min">30 min</string>
+    <string name="snooze_1_hour">1 hour</string>
+    <string name="snooze_tonight">Tonight</string>
+    <string name="snooze_tonight_at">Tonight %1$s</string>
+    <string name="snooze_tomorrow">Tomorrow</string>
+    <string name="snooze_tomorrow_at">Tomorrow %1$s</string>
+    <string name="snooze_pick_time">Pick time</string>
+    <string name="snooze_confirm">Snooze</string>
+    <string name="snooze_after_event_end">That is after the event ends. Pick an earlier time.</string>
+
+    <string name="why_item">Item</string>
+    <string name="why_due">Due</string>
+    <string name="why_rule">Rule</string>
+    <string name="why_level">Level</string>
+    <string name="why_edit">Edit</string>
+    <string name="why_rule_at_time">At the time</string>
+    <plurals name="why_minutes_before">
+        <item quantity="one">%d minute before</item>
+        <item quantity="other">%d minutes before</item>
+    </plurals>
+    <plurals name="why_hours_before">
+        <item quantity="one">%d hour before</item>
+        <item quantity="other">%d hours before</item>
+    </plurals>
+    <plurals name="why_days_before">
+        <item quantity="one">%d day before</item>
+        <item quantity="other">%d days before</item>
+    </plurals>
+    <plurals name="why_weeks_before">
+        <item quantity="one">%d week before</item>
+        <item quantity="other">%d weeks before</item>
+    </plurals>
+
+    <string name="level_normal">Reminder</string>
+    <string name="level_full_screen">Pop-up</string>
+    <string name="level_alarm">Alarm</string>
+
+    <string name="item_placeholder_title">Edit item</string>
+    <string name="item_placeholder_missing">This item no longer exists.</string>
+    <string name="item_placeholder_body">The editor arrives with the task screens (Prompt 9) and event screens (Prompt 10). For now this shows which item the reminder belongs to.</string>
+
+    <!-- Debug reminder engine screen additions (Prompt 8) -->
+    <string name="engine_complete_tests">Complete test tasks</string>
+    <string name="engine_hide_titles">Hide titles on the lock screen</string>
+</resources>

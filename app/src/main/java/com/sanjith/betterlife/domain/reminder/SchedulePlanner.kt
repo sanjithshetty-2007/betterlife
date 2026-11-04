@@ -34,6 +34,8 @@ public data class ScheduleTarget(
     val itemDone: Boolean,
     val scheduledFireAt: Instant?,
     val lastFiredFireAt: Instant?,
+    /** A snoozed reminder comes back at this time instead of its normal one. */
+    val snoozedUntil: Instant? = null,
 )
 
 /** An alarm to set ([fireAt] non-null) or to cancel ([fireAt] null) for one reminder. */
@@ -108,6 +110,10 @@ public object SchedulePlanner {
      * most one; repeating items look at their occurrences in order and use only the next one.
      */
     public fun nextFireTime(target: ScheduleTarget, now: Instant, zone: ZoneId, allDayFireTime: LocalTime): Instant? {
+        // A pending snooze wins until it has been delivered.
+        target.snoozedUntil
+            ?.takeIf { (target.lastFiredFireAt == null || it.isAfter(target.lastFiredFireAt)) && !it.isBefore(now) }
+            ?.let { return it }
         val itemTime = target.itemTime ?: return null
         val candidates: Sequence<ItemTime> = when (val rule = target.recurrence) {
             null -> sequenceOf(itemTime)

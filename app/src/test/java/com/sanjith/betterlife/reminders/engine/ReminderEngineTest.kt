@@ -39,27 +39,60 @@ public class ReminderEngineTest {
         var scheduledFireAt: Instant? = target.scheduledFireAt
         var lastFired: Instant? = target.lastFiredFireAt
         var state: ReminderState = ReminderState.SCHEDULED
+        var snoozedUntil: Instant? = null
+        var snoozeCount = 0
+        var taskCompleted = false
     }
 
     private class FakeStore : ReminderStore {
         val rows = linkedMapOf<String, StoredReminder>()
 
         override suspend fun loadTargets() = rows.values.filter { !it.deleted }.map {
-            it.target.copy(scheduledFireAt = it.scheduledFireAt, lastFiredFireAt = it.lastFired, itemDone = it.status != ItemStatus.ACTIVE)
+            it.target.copy(
+                scheduledFireAt = it.scheduledFireAt,
+                lastFiredFireAt = it.lastFired,
+                itemDone = it.status != ItemStatus.ACTIVE,
+                snoozedUntil = it.snoozedUntil,
+            )
         }
         override suspend fun idsToUnschedule() = rows.values.filter { it.deleted && it.scheduledFireAt != null }.map { it.target.reminderId }
         override suspend fun setScheduledFireAt(reminderId: String, fireAt: Instant?) {
             rows.getValue(reminderId).scheduledFireAt = fireAt
         }
         override suspend fun fireContext(reminderId: String) = rows[reminderId]?.let {
-            FireContext(reminderId, it.target.importance, if (it.deleted) ItemStatus.DELETED else it.status, it.title, it.target.recurrence != null, it.target.offsetMinutes)
+            FireContext(
+                reminderId, it.target.importance, if (it.deleted) ItemStatus.DELETED else it.status, it.title,
+                it.target.recurrence != null, it.target.offsetMinutes, snoozeCount = it.snoozeCount,
+            )
         }
         override suspend fun markFired(reminderId: String, fireAt: Instant, state: ReminderState): Boolean {
             val row = rows.getValue(reminderId)
             if (row.lastFired == fireAt) return false
             row.lastFired = fireAt
             row.state = state
+            if (row.snoozedUntil != fireAt) {
+                row.snoozedUntil = null
+                row.snoozeCount = 0
+            }
             return true
+        }
+        override suspend fun snooze(reminderId: String, until: Instant): Int {
+            val row = rows.getValue(reminderId)
+            row.snoozedUntil = until
+            row.snoozeCount++
+            row.state = ReminderState.SNOOZED
+            return row.snoozeCount
+        }
+        override suspend fun finish(reminderId: String, state: ReminderState) {
+            val row = rows.getValue(reminderId)
+            row.snoozedUntil = null
+            row.snoozeCount = 0
+            row.state = state
+        }
+        override suspend fun completeTask(reminderId: String) {
+            val row = rows.getValue(reminderId)
+            row.taskCompleted = true
+            row.status = ItemStatus.COMPLETED
         }
     }
 
@@ -82,8 +115,8 @@ public class ReminderEngineTest {
 
     private class FakePresenter : ReminderPresenter {
         val shown = mutableListOf<String>()
-        override fun showPopup(reminderId: String, title: String, level: Importance) {
-            shown += "popup:$title:$level"
+        override fun showPopup(context: FireContext, level: Importance) {
+            shown += "popup:${context.title}:$level"
         }
         override fun postNotification(reminderId: String, title: String, level: Importance) {
             shown += "notification:$title:$level"
@@ -276,5 +309,71 @@ public class ReminderEngineTest {
 
         assertEquals(ReasonCode.EXACT_ALARM_DENIED, logRows.single { it.status == ReminderLogStatus.SCHEDULED }.reason)
         assertTrue("a" in alarms.set)
+    }
+
+    @Test
+    public fun doneCompletesTheTaskAndCancelsItsAlarms() = runTest {
+        val row = add("a", "2026-10-09T09:00")
+        add("b", "2026-10-09T10:00")
+        engine.rescheduleAll(RescheduleTrigger.APP_LAUNCH)
+
+        engine.complete("a")
+
+        assertTrue(row.taskCompleted)
+        assertEquals(ReminderState.COMPLETED, row.state)
+        assertTrue("a" !in alarms.set)
+        assertTrue("b" in alarms.set)
+        assertEquals(1, logRows.count { it.status == ReminderLogStatus.COMPLETED })
+    }
+
+    @Test
+    public fun snoozeSchedulesTheNewTimeAndCountsUp() = runTest {
+        val row = add("a", "2026-10-08T18:00")
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+        clock.instant = at("2026-10-08T18:01")
+
+        engine.snooze("a", at("2026-10-08T18:11"))
+
+        assertEquals(at("2026-10-08T18:11"), alarms.set["a"]?.first)
+        assertEquals(1, row.snoozeCount)
+        assertEquals(1, logRows.count { it.status == ReminderLogStatus.SNOOZED })
+    }
+
+    @Test
+    public fun snoozedFiringKeepsTheCountAndANormalFiringResetsIt() = runTest {
+        val row = add("a", "2026-10-08T18:00", recurrence = RecurrenceRule.Daily())
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+        engine.snooze("a", at("2026-10-08T18:10"))
+        engine.onAlarm("a", at("2026-10-08T18:10"))
+        engine.snooze("a", at("2026-10-08T18:20"))
+        assertEquals(2, row.snoozeCount)
+
+        // Tomorrow's normal occurrence starts a fresh count.
+        engine.onAlarm("a", at("2026-10-09T18:00"))
+        assertEquals(0, row.snoozeCount)
+    }
+
+    @Test
+    public fun timeoutLogsMissedAndPostsOneQuietNotification() = runTest {
+        val row = add("a", "2026-10-08T18:00", title = "Pills")
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+
+        engine.timedOut("a", timeoutMinutes = 5)
+
+        assertEquals(ReminderState.MISSED, row.state)
+        assertEquals(listOf("popup:Pills:FULL_SCREEN", "notification:Pills:NORMAL"), presenter.shown)
+        assertEquals(1, logRows.count { it.status == ReminderLogStatus.MISSED })
+    }
+
+    @Test
+    public fun dismissAndRescheduleAreLogged() = runTest {
+        add("a", "2026-10-08T18:00")
+        add("b", "2026-10-08T18:00")
+
+        engine.dismiss("a")
+        engine.openedEditor("b")
+
+        assertEquals(1, logRows.count { it.status == ReminderLogStatus.DISMISSED })
+        assertEquals(1, logRows.count { it.status == ReminderLogStatus.RESCHEDULED })
     }
 }

@@ -76,6 +76,24 @@ public class MigrationTest {
     }
 
     @Test
+    public fun migration2To3StartsEveryReminderUnsnoozed() {
+        helper.createDatabase(DB_NAME, 2).use { db ->
+            db.execSQL(INSERT_V1_TASK)
+            db.execSQL(INSERT_V1_REMINDER)
+            db.execSQL("UPDATE reminders SET scheduledFireAt = 1800000000000 WHERE id = 'rem-1'")
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME, 3, true, BetterLifeDatabase.MIGRATION_2_3).use { db ->
+            db.query("SELECT scheduledFireAt, snoozeCount, snoozedUntil FROM reminders WHERE id = 'rem-1'").use { c ->
+                c.moveToFirst()
+                assertEquals(1_800_000_000_000L, c.getLong(0))
+                assertEquals(0, c.getInt(1))
+                assertTrue(c.isNull(2))
+            }
+        }
+    }
+
+    @Test
     public fun allMigrationsOpenOldDataWithRoom() = runTest {
         helper.createDatabase(DB_NAME, 1).use { db -> db.execSQL(INSERT_V1_TASK) }
 

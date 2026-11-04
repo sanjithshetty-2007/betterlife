@@ -131,6 +131,10 @@ public data class ReminderEntity(
     val serverUpdatedAt: Long?,
     val scheduledFireAt: Long? = null,
     val lastFiredFireAt: Long? = null,
+    /** Times this reminder was snoozed since it last fired normally (version 3, local only). */
+    @ColumnInfo(defaultValue = "0") val snoozeCount: Int = 0,
+    /** When a snoozed reminder comes back (version 3, local only). */
+    val snoozedUntil: Long? = null,
 )
 
 /** Append-only history of what happened to reminders; never edited, kept 60 days (Prompt 11). */

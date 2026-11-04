@@ -11,10 +11,13 @@ import com.sanjith.betterlife.domain.recurrence.RecurrenceRule
 import com.sanjith.betterlife.domain.recurrence.RecurrenceRuleText
 import com.sanjith.betterlife.domain.reminder.ItemTime
 import com.sanjith.betterlife.domain.reminder.ScheduleTarget
+import com.sanjith.betterlife.domain.time.Clock
+import com.sanjith.betterlife.domain.time.millis
 import java.time.Instant
 
 /** [ReminderStore] backed by Room: joins each reminder with its task or event. */
-public class RoomReminderStore(private val db: BetterLifeDatabase) : ReminderStore {
+/** [clock] must be the real clock (see ReminderEngine). */
+public class RoomReminderStore(private val db: BetterLifeDatabase, private val clock: Clock) : ReminderStore {
 
     private val reminderDao = db.reminderDao()
 
@@ -33,6 +36,7 @@ public class RoomReminderStore(private val db: BetterLifeDatabase) : ReminderSto
                 itemDone = item.status != ItemStatus.ACTIVE,
                 scheduledFireAt = reminder.scheduledFireAt?.let(Instant::ofEpochMilli),
                 lastFiredFireAt = reminder.lastFiredFireAt?.let(Instant::ofEpochMilli),
+                snoozedUntil = reminder.snoozedUntil?.let(Instant::ofEpochMilli),
             )
         }
     }
@@ -52,14 +56,53 @@ public class RoomReminderStore(private val db: BetterLifeDatabase) : ReminderSto
         }
         // A reminder deleted on its own counts like a deleted item: it must not show.
         val status = if (reminder.deletedAt != null || reminder.state == ReminderState.CANCELLED) ItemStatus.DELETED else item.status
-        return FireContext(reminder.id, reminder.importance, status, item.title, item.recurrence != null, reminder.offsetMinutes)
+        return FireContext(
+            reminderId = reminder.id,
+            importance = reminder.importance,
+            itemStatus = status,
+            title = item.title,
+            recurring = item.recurrence != null,
+            offsetMinutes = reminder.offsetMinutes,
+            itemType = reminder.itemType,
+            itemId = reminder.itemId,
+            notes = item.notes,
+            itemTime = when (val time = item.time) {
+                is ItemTime.At -> time.instant
+                is ItemTime.AllDay -> time.date.atStartOfDay(clock.zone).toInstant()
+                null -> null
+            },
+            itemAllDay = item.time is ItemTime.AllDay,
+            eventEnd = item.end,
+            snoozeCount = reminder.snoozeCount,
+        )
+    }
+
+    override suspend fun snooze(reminderId: String, until: Instant): Int {
+        reminderDao.snooze(reminderId, until.toEpochMilli())
+        return reminderDao.getAnyById(reminderId)?.snoozeCount ?: 0
+    }
+
+    override suspend fun finish(reminderId: String, state: ReminderState) {
+        reminderDao.finish(reminderId, state)
+    }
+
+    override suspend fun completeTask(reminderId: String) {
+        val reminder = reminderDao.getAnyById(reminderId) ?: return
+        if (reminder.itemType == ReminderItemType.TASK) reminder.itemId?.let { db.taskDao().complete(it, clock.millis()) }
     }
 
     override suspend fun markFired(reminderId: String, fireAt: Instant, state: ReminderState): Boolean =
         reminderDao.markFired(reminderId, fireAt.toEpochMilli(), state) > 0
 
     /** The parts of a task or event the engine needs. */
-    private data class ItemInfo(val title: String, val status: ItemStatus, val time: ItemTime?, val recurrence: RecurrenceRule?)
+    private data class ItemInfo(
+        val title: String,
+        val status: ItemStatus,
+        val time: ItemTime?,
+        val recurrence: RecurrenceRule?,
+        val notes: String? = null,
+        val end: Instant? = null,
+    )
 
     private fun itemFor(reminder: ReminderEntity, tasks: Map<String, TaskEntity>, events: Map<String, EventEntity>): ItemInfo =
         when (reminder.itemType) {
@@ -90,6 +133,7 @@ public class RoomReminderStore(private val db: BetterLifeDatabase) : ReminderSto
             else -> null
         },
         recurrence = RecurrenceRuleText.decode(recurrenceRule),
+        notes = notes,
     )
 
     private fun EventEntity.toItem() = ItemInfo(
@@ -101,6 +145,8 @@ public class RoomReminderStore(private val db: BetterLifeDatabase) : ReminderSto
             else -> null
         },
         recurrence = RecurrenceRuleText.decode(recurrenceRule),
+        notes = notes,
+        end = endAtMillis?.let(Instant::ofEpochMilli),
     )
 
     private companion object {

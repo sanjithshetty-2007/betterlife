@@ -42,7 +42,7 @@ public class RoomReminderStoreTest {
     @Before
     public fun setUp() {
         db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), BetterLifeDatabase::class.java).build()
-        store = RoomReminderStore(db)
+        store = RoomReminderStore(db, com.sanjith.betterlife.domain.time.FixedClock(Instant.parse("2026-10-09T10:00:00Z"), zone))
         val newId = { "id-${++idCounter}" }
         tasks = TaskRepository(db, { 1L }, newId)
         events = EventRepository(db, { 1L }, newId)

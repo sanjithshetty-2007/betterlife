@@ -12,9 +12,6 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.sanjith.betterlife.ui.theme.BetterLifeTheme
 
-/** Why the overlay went away. */
-public enum class OverlayDismissReason { DONE, SNOOZE, BACK, REMOVED }
-
 /** Result of trying to add the overlay window. */
 public sealed interface OverlayShowResult {
     public data object Shown : OverlayShowResult
@@ -32,27 +29,23 @@ public class OverlayController(private val context: Context) {
     private val windowManager = context.getSystemService(WindowManager::class.java)
     private var root: View? = null
     private var lifecycleOwner: OverlayLifecycleOwner? = null
-    private var onDismiss: ((OverlayDismissReason) -> Unit)? = null
 
     public val isShowing: Boolean
         get() = root != null
 
-    public fun show(
-        onDismiss: (OverlayDismissReason) -> Unit,
-        content: @Composable (dismiss: (OverlayDismissReason) -> Unit) -> Unit,
-    ): OverlayShowResult {
+    /** [onBack] runs on the system Back gesture; the window stays until [remove] is called. */
+    public fun show(onBack: () -> Unit, content: @Composable () -> Unit): OverlayShowResult {
         if (root != null) return OverlayShowResult.AlreadyShowing
         // Re-checked at the moment of use: the permission can be revoked at any time.
         if (!Settings.canDrawOverlays(context)) return OverlayShowResult.Failed(CAUSE_PERMISSION)
 
         val owner = OverlayLifecycleOwner().apply { create() }
-        val view = buildRoot(owner, content)
+        val view = buildRoot(owner, onBack, content)
         return try {
             windowManager.addView(view, layoutParams())
             owner.resume()
             root = view
             lifecycleOwner = owner
-            this.onDismiss = onDismiss
             OverlayShowResult.Shown
         } catch (e: WindowManager.BadTokenException) {
             owner.destroy()
@@ -65,10 +58,6 @@ public class OverlayController(private val context: Context) {
 
     /** Removes the window if present. Safe to call more than once. */
     public fun remove() {
-        dismiss(OverlayDismissReason.REMOVED)
-    }
-
-    private fun dismiss(reason: OverlayDismissReason) {
         val view = root ?: return
         root = null
         lifecycleOwner?.destroy()
@@ -78,20 +67,15 @@ public class OverlayController(private val context: Context) {
         } catch (_: IllegalArgumentException) {
             // Already detached by the system (for example the permission was revoked): nothing left to remove.
         }
-        onDismiss?.invoke(reason)
-        onDismiss = null
     }
 
-    private fun buildRoot(
-        owner: OverlayLifecycleOwner,
-        content: @Composable (dismiss: (OverlayDismissReason) -> Unit) -> Unit,
-    ): View {
-        val frame = BackAwareFrameLayout(context) { dismiss(OverlayDismissReason.BACK) }
+    private fun buildRoot(owner: OverlayLifecycleOwner, onBack: () -> Unit, content: @Composable () -> Unit): View {
+        val frame = BackAwareFrameLayout(context, onBack)
         frame.setViewTreeLifecycleOwner(owner)
         frame.setViewTreeSavedStateRegistryOwner(owner)
         val composeView = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
-            setContent { BetterLifeTheme { content(::dismiss) } }
+            setContent { BetterLifeTheme { content() } }
         }
         frame.addView(composeView)
         return frame
@@ -101,7 +85,7 @@ public class OverlayController(private val context: Context) {
         WindowManager.LayoutParams.MATCH_PARENT,
         WindowManager.LayoutParams.MATCH_PARENT,
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-        // Focusable (no FLAG_NOT_FOCUSABLE) so Back reaches us; drawn edge to edge under the system bars.
+        // Focusable (no FLAG_NOT_FOCUSABLE) so Back and the time input reach us; drawn edge to edge.
         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
         PixelFormat.TRANSLUCENT,
     ).apply {

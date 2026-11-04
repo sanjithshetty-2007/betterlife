@@ -106,7 +106,57 @@ public class ReminderEngine(
         val decision = DeliveryPipeline.decide(
             DeliveryInput(context.importance, context.itemStatus, device.presentationInputs(), device.callActive(), clock.now()),
         )
-        return execute(context, decision)
+        // Re-read after markFired: a normal (not snoozed) firing has just reset the snooze count.
+        return execute(store.fireContext(reminderId) ?: context, decision)
+    }
+
+    /** Done on the pop-up: completes the task (or just this reminder, for events) and cancels its alarms. */
+    public suspend fun complete(reminderId: String) {
+        lock.withLock {
+            val context = store.fireContext(reminderId) ?: return@withLock
+            store.completeTask(reminderId)
+            store.finish(reminderId, ReminderState.COMPLETED)
+            log.append(reminderId, ReminderLogStatus.COMPLETED, context.importance, null, context.itemType?.name, clock.now())
+        }
+        rescheduleAll(RescheduleTrigger.AFTER_FIRE)
+    }
+
+    /** Snooze on the pop-up: the reminder comes back at [until]. */
+    public suspend fun snooze(reminderId: String, until: Instant) {
+        lock.withLock {
+            val context = store.fireContext(reminderId) ?: return@withLock
+            val count = store.snooze(reminderId, until)
+            log.append(reminderId, ReminderLogStatus.SNOOZED, context.importance, null, "count $count until $until", clock.now())
+        }
+        rescheduleAll(RescheduleTrigger.AFTER_FIRE)
+    }
+
+    /** Back or swipe on the pop-up: closed without an answer. The reminder is not shown again. */
+    public suspend fun dismiss(reminderId: String) {
+        lock.withLock {
+            val context = store.fireContext(reminderId) ?: return@withLock
+            store.finish(reminderId, if (context.recurring) ReminderState.SCHEDULED else ReminderState.DISMISSED)
+            log.append(reminderId, ReminderLogStatus.DISMISSED, context.importance, null, "closed without an answer", clock.now())
+        }
+    }
+
+    /** Reschedule on the pop-up: the editor opens; the real change is saved there (Prompt 9). */
+    public suspend fun openedEditor(reminderId: String) {
+        lock.withLock {
+            val context = store.fireContext(reminderId) ?: return@withLock
+            store.finish(reminderId, if (context.recurring) ReminderState.SCHEDULED else ReminderState.DISMISSED)
+            log.append(reminderId, ReminderLogStatus.RESCHEDULED, context.importance, null, "opened the editor", clock.now())
+        }
+    }
+
+    /** No answer before the timeout: a MISSED entry plus one quiet notification (context.md 5.1). */
+    public suspend fun timedOut(reminderId: String, timeoutMinutes: Int) {
+        lock.withLock {
+            val context = store.fireContext(reminderId) ?: return@withLock
+            store.finish(reminderId, if (context.recurring) ReminderState.SCHEDULED else ReminderState.MISSED)
+            log.append(reminderId, ReminderLogStatus.MISSED, context.importance, null, "no answer in $timeoutMinutes min", clock.now())
+            presenter.postNotification(reminderId, context.title, Importance.NORMAL)
+        }
     }
 
     private suspend fun execute(context: FireContext, decision: DeliveryDecision): FireOutcome {
@@ -121,7 +171,7 @@ public class ReminderEngine(
             return FireOutcome.DELIVERED
         }
         when (decision.path) {
-            PresentationPath.OVERLAY, PresentationPath.FULL_SCREEN_INTENT -> presenter.showPopup(id, context.title, decision.level)
+            PresentationPath.OVERLAY, PresentationPath.FULL_SCREEN_INTENT -> presenter.showPopup(context, decision.level)
             PresentationPath.NOTIFICATION_ONLY -> presenter.postNotification(id, context.title, decision.level)
             PresentationPath.NONE -> {
                 log.append(id, ReminderLogStatus.FAILED, context.importance, decision.reasonCode, "nothing can be shown", now)

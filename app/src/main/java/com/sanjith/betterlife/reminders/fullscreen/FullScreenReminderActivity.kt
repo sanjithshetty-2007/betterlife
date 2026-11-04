@@ -1,27 +1,31 @@
 package com.sanjith.betterlife.reminders.fullscreen
 
-import android.app.NotificationManager
+import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.text.format.DateFormat
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.sanjith.betterlife.BetterLifeApp
-import com.sanjith.betterlife.core.isReducedMotion
-import com.sanjith.betterlife.reminders.popup.ReminderPopup
+import com.sanjith.betterlife.reminders.popup.CardAction
+import com.sanjith.betterlife.reminders.popup.PopupHost
 import com.sanjith.betterlife.ui.theme.BetterLifeTheme
-import java.util.Date
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
- * The pop-up on the lock screen (Path B). Opened by a notification's full-screen intent, which Android
- * only launches full screen when the phone is locked or the screen is off.
+ * The pop-up on the lock screen (Path B). Opened by the full-screen notification, which Android only
+ * launches full screen when the phone is locked or the screen is off. Shows the same shared stack as
+ * the overlay and closes itself when the stack is empty.
  */
 public class FullScreenReminderActivity : ComponentActivity() {
 
-    private val debugLog by lazy { (application as BetterLifeApp).container.debugLog }
+    private val container by lazy { (application as BetterLifeApp).container }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,49 +33,29 @@ public class FullScreenReminderActivity : ComponentActivity() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         enableEdgeToEdge()
-
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() = close(OUTCOME_BACK)
+                override fun handleOnBackPressed() {
+                    val top = container.popupCoordinator.state.value.cards.lastOrNull() ?: return finish()
+                    container.popupCoordinator.act(top.key, CardAction.Dismiss)
+                }
             },
         )
-
-        val title = intent.getStringExtra(EXTRA_TITLE).orEmpty()
-        val timeText = DateFormat.getTimeFormat(this).format(Date())
-        debugLog.add("Path B: full-screen Activity shown")
-        setContent {
-            BetterLifeTheme {
-                ReminderPopup(
-                    title = title,
-                    timeText = timeText,
-                    reduceMotion = isReducedMotion(),
-                    onAction = { action -> close(action.name) },
-                    onTapIgnored = { debugLog.add("Path B: tap ignored (tap guard)") },
-                )
+        val locked = getSystemService(KeyguardManager::class.java).isKeyguardLocked
+        container.debugLog.add("Path B: full-screen Activity shown")
+        setContent { BetterLifeTheme { PopupHost(container, onScreenLock = locked) } }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                container.popupCoordinator.state.first { it.isEmpty }
+                finish()
             }
         }
     }
 
-    private fun close(outcome: String) {
-        debugLog.add("Path B: dismissed with $outcome")
-        val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, NO_NOTIFICATION)
-        if (notificationId != NO_NOTIFICATION) {
-            getSystemService(NotificationManager::class.java).cancel(notificationId)
-        }
-        finish()
-    }
-
     public companion object {
-        private const val EXTRA_TITLE = "title"
-        private const val EXTRA_NOTIFICATION_ID = "notification_id"
-        private const val NO_NOTIFICATION = -1
-        private const val OUTCOME_BACK = "BACK"
-
-        public fun intent(context: Context, title: String, notificationId: Int): Intent =
+        public fun intent(context: Context): Intent =
             Intent(context, FullScreenReminderActivity::class.java)
-                .putExtra(EXTRA_TITLE, title)
-                .putExtra(EXTRA_NOTIFICATION_ID, notificationId)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
     }
 }

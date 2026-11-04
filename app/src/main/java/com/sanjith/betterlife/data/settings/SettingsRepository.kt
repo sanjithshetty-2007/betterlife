@@ -49,6 +49,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 alarmExemptFromFatigue = prefs[ALARM_EXEMPT_FATIGUE] ?: d.alarmExemptFromFatigue,
                 pauseExemptsEventsAndAlarms = prefs[PAUSE_EXEMPTS] ?: d.pauseExemptsEventsAndAlarms,
                 weekStart = prefs[WEEK_START]?.let(DayOfWeek::of) ?: d.weekStart,
+                hideTitleOnLockScreen = prefs[HIDE_TITLE_LOCKED] ?: d.hideTitleOnLockScreen,
             )
         }.getOrDefault(d)
     }
@@ -70,6 +71,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         prefs[ALARM_EXEMPT_FATIGUE] = s.alarmExemptFromFatigue
         prefs[PAUSE_EXEMPTS] = s.pauseExemptsEventsAndAlarms
         prefs[WEEK_START] = s.weekStart.value
+        prefs[HIDE_TITLE_LOCKED] = s.hideTitleOnLockScreen
     }
 
     private fun Preferences.time(key: Preferences.Key<Int>, default: LocalTime): LocalTime =
@@ -95,5 +97,6 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val ALARM_EXEMPT_FATIGUE = booleanPreferencesKey("alarm_exempt_from_fatigue")
         val PAUSE_EXEMPTS = booleanPreferencesKey("pause_exempts_events_and_alarms")
         val WEEK_START = intPreferencesKey("week_start_iso_day")
+        val HIDE_TITLE_LOCKED = booleanPreferencesKey("hide_title_on_lock_screen")
     }
 }

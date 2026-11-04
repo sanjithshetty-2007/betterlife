@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -54,7 +57,7 @@ public fun ReminderEngineDebugScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
-            item { EngineControls(viewModel, onBack) }
+            item { EngineControls(viewModel, state.hideTitles, onBack) }
             item { SectionTitle(stringResource(R.string.engine_scheduled_title, state.scheduled.size)) }
             items(state.scheduled, key = { it.id }) { reminder ->
                 MonoLine("${format(reminder.scheduledFireAt)}  ${reminder.importance}  ${reminder.id.take(ID_PREVIEW)}")
@@ -71,7 +74,7 @@ public fun ReminderEngineDebugScreen(
 }
 
 @Composable
-private fun EngineControls(viewModel: ReminderEngineDebugViewModel, onBack: () -> Unit) {
+private fun EngineControls(viewModel: ReminderEngineDebugViewModel, hideTitles: Boolean, onBack: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
@@ -117,6 +120,27 @@ private fun EngineControls(viewModel: ReminderEngineDebugViewModel, onBack: () -
                     .weight(1f)
                     .heightIn(min = Dimens.minTouchTarget),
             ) { Text(stringResource(R.string.engine_remove_tests)) }
+        }
+        OutlinedButton(
+            onClick = viewModel::completeTests,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = Dimens.minTouchTarget),
+        ) { Text(stringResource(R.string.engine_complete_tests)) }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = Dimens.minTouchTarget)
+                .toggleable(value = hideTitles, role = Role.Switch, onValueChange = viewModel::setHideTitles),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.engine_hide_titles),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(checked = hideTitles, onCheckedChange = null)
         }
     }
 }

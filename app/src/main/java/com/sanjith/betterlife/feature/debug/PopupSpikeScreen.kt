@@ -82,7 +82,7 @@ public fun PopupSpikeScreen(
             item {
                 SpikeHeader(
                     onBack = onBack,
-                    onShow = { ReminderPopupService.start(context, delayMillis = SPIKE_DELAY_MILLIS) },
+                    onShow = { ReminderPopupService.showTest(context, delayMillis = SPIKE_DELAY_MILLIS) },
                     onClear = viewModel::clear,
                 )
             }

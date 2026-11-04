@@ -27,6 +27,10 @@ import com.sanjith.betterlife.reminders.engine.AndroidDeviceState
 import com.sanjith.betterlife.reminders.engine.AndroidReminderPresenter
 import com.sanjith.betterlife.reminders.engine.ReminderEngine
 import com.sanjith.betterlife.reminders.engine.RoomReminderStore
+import com.sanjith.betterlife.reminders.popup.AndroidPopupActions
+import com.sanjith.betterlife.reminders.popup.AndroidSoundPlayer
+import com.sanjith.betterlife.reminders.popup.PopupCoordinator
+import com.sanjith.betterlife.reminders.popup.RoomItemWatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -108,15 +112,30 @@ public class AppContainer(appContext: Context) {
     public val reminderEngine: ReminderEngine by lazy {
         val realLog = ReminderLogRepository(database, realNowMillis, newId)
         ReminderEngine(
-            store = RoomReminderStore(database),
+            store = RoomReminderStore(database, realClock),
             alarms = AndroidAlarmScheduler(appContext),
             device = AndroidDeviceState(appContext),
-            presenter = AndroidReminderPresenter(appContext, debugLog),
+            presenter = AndroidReminderPresenter(appContext, debugLog, { popupCoordinator }, realClock),
             log = { id, status, level, reason, detail, at ->
                 realLog.append(id, status, level, reason, detail, at.toEpochMilli())
             },
             clock = realClock,
             allDayFireTime = { settingsRepository.current().birthdayFireTime },
+        )
+    }
+
+    /**
+     * The one pop-up stack for the whole app. Runs on the main thread (one thread, so its state never
+     * races) and on the real clock. It and the engine refer to each other, hence the lazy lambdas.
+     */
+    public val popupCoordinator: PopupCoordinator by lazy {
+        PopupCoordinator(
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+            actions = AndroidPopupActions(appContext) { reminderEngine },
+            sound = AndroidSoundPlayer(appContext),
+            watcher = RoomItemWatcher(database),
+            clock = realClock,
+            timeoutMinutes = { settingsRepository.current().popupTimeoutMinutes },
         )
     }
 

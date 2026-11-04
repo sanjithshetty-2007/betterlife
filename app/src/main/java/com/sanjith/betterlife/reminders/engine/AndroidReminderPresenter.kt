@@ -5,26 +5,32 @@ import android.content.Context
 import android.text.format.DateFormat
 import com.sanjith.betterlife.core.DebugLog
 import com.sanjith.betterlife.domain.model.Importance
+import com.sanjith.betterlife.domain.popup.PopupCard
+import com.sanjith.betterlife.domain.time.Clock
 import com.sanjith.betterlife.reminders.ReminderNotifier
+import com.sanjith.betterlife.reminders.popup.PopupCoordinator
 import com.sanjith.betterlife.reminders.popup.ReminderPopupService
 import java.util.Date
 
-/** [ReminderPresenter] using the Prompt 3/4 pop-up service and notifications. */
+/** [ReminderPresenter] that adds a card to the shared pop-up stack, or posts a notification. */
 public class AndroidReminderPresenter(
     private val context: Context,
     private val debugLog: DebugLog,
+    private val coordinator: () -> PopupCoordinator,
+    private val clock: Clock,
 ) : ReminderPresenter {
 
     private val notifier = ReminderNotifier(context)
 
-    override fun showPopup(reminderId: String, title: String, level: Importance) {
-        val notificationId = ReminderNotifier.idFor(reminderId)
+    override fun showPopup(context: FireContext, level: Importance) {
+        coordinator().show(context.toCard(level))
         try {
-            ReminderPopupService.start(context, delayMillis = 0L, title = title, notificationId = notificationId, level = level)
+            ReminderPopupService.show(this.context)
         } catch (e: ForegroundServiceStartNotAllowedException) {
-            // The exact alarm should allow this start; if Android refuses anyway, the lock-screen path still works.
+            // The exact alarm should allow this start; if Android refuses anyway, the lock-screen path
+            // still shows the same stack (the card is already in the coordinator).
             debugLog.add("Pop-up service refused (${e.javaClass.simpleName}); full-screen notification instead")
-            notifier.postFullScreen(notificationId, title, timeNow(), level)
+            notifier.postPopupStack(context.title, level, hideTitle = false)
         }
     }
 
@@ -36,5 +42,25 @@ public class AndroidReminderPresenter(
         notifier.postMissedSummary(count)
     }
 
-    private fun timeNow(): String = DateFormat.getTimeFormat(context).format(Date())
+    private fun FireContext.toCard(level: Importance) = PopupCard(
+        key = reminderId,
+        reminderId = reminderId,
+        title = title,
+        notesPreview = notes?.take(NOTES_PREVIEW_CHARS),
+        importance = level,
+        itemType = itemType,
+        itemId = itemId,
+        itemTime = itemTime,
+        itemAllDay = itemAllDay,
+        offsetMinutes = offsetMinutes,
+        eventEnd = eventEnd,
+        snoozeCount = snoozeCount,
+        shownAt = clock.now(),
+    )
+
+    private fun timeNow(): String = DateFormat.getTimeFormat(context).format(Date.from(clock.now()))
+
+    private companion object {
+        const val NOTES_PREVIEW_CHARS = 140
+    }
 }

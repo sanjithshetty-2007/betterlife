@@ -41,15 +41,25 @@ public interface ReminderDao {
 
     /**
      * Records that the alarm for [fireAt] was delivered. Returns 0 if it already was, which is how a
-     * duplicate alarm is ignored (one atomic UPDATE, so two receivers cannot both win).
+     * duplicate alarm is ignored (one atomic UPDATE, so two receivers cannot both win). A firing that is
+     * not the snoozed one starts a fresh snooze count.
      */
     @Query(
         """
-        UPDATE reminders SET lastFiredFireAt = :fireAt, state = :state
+        UPDATE reminders SET lastFiredFireAt = :fireAt, state = :state,
+          snoozeCount = CASE WHEN snoozedUntil = :fireAt THEN snoozeCount ELSE 0 END,
+          snoozedUntil = CASE WHEN snoozedUntil = :fireAt THEN snoozedUntil ELSE NULL END
         WHERE id = :id AND (lastFiredFireAt IS NULL OR lastFiredFireAt != :fireAt)
         """,
     )
     public suspend fun markFired(id: String, fireAt: Long, state: ReminderState): Int
+
+    /** Local fire state only: no sync marking. */
+    @Query("UPDATE reminders SET snoozedUntil = :until, snoozeCount = snoozeCount + 1, state = 'SNOOZED' WHERE id = :id")
+    public suspend fun snooze(id: String, until: Long)
+
+    @Query("UPDATE reminders SET snoozedUntil = NULL, snoozeCount = 0, state = :state WHERE id = :id")
+    public suspend fun finish(id: String, state: ReminderState)
 
     @Query("SELECT * FROM reminders WHERE scheduledFireAt IS NOT NULL ORDER BY scheduledFireAt")
     public fun observeScheduled(): Flow<List<ReminderEntity>>

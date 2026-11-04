@@ -157,6 +157,20 @@ public class SchedulePlannerTest {
     }
 
     @Test
+    public fun pendingSnoozeWinsOverTheNormalTime() {
+        val t = target(itemTime = ItemTime.At(at("2026-10-08T17:00"), zone), lastFired = at("2026-10-08T17:00"))
+            .copy(snoozedUntil = at("2026-10-08T18:10"))
+        assertEquals(at("2026-10-08T18:10"), plan(t).alarms.single().fireAt)
+    }
+
+    @Test
+    public fun deliveredSnoozeIsNotScheduledAgain() {
+        val t = target(itemTime = ItemTime.At(at("2026-10-08T17:00"), zone), lastFired = at("2026-10-08T17:50"))
+            .copy(snoozedUntil = at("2026-10-08T17:50"))
+        assertNull(plan(t).alarms.single().fireAt)
+    }
+
+    @Test
     public fun planningIsDeterministic() {
         val targets = listOf(target("a"), target("b", offset = 30))
         assertEquals(SchedulePlanner.plan(targets, now, zone, nine), SchedulePlanner.plan(targets, now, zone, nine))

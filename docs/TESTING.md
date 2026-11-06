@@ -253,3 +253,22 @@ Before you start: Home > Reminder Health shows 10/10 (fix any red row first), an
 | R21 | Airplane mode | Airplane mode on for a day of normal use | Everything works; reminders fire (Supabase is not used yet) | |
 
 Owner gate: also use the app normally for 2 to 3 days with real tasks and write anything missed or annoying under Known issues in PROGRESS.md. Keep a backup somewhere safe before Phase 2.
+
+## Prompt S1: Supabase project, schema, row-level security and sign-in
+
+Project: betterlife, Mumbai, ref `qprtltwuuihbixbfgspm` (found with the Supabase connection, created by the owner on 2026-11-04).
+
+| # | Test | Expected | Result |
+|---|---|---|---|
+| 1 | Supabase dashboard > Table Editor | projects, tasks, events, reminders, standalone_reminders exist, each "RLS enabled" (habits, habit_logs, pause_ranges come in S3) | **PASS** (AI: tables created by migration, RLS on) |
+| 2 | Security advisor | No warnings | **PASS** (AI 2026-11-06: 0 security lints; performance only notes the new pull indexes are unused yet) |
+| 3 | SQL editor: run `supabase/tests/rls_test.sql` | Ends with `RLS test passed`, leaves nothing behind | **PASS** (AI, 0 rows left) |
+| 4 | Home > Account & sync > enter your email and a password > Create account | "Almost done: open the email…" | |
+| 5 | Open the email from Supabase on the phone, tap the link (the page may look broken), back in the app > Sign in | "Signed in as …" | |
+| 6 | Close the app from recent apps, reopen > Account & sync | Still signed in | |
+| 7 | Sign in with a wrong password | "Wrong email or password." | |
+| 8 | Airplane mode on, Sign in | "No internet connection…"; the rest of the app and reminders keep working | |
+| 9 | Sign out | Signed out; all tasks and events are still on the phone | |
+| 10 | Search the repo on GitHub for your publishable key and for "service_role" | The key is not in any committed file; service_role appears only in docs that warn against it | |
+
+About the confirmation email: Supabase's email link goes to the project's Site URL (localhost by default), so the browser page may fail to load. The account is confirmed anyway. To change that page later: Supabase dashboard > Authentication > URL Configuration.

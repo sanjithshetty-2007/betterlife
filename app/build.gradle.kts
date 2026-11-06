@@ -1,3 +1,12 @@
+import java.util.Properties
+
+// Supabase settings come from local.properties (never committed). Only the publishable key may be there.
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
+fun localString(key: String): String = "\"" + localProperties.getProperty(key, "").trim() + "\""
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -26,6 +35,10 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Empty when local.properties has no Supabase settings: the app then simply runs without sync.
+        buildConfigField("String", "SUPABASE_URL", localString("supabase.url"))
+        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", localString("supabase.anonKey"))
     }
 
     buildTypes {
@@ -63,6 +76,11 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.work.runtime.ktx)
+    // Supabase sign-in (S1) and the sync engine's database calls (S2). Network is used only by sync/.
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)

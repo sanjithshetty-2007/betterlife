@@ -58,6 +58,7 @@ public fun HomeScreen(
     onPause: () -> Unit = {},
     onOpenQuiet: () -> Unit = {},
     onOpenBackup: () -> Unit = {},
+    onOpenAccount: () -> Unit = {},
     debugTools: List<DebugTool> = emptyList(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -147,6 +148,14 @@ public fun HomeScreen(
                     .heightIn(min = Dimens.minTouchTarget),
             ) {
                 Text(text = stringResource(R.string.backup_home_button))
+            }
+            OutlinedButton(
+                onClick = onOpenAccount,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.minTouchTarget),
+            ) {
+                Text(text = stringResource(R.string.account_home_button))
             }
             debugTools.forEach { tool ->
                 OutlinedButton(

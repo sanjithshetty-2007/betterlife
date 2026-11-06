@@ -46,6 +46,9 @@ import com.sanjith.betterlife.reminders.popup.AndroidPopupActions
 import com.sanjith.betterlife.reminders.popup.AndroidSoundPlayer
 import com.sanjith.betterlife.reminders.popup.PopupCoordinator
 import com.sanjith.betterlife.reminders.popup.RoomItemWatcher
+import com.sanjith.betterlife.sync.AccountRepository
+import com.sanjith.betterlife.sync.createSupabaseOrNull
+import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -147,6 +150,17 @@ public class AppContainer(appContext: Context) {
 
     /** Debug integrity check for references SQLite cannot enforce (Prompt 13). */
     public val integrityChecker: IntegrityChecker by lazy { IntegrityChecker(database, nowMillis) }
+
+    /**
+     * The Supabase client (Prompt S1), created on first use and only when this build has Supabase
+     * settings. Nothing in the reminder path touches it: the app and its alarms work with no network.
+     */
+    public val supabase: SupabaseClient? by lazy {
+        createSupabaseOrNull(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY)
+    }
+
+    /** Email + password sign-in; the session is kept on the phone and refreshed by Supabase. */
+    public val accountRepository: AccountRepository by lazy { AccountRepository(supabase, appScope) }
 
     /** Pause, digest time and fatigue counters (Prompt 12), on disk. */
     public val calmStore: CalmStore = CalmStore(appContext.settingsDataStore)

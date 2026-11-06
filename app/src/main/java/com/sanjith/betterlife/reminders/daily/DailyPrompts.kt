@@ -17,8 +17,8 @@ import com.sanjith.betterlife.reminders.NotificationChannels
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 
-/** The two daily nudges of Prompt 9; both off by default. */
-public enum class DailyPrompt { MORNING_CHECK_IN, EVENING_WRAP_UP }
+/** The daily nudges: check-in and wrap-up (Prompt 9, off by default) and the habit nudge (Prompt 17, on at 21:00). */
+public enum class DailyPrompt { MORNING_CHECK_IN, EVENING_WRAP_UP, HABIT_NUDGE }
 
 /**
  * Keeps one alarm per enabled daily prompt, at its next time. Uses the same AlarmManager approach as
@@ -36,6 +36,7 @@ public class DailyPrompts(
         val s = settings.current()
         apply(DailyPrompt.MORNING_CHECK_IN, s.morningCheckInEnabled, s.morningCheckInTime)
         apply(DailyPrompt.EVENING_WRAP_UP, s.eveningWrapUpEnabled, s.eveningWrapUpTime)
+        apply(DailyPrompt.HABIT_NUDGE, s.habitNudgeEnabled, s.habitNudgeTime)
     }
 
     private fun apply(prompt: DailyPrompt, enabled: Boolean, time: LocalTime) {
@@ -68,20 +69,38 @@ public class DailyPrompts(
     }
 }
 
-/** Posts the nudge (opening the check-in screen) and arms tomorrow's. */
+/**
+ * Posts the nudge and arms tomorrow's. The habit nudge is only posted when a habit is still not done,
+ * kept or paused today (checked when it goes off).
+ */
 public class DailyPromptReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != DailyPrompts.ACTION) return
         val prompt = intent.getStringExtra(DailyPrompts.EXTRA_PROMPT)?.let { name -> DailyPrompt.entries.firstOrNull { it.name == name } } ?: return
+        val container = (context.applicationContext as BetterLifeApp).container
+        val pending = goAsync()
+        container.appScope.launch {
+            try {
+                if (prompt != DailyPrompt.HABIT_NUDGE || container.habitNudgeNeeded()) post(context, prompt)
+                container.dailyPrompts.rescheduleAll()
+            } finally {
+                pending.finish()
+            }
+        }
+    }
+
+    private fun post(context: Context, prompt: DailyPrompt) {
         val (title, text) = when (prompt) {
             DailyPrompt.MORNING_CHECK_IN -> R.string.nudge_morning_title to R.string.nudge_morning_text
             DailyPrompt.EVENING_WRAP_UP -> R.string.nudge_evening_title to R.string.nudge_evening_text
+            DailyPrompt.HABIT_NUDGE -> R.string.nudge_habits_title to R.string.nudge_habits_text
         }
+        val route = if (prompt == DailyPrompt.HABIT_NUDGE) MainActivity.ROUTE_HABITS else MainActivity.ROUTE_CHECK_INS
         val open = PendingIntent.getActivity(
             context,
             prompt.ordinal,
-            MainActivity.openRouteIntent(context, MainActivity.ROUTE_CHECK_INS),
+            MainActivity.openRouteIntent(context, route),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notification = NotificationCompat.Builder(context, NotificationChannels.NUDGES)
@@ -97,15 +116,6 @@ public class DailyPromptReceiver : BroadcastReceiver() {
                 manager.notify(NOTIFICATION_BASE_ID + prompt.ordinal, notification)
             } catch (_: SecurityException) {
                 // Permission revoked between the check and the call: skip today's nudge.
-            }
-        }
-        val container = (context.applicationContext as BetterLifeApp).container
-        val pending = goAsync()
-        container.appScope.launch {
-            try {
-                container.dailyPrompts.rescheduleAll()
-            } finally {
-                pending.finish()
             }
         }
     }

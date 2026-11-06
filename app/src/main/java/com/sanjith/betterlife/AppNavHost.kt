@@ -1,5 +1,25 @@
 package com.sanjith.betterlife
 
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import com.sanjith.betterlife.domain.today.TodayKind
+import com.sanjith.betterlife.feature.home.HealthBanner
+import com.sanjith.betterlife.feature.more.MoreEntry
+import com.sanjith.betterlife.feature.more.MoreScreen
+import com.sanjith.betterlife.feature.today.ComebackScreen
+import com.sanjith.betterlife.feature.today.MinimumDayScreen
+import com.sanjith.betterlife.feature.today.OnboardingNameScreen
+import com.sanjith.betterlife.feature.today.TodayActions
+import com.sanjith.betterlife.feature.today.TodayScreen
 import com.sanjith.betterlife.feature.celebration.CelebrationMessagesScreen
 import com.sanjith.betterlife.feature.celebration.CelebrationScreen
 import com.sanjith.betterlife.feature.debug.MascotDebugScreen
@@ -49,7 +69,6 @@ import com.sanjith.betterlife.feature.habits.HabitEditorScreen
 import com.sanjith.betterlife.feature.habits.HabitEditorViewModel
 import com.sanjith.betterlife.feature.habits.HabitsScreen
 import com.sanjith.betterlife.feature.home.DebugTool
-import com.sanjith.betterlife.feature.home.HomeScreen
 import com.sanjith.betterlife.feature.setup.SetupScreen
 import com.sanjith.betterlife.feature.tasks.CheckInScreen
 import com.sanjith.betterlife.feature.tasks.ProjectsScreen
@@ -67,6 +86,10 @@ internal object Routes {
     const val CHECK_INS = "check-ins"
     const val AGENDA = "agenda"
     const val HABITS = "habits"
+    const val MORE = "more"
+    const val MINIMUM_DAY = "minimum-day"
+    const val COMEBACK = "comeback"
+    const val ONBOARDING_NAME = "onboarding-name"
     const val HABIT_EDITOR = "habit"
     const val HABIT_DETAIL = "habit-detail"
     const val CELEBRATION = "celebration"
@@ -109,26 +132,62 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
     }
     val back: () -> Unit = { navController.popBackStack() }
     CelebrationLauncher(navController)
-    NavHost(navController = navController, startDestination = Routes.HOME) {
+    val current by navController.currentBackStackEntryAsState()
+    val route = current?.destination?.route
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = { if (route in TAB_ROUTES) BottomBar(route) { navController.navigateTab(it) } },
+    ) { shellPadding ->
+    NavHost(
+        navController = navController,
+        startDestination = Routes.HOME,
+        modifier = Modifier.padding(shellPadding).consumeWindowInsets(shellPadding),
+    ) {
         composable(Routes.HOME) {
-            var pauseSheet by remember { mutableStateOf(false) }
-            HomeScreen(
-                pauseBanner = activePause()?.let { until -> { PauseBanner(until) } },
-                onPause = { pauseSheet = true },
-                onOpenQuiet = { navController.navigate(Routes.QUIET) },
-                onOpenBackup = { navController.navigate(Routes.BACKUP) },
-                onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
-                syncIndicator = { SyncIndicatorLine(onOpen = { navController.navigate(Routes.ACCOUNT) }) },
-                onOpenCenter = { navController.navigate(Routes.CENTER) },
-                healthProblems = healthProblems(),
-                onOpenTasks = { navController.navigate(Routes.TASKS) },
-                onOpenSetup = { navController.navigate(Routes.SETUP) },
-                onOpenAgenda = { navController.navigate(Routes.AGENDA) },
-                onOpenHabits = { navController.navigate(Routes.HABITS) },
+            val problems = healthProblems()
+            val busyUntil = activePause()
+            TodayScreen(
+                actions = TodayActions(
+                    openItem = { item ->
+                        when (item.kind) {
+                            TodayKind.TASK -> navController.navigate(Routes.taskEditor(item.id))
+                            TodayKind.EVENT -> navController.navigate(Routes.eventEditor(item.id))
+                            TodayKind.REMINDER -> navController.navigate(Routes.reminderEditor(item.id))
+                            TodayKind.HABIT -> navController.navigate(Routes.habitDetail(item.id))
+                        }
+                    },
+                    newTask = { navController.navigate(Routes.taskEditor(null)) },
+                    minimumDay = { navController.navigate(Routes.MINIMUM_DAY) },
+                    comeback = { navController.navigate(Routes.COMEBACK) },
+                    seeAllTasks = { navController.navigateTab(Routes.TASKS) },
+                    openAccount = { navController.navigate(Routes.ACCOUNT) },
+                    askName = { navController.navigate(Routes.ONBOARDING_NAME) { launchSingleTop = true } },
+                ),
+                banners = {
+                    if (problems.isNotEmpty()) HealthBanner(problems) { navController.navigate(Routes.SETUP) }
+                    busyUntil?.let { PauseBanner(it) }
+                },
+            )
+        }
+        composable(Routes.MINIMUM_DAY) { MinimumDayScreen(onClose = back) }
+        composable(Routes.COMEBACK) { ComebackScreen(onClose = back) }
+        composable(Routes.ONBOARDING_NAME) { OnboardingNameScreen(onDone = back) }
+        composable(Routes.MORE) {
+            var busySheet by remember { mutableStateOf(false) }
+            MoreScreen(
+                entries = listOf(
+                    MoreEntry(R.drawable.ic_notifications, R.string.more_reminders) { navController.navigate(Routes.CENTER) },
+                    MoreEntry(R.drawable.ic_check_circle, R.string.more_health) { navController.navigate(Routes.SETUP) },
+                    MoreEntry(R.drawable.ic_tune, R.string.more_quiet) { navController.navigate(Routes.QUIET) },
+                    MoreEntry(R.drawable.ic_local_fire, R.string.more_celebrations) { navController.navigate(Routes.CELEBRATION_MESSAGES) },
+                    MoreEntry(R.drawable.ic_layers, R.string.more_backup) { navController.navigate(Routes.BACKUP) },
+                    MoreEntry(R.drawable.ic_refresh, R.string.more_account) { navController.navigate(Routes.ACCOUNT) },
+                ),
+                onBusy = { busySheet = true },
                 // Debug tools are unreachable in release builds.
                 debugTools = if (BuildConfig.DEBUG) debugTools(navController) else emptyList(),
             )
-            if (pauseSheet) PauseSheetHost(onDismiss = { pauseSheet = false })
+            if (busySheet) PauseSheetHost(onDismiss = { busySheet = false })
         }
         composable(Routes.SETUP) { SetupScreen(onBack = back, onOpenCenter = { navController.navigate(Routes.CENTER) }) }
         composable(Routes.QUIET) { QuietCalmScreen(onBack = back) }
@@ -212,6 +271,46 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
             composable(Routes.TIME_MACHINE) { TimeMachineScreen(onBack = back) }
             composable(Routes.ENGINE) { ReminderEngineDebugScreen(onBack = back) }
             composable(Routes.MASCOT) { MascotDebugScreen(onBack = back) }
+        }
+    }
+    }
+}
+
+/** The five main screens; the bottom bar shows only on these (Prompt 17). */
+private val TAB_ROUTES = listOf(Routes.HOME, Routes.TASKS, Routes.HABITS, Routes.AGENDA, Routes.MORE)
+
+/** Switches tabs without piling screens up: one copy of each, back goes to Today. */
+private fun NavController.navigateTab(route: String) {
+    navigate(route) {
+        popUpTo(Routes.HOME) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
+@Composable
+private fun BottomBar(current: String?, onSelect: (String) -> Unit) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+        listOf(
+            Triple(Routes.HOME, R.drawable.ic_sun, R.string.nav_today),
+            Triple(Routes.TASKS, R.drawable.ic_check_circle, R.string.nav_tasks),
+            Triple(Routes.HABITS, R.drawable.ic_grid, R.string.nav_habits),
+            Triple(Routes.AGENDA, R.drawable.ic_calendar, R.string.nav_calendar),
+            Triple(Routes.MORE, R.drawable.ic_apps, R.string.nav_more),
+        ).forEach { (tab, icon, label) ->
+            NavigationBarItem(
+                selected = current == tab,
+                onClick = { onSelect(tab) },
+                icon = { Icon(painterResource(icon), contentDescription = null) },
+                label = { Text(stringResource(label)) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                    indicatorColor = MaterialTheme.colorScheme.secondary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
+            )
         }
     }
 }

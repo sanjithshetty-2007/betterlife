@@ -65,6 +65,9 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 ),
                 habitTickHaptics = prefs[HABIT_HAPTICS] ?: d.habitTickHaptics,
                 mascotName = prefs[MASCOT_NAME]?.takeIf { it.isNotBlank() } ?: d.mascotName,
+                ownerName = prefs[OWNER_NAME] ?: d.ownerName,
+                habitNudgeEnabled = prefs[HABIT_NUDGE_ENABLED] ?: d.habitNudgeEnabled,
+                habitNudgeTime = prefs.time(HABIT_NUDGE_TIME, d.habitNudgeTime),
             )
         }.getOrDefault(d)
     }
@@ -73,6 +76,9 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         prefs[ROLLOVER_HOUR] = s.rolloverHour
         prefs[HABIT_HAPTICS] = s.habitTickHaptics
         prefs[MASCOT_NAME] = s.mascotName
+        prefs[OWNER_NAME] = s.ownerName
+        prefs[HABIT_NUDGE_ENABLED] = s.habitNudgeEnabled
+        prefs[HABIT_NUDGE_TIME] = s.habitNudgeTime.toMinuteOfDay()
         prefs[SNOOZE_TONIGHT] = s.snoozeTonight.toMinuteOfDay()
         prefs[SNOOZE_TOMORROW] = s.snoozeTomorrow.toMinuteOfDay()
         prefs[BIRTHDAY_TIME] = s.birthdayFireTime.toMinuteOfDay()
@@ -113,6 +119,9 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val ROLLOVER_HOUR = intPreferencesKey("rollover_hour")
         val HABIT_HAPTICS = booleanPreferencesKey("habit_tick_haptics")
         val MASCOT_NAME = stringPreferencesKey("mascot_name")
+        val OWNER_NAME = stringPreferencesKey("owner_name")
+        val HABIT_NUDGE_ENABLED = booleanPreferencesKey("habit_nudge_enabled")
+        val HABIT_NUDGE_TIME = intPreferencesKey("habit_nudge_time")
         val SNOOZE_TONIGHT = intPreferencesKey("snooze_tonight_minute")
         val SNOOZE_TOMORROW = intPreferencesKey("snooze_tomorrow_minute")
         val BIRTHDAY_TIME = intPreferencesKey("birthday_fire_minute")

@@ -254,6 +254,22 @@ Before you start: Home > Reminder Health shows 10/10 (fix any red row first), an
 
 Owner gate: also use the app normally for 2 to 3 days with real tasks and write anything missed or annoying under Known issues in PROGRESS.md. Keep a backup somewhere safe before Phase 2.
 
+## Prompt 17: Today, nudges, comeback, Minimum Day, pause mode (GATE)
+
+Today is the home screen now, with the bottom bar (Today, Tasks, Habits, Calendar, More). Everything that was on the old Home is on More.
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | GATE: use Today as your real home screen for 3 days | It truthfully answers "what should I do right now?" | |
+| 2 | First launch with no name | Blip asks your name; Today greets you with it; More > Your name changes it | **PASS** (AI entered the placeholder "Friend": change it to your name in More) |
+| 3 | Today with a task due today, an overdue high task, a meeting in the next 2 hours and habits | Order: pop-up/alarm reminders due now, overdue high tasks, events soon, today's tasks by priority then time (same minute = one "2:00 PM, 2 items" row), habits | **PASS** (unit tests for every tier and tie-break) |
+| 4 | Bad day? | Three things (top task, Essential habit or the longest streak at risk, a different Self-care habit); ticking all three keeps every other habit as a KEPT day and Blip says "That's enough for today." | **PASS** (device test for keeping the rest; on the phone it picked Meditation and Skincare: no tasks, Creatine already done) |
+| 5 | More > Pause habits: a range starting tomorrow | Habits show paused on those days; task reminders inside the range are held and arrive together when it ends; birthdays, events and alarm-level reminders still fire | **PASS** (engine tests: task held, alarm rings, one digest at the end) |
+| 6 | Today banner > End pause | The range ends yesterday (or disappears if it started today); held reminders arrive at once | **PASS** (device test) |
+| 7 | Time Machine 3 days ahead without ticking | Comeback opens once that day: "Welcome back!", two habits and one task, no list of missed days | **PASS** (unit and device tests) |
+| 8 | Leave a habit unticked at 21:00 | "A habit is still waiting" notification; none if all are done; switch and time on More | |
+| 9 | After the gate: Backup > Back up now; the AI tags phase-2 in git | Backup saved; tag pushed | |
+
 ## Prompt 16: Celebrations and mascot v1
 
 Blip lives on the celebration screen, the reminder pop-up, the quiet banner and Debug: mascot. Your own messages: Habits > ⋮ > Celebration messages (Blip's name is at the top of that screen).

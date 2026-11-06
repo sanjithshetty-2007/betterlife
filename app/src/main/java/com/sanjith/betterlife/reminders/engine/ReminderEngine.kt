@@ -50,6 +50,8 @@ public class ReminderEngine(
     private val allDayFireTime: suspend () -> LocalTime,
     private val calmStore: CalmStateStore = InMemoryCalmStateStore(),
     private val settings: suspend () -> AppSettings = { AppSettings() },
+    /** When a habit pause range covers now, the moment it ends (Prompt 17); null = no range. */
+    private val rangePauseUntil: suspend (Instant) -> Instant? = { null },
 ) {
     private val lock = Mutex()
 
@@ -152,8 +154,10 @@ public class ReminderEngine(
     private suspend fun calmInputs(now: Instant): CalmInputs {
         val s = settings()
         val state = calmStore.read()
+        // A habit pause range (vacation / sick) holds reminders like "I'm busy", with the same exemptions.
+        val rangePause = rangePauseUntil(now)?.let { Pause(it, holdsCalendar = !s.pauseExemptsEventsAndAlarms, holdsAlarm = !s.pauseExemptsEventsAndAlarms) }
         return CalmInputs(
-            pause = state.pause,
+            pause = state.pause ?: rangePause,
             quietUntil = QuietHours.activeUntil(s.quietHours(), now.atZone(clock.zone)),
             alarmBypassesQuiet = s.alarmBypassesQuietHours,
             fatigue = FatigueInputs(
@@ -188,7 +192,7 @@ public class ReminderEngine(
     public suspend fun deliverDigest() {
         val delivered = lock.withLock {
             val now = clock.now()
-            val pauseUntil = calmStore.read().pause?.until?.takeIf { now.isBefore(it) }
+            val pauseUntil = (calmStore.read().pause?.until ?: rangePauseUntil(now))?.takeIf { now.isBefore(it) }
             val quietUntil = QuietHours.activeUntil(settings().quietHours(), now.atZone(clock.zone))
             val held = store.heldReminderIds()
             // A running pause always keeps its end alarm; Quiet Hours only matter when something is held.

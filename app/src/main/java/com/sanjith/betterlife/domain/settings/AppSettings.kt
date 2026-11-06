@@ -43,6 +43,11 @@ public data class AppSettings(
     val habitTickHaptics: Boolean = true,
     /** The mascot's name (context.md 13: Blip). */
     val mascotName: String = DEFAULT_MASCOT_NAME,
+    /** The owner's name for the Today greeting, asked on first launch (Prompt 17). Empty = not asked yet. */
+    val ownerName: String = "",
+    /** Evening nudge if any habit is not done yet (Prompt 17). */
+    val habitNudgeEnabled: Boolean = true,
+    val habitNudgeTime: LocalTime = LocalTime.of(21, 0),
 ) {
     init {
         require(rolloverHour in 0..MAX_ROLLOVER_HOUR) { "rolloverHour must be 0 to $MAX_ROLLOVER_HOUR" }

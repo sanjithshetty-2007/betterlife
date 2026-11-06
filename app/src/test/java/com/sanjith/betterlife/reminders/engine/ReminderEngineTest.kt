@@ -153,6 +153,7 @@ public class ReminderEngineTest {
     private val logRows = mutableListOf<LogRow>()
     private val calmStore = InMemoryCalmStateStore()
     private var appSettings = AppSettings()
+    private var rangeUntil: Instant? = null
     private val engine = ReminderEngine(
         store, alarms, device, presenter,
         log = { id, status, level, reason, _, _ -> logRows += LogRow(id, status, level, reason) },
@@ -160,7 +161,38 @@ public class ReminderEngineTest {
         allDayFireTime = { LocalTime.of(9, 0) },
         calmStore = calmStore,
         settings = { appSettings },
+        rangePauseUntil = { now -> rangeUntil?.takeIf { now.isBefore(it) } },
     )
+
+    // Prompt 17: a habit pause range (vacation / sick) holds task reminders like "I'm busy".
+
+    @Test
+    public fun aHabitPauseRangeHoldsTaskRemindersButAlarmsStillRing() = runTest {
+        rangeUntil = at("2026-10-10T03:00")
+        add("a", "2026-10-08T18:00", title = "Call mom")
+        add("b", "2026-10-08T18:00", importance = Importance.ALARM, title = "Medicine")
+
+        assertEquals(FireOutcome.HELD, engine.onAlarm("a", at("2026-10-08T18:00")))
+        assertTrue(LogRow("a", ReminderLogStatus.HELD, Importance.FULL_SCREEN, ReasonCode.PAUSED) in logRows)
+        assertEquals(at("2026-10-10T03:00"), alarms.digestAlarm)
+        assertEquals(FireOutcome.DELIVERED, engine.onAlarm("b", at("2026-10-08T18:00")))
+    }
+
+    @Test
+    public fun heldRemindersArriveTogetherWhenThePauseRangeEnds() = runTest {
+        rangeUntil = at("2026-10-10T03:00")
+        add("a", "2026-10-08T18:00", title = "Call mom")
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+
+        // Still inside the range: the digest waits.
+        clock.instant = at("2026-10-09T12:00")
+        engine.deliverDigest()
+        assertTrue(presenter.shown.none { it.startsWith("digest") })
+
+        clock.instant = at("2026-10-10T03:00")
+        engine.deliverDigest()
+        assertEquals("digest:Call mom", presenter.shown.last())
+    }
 
     private fun add(
         id: String,

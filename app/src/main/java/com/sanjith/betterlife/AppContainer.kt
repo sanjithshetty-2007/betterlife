@@ -17,6 +17,9 @@ import com.sanjith.betterlife.data.db.BetterLifeDatabase
 import com.sanjith.betterlife.data.db.IntegrityChecker
 import com.sanjith.betterlife.data.debug.SeedDataGenerator
 import com.sanjith.betterlife.data.habit.CelebrationCenter
+import com.sanjith.betterlife.data.settings.TodayStore
+import com.sanjith.betterlife.domain.habit.PausePeriod
+import com.sanjith.betterlife.domain.today.PauseRangeRules
 import com.sanjith.betterlife.data.habit.MascotMoodSource
 import com.sanjith.betterlife.data.habit.StarterHabitSeeder
 import com.sanjith.betterlife.data.repository.CelebrationMessageRepository
@@ -199,6 +202,20 @@ public class AppContainer(appContext: Context) {
         }
     }
 
+    /** Today's memory between days: last open, comeback shown (Prompt 17). */
+    public val todayStore: TodayStore = TodayStore(appContext.settingsDataStore)
+
+    /** The evening nudge goes out only while a habit is still not done, kept or paused today. */
+    public suspend fun habitNudgeNeeded(): Boolean {
+        val today = realClock.habitToday(settingsRepository.current().rolloverHour)
+        val ranges = database.pauseRangeDao().getActive().map { PausePeriod(it.startDate, it.endDate) }
+        return database.habitDao().getActive().any { habit ->
+            val state = habitRepository.history(habit.id)?.state(today, today)
+            habit.startDate <= today && state != DayState.DONE && state != DayState.KEPT && state != DayState.PAUSED &&
+                ranges.none { it.contains(today) }
+        }
+    }
+
     /** Milestones waiting to be celebrated (Prompt 16). */
     public val celebrations: CelebrationCenter = CelebrationCenter()
     public val celebrationMessages: CelebrationMessageRepository by lazy { CelebrationMessageRepository(database, nowMillis, newId) }
@@ -330,6 +347,11 @@ public class AppContainer(appContext: Context) {
             allDayFireTime = { settingsRepository.current().birthdayFireTime },
             calmStore = calmStore,
             settings = { settingsRepository.current() },
+            // Habit pause ranges (Prompt 17) hold reminders like "I'm busy".
+            rangePauseUntil = { now ->
+                val ranges = database.pauseRangeDao().getActive().map { PausePeriod(it.startDate, it.endDate) }
+                PauseRangeRules.activeUntil(ranges, now, realClock.zone, settingsRepository.current().rolloverHour)
+            },
         )
     }
 

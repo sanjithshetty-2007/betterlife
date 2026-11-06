@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Evening habit nudge (Prompt 17) -->
+    <string name="nudge_habits_title">A habit is still waiting</string>
+    <string name="nudge_habits_text">A small one now still counts.</string>
+
+    <!-- Bottom navigation (Prompt 17) -->
+    <string name="nav_today">Today</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_habits">Habits</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_more">More</string>
+
+    <!-- Onboarding: name (Prompt 17) -->
+    <string name="onboarding_name_bubble">Hi! I\'m %1$s.</string>
+    <string name="onboarding_name_title">What should I call you?</string>
+    <string name="onboarding_name_label">Your name</string>
+    <string name="onboarding_name_hint">Used for the greeting on Today. It stays on this phone.</string>
+    <string name="onboarding_continue">Continue</string>
+
+    <!-- Today (Prompt 17) -->
+    <string name="today_greeting_morning">Good morning, %1$s</string>
+    <string name="today_greeting_afternoon">Good afternoon, %1$s</string>
+    <string name="today_greeting_evening">Good evening, %1$s</string>
+    <string name="today_progress_label">today</string>
+    <string name="today_progress_description">%1$d percent of today done</string>
+    <string name="today_consistency">consistency</string>
+    <string name="today_streak">%1$d-day streak</string>
+    <string name="today_streak_none">Tick a habit to start a streak</string>
+    <string name="today_counts">%1$d of %2$d tasks · %3$d of %4$d habits done</string>
+    <string name="today_capture_task">Task</string>
+    <string name="today_capture_note">Note</string>
+    <string name="today_capture_voice">Voice</string>
+    <string name="today_capture_later">%1$s, coming later</string>
+    <string name="today_bad_day">Bad day?</string>
+    <string name="today_right_now">Right now</string>
+    <string name="today_see_all">See all</string>
+    <string name="today_nothing">Nothing needs you right now. Enjoy it.</string>
+    <string name="today_group">%1$s, %2$d items</string>
+    <string name="today_pop_up">Pop-up</string>
+    <string name="today_due_at">Due %1$s</string>
+    <string name="today_overdue">Overdue</string>
+    <string name="today_event_starts">Starts %1$s</string>
+    <string name="today_kind_reminder">Remind me</string>
+    <string name="today_kind_habit">Habit</string>
+    <string name="today_habit_at">Habit · %1$s</string>
+    <string name="today_tick_task">Mark %1$s done</string>
+    <string name="today_tick_habit">Tick %1$s for today</string>
+
+    <!-- Habit pause range (Prompt 17) -->
+    <string name="pause_range_title">Pause habits</string>
+    <string name="pause_range_subtitle">Streaks and consistency stay safe. Task reminders wait for you; birthdays, events and alarms still come.</string>
+    <string name="pause_range_from">From %1$s</string>
+    <string name="pause_range_until">Until %1$s</string>
+    <string name="pause_range_open_ended">Until I end it</string>
+    <string name="pause_range_start">Start pause</string>
+    <string name="pause_range_reason_pause">Pause</string>
+    <string name="pause_range_reason_vacation">Vacation</string>
+    <string name="pause_range_reason_sick">Sick</string>
+    <string name="pause_range_banner">%1$s: habits paused until %2$s</string>
+    <string name="pause_range_banner_open">%1$s: habits paused</string>
+    <string name="pause_range_banner_detail">Nothing is lost. Task reminders arrive together when it ends.</string>
+    <string name="pause_range_end">End pause</string>
+
+    <!-- Minimum Day (Prompt 17) -->
+    <plurals name="minimum_title">
+        <item quantity="one">Just this one.</item>
+        <item quantity="other">Just these %1$d.</item>
+    </plurals>
+    <string name="minimum_subtitle">That\'s enough for today. Finishing them keeps every streak alive.</string>
+    <string name="minimum_done_subtitle">Every streak is safe. Rest well.</string>
+    <string name="minimum_kind_task">Most important task</string>
+    <string name="minimum_kind_essential">Essential habit</string>
+    <string name="minimum_kind_habit">One habit</string>
+    <string name="minimum_kind_self_care">A bit of self-care</string>
+    <string name="minimum_progress">%1$d of %2$d</string>
+    <string name="minimum_counts">Counts as a kept day</string>
+    <string name="minimum_done">That\'s enough for today.</string>
+    <string name="minimum_empty">Nothing to pick today. Resting is fine too.</string>
+    <string name="close">Close</string>
+    <string name="mascot_with_mood">%1$s, %2$s</string>
+
+    <!-- Comeback (Prompt 17). Never mentions missed days. -->
+    <string name="comeback_title">Welcome back!</string>
+    <string name="comeback_subtitle">Fresh start. A few small wins and we\'re rolling again.</string>
+    <string name="comeback_kind_habit">Habit</string>
+    <string name="comeback_kind_task">Important task</string>
+    <string name="comeback_start">Let\'s go</string>
+
+    <!-- More (Prompt 17) -->
+    <string name="more_title">More</string>
+    <string name="more_reminders">Reminders</string>
+    <string name="more_health">Health</string>
+    <string name="more_busy">I\'m busy</string>
+    <string name="more_quiet">Quiet &amp; calm</string>
+    <string name="more_celebrations">Celebrations</string>
+    <string name="more_pause_habits">Pause habits</string>
+    <string name="more_backup">Backup &amp; restore</string>
+    <string name="more_account">Account &amp; sync</string>
+    <string name="more_your_name">Your name</string>
+    <string name="more_nudge">Evening habit nudge</string>
+    <string name="more_nudge_hint">Only when a habit is still not done.</string>
+    <string name="more_debug">Debug tools</string>
+</resources>

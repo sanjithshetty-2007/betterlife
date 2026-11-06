@@ -7,6 +7,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sanjith.betterlife.BetterLifeApp
+import com.sanjith.betterlife.domain.time.millis
 import java.util.concurrent.TimeUnit
 
 /**
@@ -19,6 +20,9 @@ public class DailyTopUpWorker(context: Context, params: WorkerParameters) : Coro
         val container = (applicationContext as BetterLifeApp).container
         container.reminderEngine.rescheduleAll(RescheduleTrigger.DAILY)
         container.debugLog.add("Reminder engine rescheduled (DAILY)")
+        // The Reminder Center keeps 60 days (context.md 5.1); real time, never the Time Machine.
+        val purged = container.reminderLogRepository.purgeOld(container.realClock.millis())
+        container.debugLog.add("Reminder log purge removed $purged rows")
         return Result.success()
     }
 

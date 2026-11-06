@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Reminder Health (Prompt 11) -->
+    <string name="health_recheck">Check again</string>
+    <string name="health_score">%1$d/%2$d</string>
+    <string name="health_score_description">%1$d of %2$d checks are fine</string>
+    <plurals name="health_needs_you">
+        <item quantity="one">1 thing needs you</item>
+        <item quantity="other">%d things need you</item>
+    </plurals>
+    <string name="health_all_set">All set. Reminders can reach you.</string>
+    <string name="health_checked_just_now">Checked just now</string>
+    <plurals name="health_checked_minutes">
+        <item quantity="one">Checked 1 min ago</item>
+        <item quantity="other">Checked %d min ago</item>
+    </plurals>
+    <string name="health_checked_at">Last checked %1$s</string>
+    <string name="health_fix_all">Fix all</string>
+    <string name="health_fix">Fix</string>
+    <string name="health_section_android">Android</string>
+    <string name="health_section_vivo">Vivo · ticked by hand</string>
+    <string name="health_open_settings_for">Open settings for %1$s</string>
+    <string name="health_fix_next_title">Next: %1$s</string>
+    <string name="health_fix_next_body">Open its settings page now?</string>
+    <string name="health_fix_next_open">Open settings</string>
+    <string name="health_fix_stop">Stop</string>
+    <string name="health_fix_done_title">Fix all finished</string>
+    <string name="health_fix_done_all_green">Nothing red is left.</string>
+    <string name="health_fix_done_still_red">Still red: %1$s. Open the row to see what it needs.</string>
+    <string name="health_open_center">Open Reminder Center</string>
+
+    <string name="health_test_quick">Test in 10 s</string>
+    <string name="health_test_quick_title">Test reminder</string>
+    <string name="health_test_quick_started">A test pop-up arrives in 10 seconds. Stay here or open another app.</string>
+    <string name="health_test_closed">Test after closing</string>
+    <string name="health_test_closed_title">Test after closing the app</string>
+    <string name="health_test_closed_waiting">Due at %1$s. Now swipe BetterLife away from recent apps and wait. The pop-up should appear on its own.</string>
+    <string name="health_test_closed_fired">Test after closing: arrived at %1$s, %2$d s after it was due.</string>
+    <string name="health_test_closed_failed">Test after closing: it did not arrive (due %1$s). Check the battery and Vivo rows, then try again.</string>
+
+    <!-- Home banner -->
+    <string name="home_health_banner">Reminders may not reach you: %1$s. Tap to fix.</string>
+
+    <!-- Reminder Center (Prompt 11) -->
+    <string name="center_title">Reminder Center</string>
+    <string name="center_home_button">Reminder Center</string>
+    <string name="center_empty">Nothing here yet. Every reminder that is scheduled, shown or missed is listed here.</string>
+    <string name="center_kept">Kept for 60 days</string>
+    <string name="center_item_gone">(item removed)</string>
+    <string name="center_item_deleted">That item was deleted, so it cannot be opened.</string>
+    <string name="center_snoozed_count">Snoozed ×%1$d</string>
+
+    <string name="center_filter_all">All</string>
+    <string name="center_status_scheduled">Scheduled</string>
+    <string name="center_status_fired">Fired</string>
+    <string name="center_status_completed">Completed</string>
+    <string name="center_status_snoozed">Snoozed</string>
+    <string name="center_status_rescheduled">Rescheduled</string>
+    <string name="center_status_dismissed">Dismissed</string>
+    <string name="center_status_missed">Missed</string>
+    <string name="center_status_held">Held</string>
+    <string name="center_status_failed">Failed</string>
+
+    <!-- One plain sentence per reason code (context.md 5.1). Every one ends with a full stop. -->
+    <string name="reason_quiet_hours">Held because Quiet Hours were active.</string>
+    <string name="reason_paused">Held because you paused reminders.</string>
+    <string name="reason_fatigue_grouped">Grouped with other reminders that came close together.</string>
+    <string name="reason_fatigue_downgraded">Shown as a normal notification because several pop-ups in a row were ignored.</string>
+    <string name="reason_in_call">You were on a call, so it came as a normal notification.</string>
+    <string name="reason_permission_missing">A permission was missing, so it could not be shown the way you chose. Check Reminder Health.</string>
+    <string name="reason_item_completed">Not shown because the item was already done.</string>
+    <string name="reason_item_deleted">Not shown because the item was deleted.</string>
+    <string name="reason_device_off">The phone was off or the app was stopped when this was due.</string>
+    <string name="reason_exact_alarm_denied">Exact alarms were not allowed, so it may have come late. Check Reminder Health.</string>
+    <string name="reason_missed_no_answer">It was not answered before the pop-up closed.</string>
+    <string name="reason_failed_unknown">Nothing could be shown. Check Reminder Health.</string>
+    <string name="reason_held_unknown">Held for later.</string>
+</resources>

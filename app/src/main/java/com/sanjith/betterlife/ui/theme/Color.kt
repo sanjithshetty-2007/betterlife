@@ -36,6 +36,9 @@ internal object BetterLifeColors {
         Color(0xFFB0A49C),
     )
 
+    /** Soft cherry tint behind row icons (the design's "soft tint", added in Prompt 11). */
+    val CherryTint = Cherry.copy(alpha = 0.55f)
+
     /** Dims whatever is behind the reminder pop-up. */
     val Scrim = Background.copy(alpha = 0.82f)
 }

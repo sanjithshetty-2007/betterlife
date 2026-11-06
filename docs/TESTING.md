@@ -165,3 +165,38 @@ Defaults chosen (editable in Agenda > Defaults): birthdays and timed tasks get "
 | 10 | Change a default in Agenda > Defaults, then add a new event | The new event starts with your default | |
 | 11 | Reschedule on an event pop-up | Opens the event editor for that event | |
 | 12 | Delete an event | Gone from the agenda; its alarms gone from dumpsys | |
+
+## Prompt 11: Reminder Center, Reminder Health and test reminders
+
+How: Home > Reminder Health (the Setup Checklist became this screen) and Home > Reminder Center. Health re-checks every time the app comes back to the front.
+
+Reason codes and the sentence the Reminder Center shows (a unit test checks every code has one and that each is a full sentence):
+
+| Code | Sentence |
+|---|---|
+| QUIET_HOURS | Held because Quiet Hours were active. |
+| PAUSED | Held because you paused reminders. |
+| FATIGUE_GROUPED | Grouped with other reminders that came close together. |
+| FATIGUE_DOWNGRADED | Shown as a normal notification because several pop-ups in a row were ignored. |
+| IN_CALL | You were on a call, so it came as a normal notification. |
+| PERMISSION_MISSING | A permission was missing, so it could not be shown the way you chose. Check Reminder Health. |
+| ITEM_COMPLETED | Not shown because the item was already done. |
+| ITEM_DELETED | Not shown because the item was deleted. |
+| DEVICE_OFF | The phone was off or the app was stopped when this was due. |
+| EXACT_ALARM_DENIED | Exact alarms were not allowed, so it may have come late. Check Reminder Health. |
+| (Missed, no code) | It was not answered before the pop-up closed. |
+| (Failed, no code) | Nothing could be shown. Check Reminder Health. |
+| (Held, no code) | Held for later. |
+
+| # | Test | Expected | Result |
+|---|---|---|---|
+| 1 | Reminder Health with everything allowed | 10/10, "All set", every Android row OK, Vivo rows ticked | **PASS** (AI 2026-11-06, screenshot) |
+| 2 | Test in 10 s | The real pop-up "Test reminder" about 10 s later | **PASS** (AI: pop-up at 3:54 PM) |
+| 3 | Snooze the test pop-up, open Reminder Center | Rows Scheduled, Fired, Snoozed ×1 and the new Scheduled time | **PASS** (AI, screenshot) |
+| 4 | Test after closing, then leave and kill the app | Pop-up arrives on its own; Health shows "arrived at …, N s after it was due" | **PASS** (AI: process killed, pop-up at 3:57 PM, "0 s after it was due") |
+| 5 | Turn off "Display over other apps" for BetterLife Dev in phone settings, come back | Red banner on Home naming it; Health row red with a Fix button; score drops | |
+| 6 | Fix all with two rows red | Opens the first row's settings; after Back, asks "Next: …"; ends with a summary | |
+| 7 | Turn the Pop-up channel off (long-press a BetterLife notification > turn off "Full-screen reminders") | "Reminder channels not turned down" turns red | |
+| 8 | Complete a task from its pop-up, snooze another | Completed and Snoozed rows with the right item names | |
+| 9 | Tap a Reminder Center row | Opens that task / event / reminder; a deleted item says it was deleted | |
+| 10 | Real swipe-away: Test after closing, then swipe BetterLife away in recent apps | Pop-up arrives within a few seconds of the due time | |

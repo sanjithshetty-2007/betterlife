@@ -71,7 +71,8 @@ public class SetupStatusMapperTest {
     public fun otherBrandsGetNoVivoRows() {
         val status = buildSetupStatus(allGranted, manualTicks = SetupCheck.MANUAL_CHECKS, isVivo = false)
 
-        assertEquals(5, status.items.size)
+        // Six detectable rows since Prompt 11 added the notification channels row.
+        assertEquals(6, status.items.size)
         assertTrue(status.items.none { it.check.isManual })
         assertEquals(SetupLevel.GREEN, status.overall)
     }
@@ -80,7 +81,7 @@ public class SetupStatusMapperTest {
     public fun vivoRowsAreYellowUntilTicked() {
         val status = buildSetupStatus(allGranted, manualTicks = emptySet(), isVivo = true)
 
-        assertEquals(9, status.items.size)
+        assertEquals(10, status.items.size)
         SetupCheck.MANUAL_CHECKS.forEach { check ->
             assertEquals(SetupItem(check, SetupLevel.YELLOW, SetupReason.NOT_CONFIRMED), status.item(check))
         }

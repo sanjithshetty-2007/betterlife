@@ -50,6 +50,10 @@ public class StandaloneReminderRepository(
             .filter { it.deletedAt == null }
             .map { ReminderDraft(it.offsetMinutes, it.importance) }
 
+    /** Ids of the item's current (not deleted) reminder rows. */
+    public suspend fun activeReminderIds(id: String): List<String> =
+        reminderDao.getAllForItemIncludingDeleted(ReminderItemType.STANDALONE, id).filter { it.deletedAt == null }.map { it.id }
+
     /** Saves an edit and replaces the reminders in one transaction (old alarms go at the next reschedule). */
     public suspend fun updateWithReminders(item: StandaloneReminderEntity, reminders: List<ReminderDraft>) {
         val now = nowMillis()

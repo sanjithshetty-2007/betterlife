@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="setup_title">Setup checklist</string>
+    <string name="setup_title">Reminder Health</string>
     <string name="setup_subtitle">Reminders only work when every row is green. Come back here after changing a setting.</string>
     <string name="setup_open_settings">Open settings</string>
     <string name="setup_manual_tick">I\'ve done this</string>
     <string name="setup_back">Back</string>
     <string name="setup_loading">Checking your phone…</string>
-    <string name="setup_home_button">Setup checklist</string>
+    <string name="setup_home_button">Reminder Health</string>
 
     <!-- Status chip words: the chip never relies on color alone. -->
     <string name="setup_level_green">OK</string>
@@ -19,6 +19,7 @@
     <!-- Row titles -->
     <string name="setup_notifications_title">Notifications</string>
     <string name="setup_exact_alarms_title">Exact alarms</string>
+    <string name="setup_channels_title">Reminder channels not turned down</string>
     <string name="setup_overlay_title">Display over other apps</string>
     <string name="setup_full_screen_title">Full-screen notifications</string>
     <string name="setup_battery_title">Background battery use</string>
@@ -30,6 +31,7 @@
     <!-- Why each row matters -->
     <string name="setup_notifications_why">Every reminder is delivered as a notification, even when it also pops up.</string>
     <string name="setup_exact_alarms_why">Lets reminders fire at the exact minute instead of being batched later.</string>
+    <string name="setup_channels_why">Each reminder level has its own notification channel. If one is turned off or made quieter in phone settings, those reminders hide or stay silent.</string>
     <string name="setup_overlay_why">Lets the full-screen pop-up appear on top of the app you are using.</string>
     <string name="setup_full_screen_why">Lets the pop-up wake the screen when the phone is locked.</string>
     <string name="setup_battery_why">Stops the phone from putting the app to sleep and delaying reminders.</string>
@@ -49,6 +51,8 @@
     <string name="setup_reason_granted">Allowed.</string>
     <string name="setup_reason_notifications_off">Notifications are off for this app.</string>
     <string name="setup_reason_exact_alarms_denied">Exact alarms are not allowed.</string>
+    <string name="setup_reason_channel_blocked">A reminder channel is turned off, so those reminders never appear.</string>
+    <string name="setup_reason_channel_lowered">A reminder channel was made quieter than the app set it, so those reminders may not pop up or make a sound.</string>
     <string name="setup_reason_overlay_denied">Drawing over other apps is not allowed.</string>
     <string name="setup_reason_full_screen_denied">Full-screen notifications are not allowed.</string>
     <string name="setup_reason_battery_restricted">The phone may restrict this app in the background.</string>

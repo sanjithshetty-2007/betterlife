@@ -10,6 +10,7 @@ import com.sanjith.betterlife.domain.model.ReasonCode
 import com.sanjith.betterlife.domain.model.ReminderLogStatus
 import com.sanjith.betterlife.domain.model.ReminderState
 import com.sanjith.betterlife.domain.reminder.MissedReminder
+import com.sanjith.betterlife.domain.reminder.ReminderLogRules
 import com.sanjith.betterlife.domain.reminder.SchedulePlanner
 import com.sanjith.betterlife.domain.time.Clock
 import kotlinx.coroutines.sync.Mutex
@@ -126,7 +127,7 @@ public class ReminderEngine(
         lock.withLock {
             val context = store.fireContext(reminderId) ?: return@withLock
             val count = store.snooze(reminderId, until)
-            log.append(reminderId, ReminderLogStatus.SNOOZED, context.importance, null, "count $count until $until", clock.now())
+            log.append(reminderId, ReminderLogStatus.SNOOZED, context.importance, null, ReminderLogRules.snoozeDetail(count, until), clock.now())
         }
         rescheduleAll(RescheduleTrigger.AFTER_FIRE)
     }

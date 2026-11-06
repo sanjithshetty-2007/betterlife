@@ -4,6 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,3 +55,20 @@ private fun SetupLevel.symbol(): Int = when (this) {
     SetupLevel.YELLOW -> R.string.setup_symbol_yellow
     SetupLevel.RED -> R.string.setup_symbol_red
 }
+
+/** A pill with an icon and a word in [color], on a faint fill of the same colour. Never colour alone. */
+@Composable
+internal fun StatusPill(icon: Int, text: String, color: Color, modifier: Modifier = Modifier) {
+    Surface(modifier = modifier, shape = MaterialTheme.shapes.extraLarge, color = color.copy(alpha = CHIP_FILL_ALPHA)) {
+        Row(
+            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+        ) {
+            Icon(painterResource(icon), contentDescription = null, tint = color, modifier = Modifier.size(Dimens.smallIconSize))
+            Text(text = text, color = color, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        }
+    }
+}
+
+internal fun SetupLevel.statusColor(): Color = color()

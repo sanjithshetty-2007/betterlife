@@ -34,6 +34,14 @@ public class MainActivity : ComponentActivity() {
         }
     }
 
+    // Reminder Health is re-checked on every launch and every return to the app, for example from a
+    // system settings page, so the Home banner and the health rows are never stale (Prompt 11).
+    override fun onResume() {
+        super.onResume()
+        val container = (application as BetterLifeApp).container
+        container.appScope.launch { container.setupRepository.refresh() }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.getStringExtra(EXTRA_ROUTE)?.let { routeToOpen.value = it }

@@ -22,6 +22,9 @@ internal fun SetupCheck.rowText(): SetupRowText = when (this) {
     SetupCheck.EXACT_ALARMS -> SetupRowText(
         R.string.setup_exact_alarms_title, R.string.setup_exact_alarms_why, null, R.drawable.ic_alarm,
     )
+    SetupCheck.CHANNELS -> SetupRowText(
+        R.string.setup_channels_title, R.string.setup_channels_why, null, R.drawable.ic_tune,
+    )
     SetupCheck.DRAW_OVER_APPS -> SetupRowText(
         R.string.setup_overlay_title, R.string.setup_overlay_why, null, R.drawable.ic_layers,
     )
@@ -54,6 +57,8 @@ internal fun SetupReason.text(): Int = when (this) {
     SetupReason.GRANTED -> R.string.setup_reason_granted
     SetupReason.NOTIFICATIONS_OFF -> R.string.setup_reason_notifications_off
     SetupReason.EXACT_ALARMS_DENIED -> R.string.setup_reason_exact_alarms_denied
+    SetupReason.CHANNEL_BLOCKED -> R.string.setup_reason_channel_blocked
+    SetupReason.CHANNEL_LOWERED -> R.string.setup_reason_channel_lowered
     SetupReason.OVERLAY_DENIED -> R.string.setup_reason_overlay_denied
     SetupReason.FULL_SCREEN_DENIED -> R.string.setup_reason_full_screen_denied
     SetupReason.BATTERY_RESTRICTED -> R.string.setup_reason_battery_restricted

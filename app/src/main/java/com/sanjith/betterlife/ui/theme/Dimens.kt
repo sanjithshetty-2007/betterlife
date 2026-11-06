@@ -23,4 +23,12 @@ public object Dimens {
     /** The colour dot of an event category, and the stripe on an agenda row. */
     public val categoryDot = 12.dp
     public val categoryStripe = 4.dp
+
+    /** Reminder Health: the score ring and the tinted tile behind each row icon (Prompt 11). */
+    public val healthRing = 72.dp
+    public val healthRingStroke = 8.dp
+    public val iconTile = 40.dp
+
+    /** Reminder Center: the time column of each row. */
+    public val centerTimeColumn = 72.dp
 }

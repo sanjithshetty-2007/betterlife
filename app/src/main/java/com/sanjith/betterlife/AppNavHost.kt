@@ -6,7 +6,15 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sanjith.betterlife.domain.model.EventType
+import com.sanjith.betterlife.domain.model.ReminderItemType
+import com.sanjith.betterlife.domain.setup.HealthSummary
+import com.sanjith.betterlife.feature.center.ReminderCenterScreen
+import com.sanjith.betterlife.feature.setup.rowText
 import com.sanjith.betterlife.feature.debug.AlarmSpikeScreen
 import com.sanjith.betterlife.feature.debug.DatabaseDebugScreen
 import com.sanjith.betterlife.feature.debug.PopupSpikeScreen
@@ -40,6 +48,7 @@ internal object Routes {
     const val EVENT_EDITOR = "event"
     const val REMINDER_EDITOR = "remind"
     const val REMINDER_DEFAULTS = "reminder-defaults"
+    const val CENTER = "reminder-center"
     const val POPUP_SPIKE = "debug/popup-spike"
     const val ALARM_SPIKE = "debug/alarm-spike"
     const val DATABASE = "debug/database"
@@ -68,6 +77,8 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
             HomeScreen(
+                onOpenCenter = { navController.navigate(Routes.CENTER) },
+                healthProblems = healthProblems(),
                 onOpenTasks = { navController.navigate(Routes.TASKS) },
                 onOpenSetup = { navController.navigate(Routes.SETUP) },
                 onOpenAgenda = { navController.navigate(Routes.AGENDA) },
@@ -75,7 +86,21 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                 debugTools = if (BuildConfig.DEBUG) debugTools(navController) else emptyList(),
             )
         }
-        composable(Routes.SETUP) { SetupScreen(onBack = back) }
+        composable(Routes.SETUP) { SetupScreen(onBack = back, onOpenCenter = { navController.navigate(Routes.CENTER) }) }
+        composable(Routes.CENTER) {
+            ReminderCenterScreen(
+                onBack = back,
+                onOpenItem = { type, id ->
+                    navController.navigate(
+                        when (type) {
+                            ReminderItemType.TASK -> Routes.taskEditor(id)
+                            ReminderItemType.EVENT -> Routes.eventEditor(id)
+                            ReminderItemType.STANDALONE -> Routes.reminderEditor(id)
+                        },
+                    )
+                },
+            )
+        }
         composable(Routes.TASKS) {
             TaskListScreen(
                 onBack = back,
@@ -117,6 +142,14 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
             composable(Routes.ENGINE) { ReminderEngineDebugScreen(onBack = back) }
         }
     }
+}
+
+/** Titles of the RED Reminder Health rows, for the Home banner. Re-checked on every resume (MainActivity). */
+@Composable
+private fun healthProblems(): List<String> {
+    val container = (LocalContext.current.applicationContext as BetterLifeApp).container
+    val status by container.setupRepository.status.collectAsStateWithLifecycle(null)
+    return status?.let { HealthSummary.of(it).redChecks.map { check -> stringResource(check.rowText().title) } }.orEmpty()
 }
 
 private fun debugTools(navController: NavController): List<DebugTool> = listOf(

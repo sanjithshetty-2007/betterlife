@@ -9,6 +9,7 @@ import androidx.room.Upsert
 import com.sanjith.betterlife.data.db.entity.ProjectEntity
 import com.sanjith.betterlife.data.db.entity.ReminderLogEntity
 import com.sanjith.betterlife.data.db.entity.SyncCursorEntity
+import com.sanjith.betterlife.domain.model.ReminderItemType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -61,7 +62,45 @@ public interface ReminderLogDao {
 
     @Query("SELECT COUNT(*) FROM reminder_log")
     public fun observeCount(): Flow<Int>
+
+    /**
+     * Log rows since [since], newest first, each with its reminder's item (task, event or standalone)
+     * and that item's title. Deleted reminders and items are included: the history stays readable.
+     */
+    @Query(
+        """
+        SELECT l.*, r.itemType AS itemType, r.itemId AS itemId,
+          COALESCE(t.title, e.title, s.title) AS itemTitle,
+          COALESCE(t.deletedAt, e.deletedAt, s.deletedAt) AS itemDeletedAt
+        FROM reminder_log l
+        LEFT JOIN reminders r ON r.id = l.reminderId
+        LEFT JOIN tasks t ON r.itemType = 'TASK' AND t.id = r.itemId
+        LEFT JOIN events e ON r.itemType = 'EVENT' AND e.id = r.itemId
+        LEFT JOIN standalone_reminders s ON r.itemType = 'STANDALONE' AND s.id = r.itemId
+        WHERE l.firedAt >= :since
+        ORDER BY l.firedAt DESC
+        LIMIT :limit
+        """,
+    )
+    public fun observeCenter(since: Long, limit: Int): Flow<List<CenterLogRow>>
+
+    /** The 60-day purge (Prompt 11). Returns how many rows were removed. */
+    @Query("DELETE FROM reminder_log WHERE firedAt < :cutoff")
+    public suspend fun deleteFiredBefore(cutoff: Long): Int
+
+    /** Rows for one reminder, oldest first (the health tests read their result here). */
+    @Query("SELECT * FROM reminder_log WHERE reminderId = :reminderId ORDER BY firedAt")
+    public fun observeForReminder(reminderId: String): Flow<List<ReminderLogEntity>>
 }
+
+/** A log row with what it belongs to, for the Reminder Center. Item fields are null if the reminder is gone. */
+public data class CenterLogRow(
+    @Embedded val log: ReminderLogEntity,
+    val itemType: ReminderItemType?,
+    val itemId: String?,
+    val itemTitle: String?,
+    val itemDeletedAt: Long?,
+)
 
 @Dao
 public interface SyncCursorDao {

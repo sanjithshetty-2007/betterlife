@@ -36,6 +36,8 @@ internal object SystemSettingsLauncher {
     private fun intentFor(context: Context, check: SetupCheck): Intent = when (check) {
         SetupCheck.NOTIFICATIONS -> Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
             .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+        SetupCheck.CHANNELS -> Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
         SetupCheck.EXACT_ALARMS -> Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, packageUri(context))
         SetupCheck.DRAW_OVER_APPS -> Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, packageUri(context))
         SetupCheck.FULL_SCREEN_INTENT ->

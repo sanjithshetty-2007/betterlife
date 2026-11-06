@@ -2,7 +2,14 @@ package com.sanjith.betterlife.feature.home
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
+import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +50,9 @@ public fun HomeScreen(
     onOpenTasks: () -> Unit,
     onOpenSetup: () -> Unit,
     onOpenAgenda: () -> Unit = {},
+    onOpenCenter: () -> Unit = {},
+    /** Titles of the RED Reminder Health rows; the banner shows when this is not empty. */
+    healthProblems: List<String> = emptyList(),
     debugTools: List<DebugTool> = emptyList(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -66,6 +76,7 @@ public fun HomeScreen(
                 style = MaterialTheme.typography.displaySmall,
                 color = MaterialTheme.colorScheme.onBackground,
             )
+            if (healthProblems.isNotEmpty()) HealthBanner(healthProblems, onOpenSetup)
             WelcomeCard()
             Button(
                 onClick = { scope.launch { snackbarHostState.showSnackbar(snackbarText) } },
@@ -99,6 +110,14 @@ public fun HomeScreen(
             ) {
                 Text(text = stringResource(R.string.setup_home_button))
             }
+            OutlinedButton(
+                onClick = onOpenCenter,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.minTouchTarget),
+            ) {
+                Text(text = stringResource(R.string.center_home_button))
+            }
             debugTools.forEach { tool ->
                 OutlinedButton(
                     onClick = tool.onOpen,
@@ -109,6 +128,26 @@ public fun HomeScreen(
                     Text(text = stringResource(tool.label))
                 }
             }
+        }
+    }
+}
+
+/** Red banner (icon + words, not colour alone) when a Reminder Health row is RED (Prompt 11). */
+@Composable
+private fun HealthBanner(problems: List<String>, onOpen: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen),
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(Dimens.borderWidth, BetterLifeColors.StatusBad),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
+        Row(modifier = Modifier.padding(Spacing.md), horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
+            Icon(painterResource(R.drawable.ic_error), contentDescription = null, tint = BetterLifeColors.StatusBad, modifier = Modifier.size(Dimens.iconSize))
+            Text(
+                text = stringResource(R.string.home_health_banner, problems.joinToString(", ")),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
         }
     }
 }

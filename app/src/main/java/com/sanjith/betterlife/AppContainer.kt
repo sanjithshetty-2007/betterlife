@@ -27,6 +27,8 @@ import com.sanjith.betterlife.feature.tasks.TaskService
 import com.sanjith.betterlife.reminders.daily.DailyPrompts
 import com.sanjith.betterlife.reminders.engine.RescheduleTrigger
 import com.sanjith.betterlife.data.setup.DeviceCapabilityChecker
+import com.sanjith.betterlife.data.setup.HealthStore
+import com.sanjith.betterlife.feature.setup.HealthTests
 import com.sanjith.betterlife.data.setup.ManualCheckStore
 import com.sanjith.betterlife.data.setup.SetupRepository
 import com.sanjith.betterlife.reminders.alarm.TestAlarmController
@@ -82,10 +84,15 @@ public class AppContainer(appContext: Context) {
         ioDispatcher = ioDispatcher.limitedParallelism(1),
     )
 
+    /** Reminder Health's last-check time and test reminders. */
+    public val healthStore: HealthStore = HealthStore(appContext.settingsDataStore)
+
     public val setupRepository: SetupRepository = SetupRepository(
         checker = DeviceCapabilityChecker(appContext),
         manualChecks = ManualCheckStore(appContext.settingsDataStore),
+        healthStore = healthStore,
         ioDispatcher = ioDispatcher,
+        nowMillis = realNowMillis,
     )
 
     private val newId: () -> String = { UUID.randomUUID().toString() }
@@ -110,6 +117,9 @@ public class AppContainer(appContext: Context) {
     public val eventService: EventService by lazy {
         EventService(eventRepository, standaloneReminderRepository) { reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL) }
     }
+
+    /** Reminder Health's two test reminders; on the real clock like every real alarm. */
+    public val healthTests: HealthTests by lazy { HealthTests(eventService, standaloneReminderRepository, healthStore, realClock) }
 
     /** The owner's colour categories for events. */
     public val eventCategoryStore: EventCategoryStore = EventCategoryStore(appContext.settingsDataStore)

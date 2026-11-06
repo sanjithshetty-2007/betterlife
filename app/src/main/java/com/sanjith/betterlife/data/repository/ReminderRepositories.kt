@@ -1,6 +1,7 @@
 package com.sanjith.betterlife.data.repository
 
 import com.sanjith.betterlife.data.db.BetterLifeDatabase
+import com.sanjith.betterlife.data.db.dao.CenterLogRow
 import com.sanjith.betterlife.data.db.entity.ReminderEntity
 import com.sanjith.betterlife.data.db.entity.ReminderLogEntity
 import com.sanjith.betterlife.domain.model.Importance
@@ -8,7 +9,9 @@ import com.sanjith.betterlife.domain.model.ReasonCode
 import com.sanjith.betterlife.domain.model.ReminderItemType
 import com.sanjith.betterlife.domain.model.ReminderLogStatus
 import com.sanjith.betterlife.domain.model.ReminderState
+import com.sanjith.betterlife.domain.reminder.ReminderLogRules
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 /** Reminder rows. Creating and deleting them happens through the task and event repositories. */
 public class ReminderRepository(
@@ -42,6 +45,15 @@ public class ReminderLogRepository(
     public fun observeRecent(limit: Int): Flow<List<ReminderLogEntity>> = dao.observeRecent(limit)
 
     public fun observeCount(): Flow<Int> = dao.observeCount()
+
+    /** Reminder Center rows fired at or after [sinceMillis], newest first. */
+    public fun observeCenter(sinceMillis: Long, limit: Int): Flow<List<CenterLogRow>> = dao.observeCenter(sinceMillis, limit)
+
+    public fun observeForReminder(reminderId: String): Flow<List<ReminderLogEntity>> = dao.observeForReminder(reminderId)
+
+    /** Deletes rows older than the 60-day retention (ReminderLogRules); returns how many went. */
+    public suspend fun purgeOld(nowMillis: Long): Int =
+        dao.deleteFiredBefore(ReminderLogRules.purgeCutoff(Instant.ofEpochMilli(nowMillis)).toEpochMilli())
 
     /** [detail] is technical text for debugging; never put note text or other private content in it. */
     public suspend fun append(

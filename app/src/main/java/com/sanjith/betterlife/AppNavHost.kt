@@ -1,5 +1,9 @@
 package com.sanjith.betterlife
 
+import com.sanjith.betterlife.feature.celebration.CelebrationMessagesScreen
+import com.sanjith.betterlife.feature.celebration.CelebrationScreen
+import com.sanjith.betterlife.feature.debug.MascotDebugScreen
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
@@ -65,6 +69,9 @@ internal object Routes {
     const val HABITS = "habits"
     const val HABIT_EDITOR = "habit"
     const val HABIT_DETAIL = "habit-detail"
+    const val CELEBRATION = "celebration"
+    const val CELEBRATION_MESSAGES = "celebration-messages"
+    const val MASCOT = "debug/mascot"
     const val EVENT_EDITOR = "event"
     const val REMINDER_EDITOR = "remind"
     const val REMINDER_DEFAULTS = "reminder-defaults"
@@ -101,6 +108,7 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
         onRouteOpened()
     }
     val back: () -> Unit = { navController.popBackStack() }
+    CelebrationLauncher(navController)
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
             var pauseSheet by remember { mutableStateOf(false) }
@@ -179,9 +187,21 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                 onBack = back,
                 onOpenHabit = { id -> navController.navigate(Routes.habitDetail(id)) },
                 onNewHabit = { navController.navigate(Routes.habitEditor(null)) },
+                onOpenCelebrations = { navController.navigate(Routes.CELEBRATION_MESSAGES) },
             )
         }
         composable("${Routes.HABIT_EDITOR}/{${HabitEditorViewModel.ARG_ID}}") { HabitEditorScreen(onClose = back) }
+        composable(Routes.CELEBRATION_MESSAGES) { CelebrationMessagesScreen(onBack = back) }
+        composable(Routes.CELEBRATION) {
+            val center = (LocalContext.current.applicationContext as BetterLifeApp).container.celebrations
+            val pending by center.full.collectAsStateWithLifecycle()
+            val event = pending.firstOrNull()
+            if (event == null) {
+                LaunchedEffect(Unit) { navController.popBackStack() }
+            } else {
+                CelebrationScreen(event, onClose = { center.shown(event); navController.popBackStack() })
+            }
+        }
         composable("${Routes.HABIT_DETAIL}/{${HabitDetailViewModel.ARG_ID}}") {
             HabitDetailScreen(onBack = back, onEdit = { id -> navController.navigate(Routes.habitEditor(id)) })
         }
@@ -191,6 +211,7 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
             composable(Routes.DATABASE) { DatabaseDebugScreen(onBack = back) }
             composable(Routes.TIME_MACHINE) { TimeMachineScreen(onBack = back) }
             composable(Routes.ENGINE) { ReminderEngineDebugScreen(onBack = back) }
+            composable(Routes.MASCOT) { MascotDebugScreen(onBack = back) }
         }
     }
 }
@@ -233,4 +254,20 @@ private fun debugTools(navController: NavController): List<DebugTool> = listOf(
     DebugTool(R.string.db_debug_home_button) { navController.navigate(Routes.DATABASE) },
     DebugTool(R.string.time_machine_home_button) { navController.navigate(Routes.TIME_MACHINE) },
     DebugTool(R.string.engine_home_button) { navController.navigate(Routes.ENGINE) },
+    DebugTool(R.string.mascot_debug_home_button) { navController.navigate(Routes.MASCOT) },
 )
+
+/**
+ * Opens the celebration screen whenever a full-screen milestone is waiting (Prompt 16), from any
+ * screen. It shows them one by one; a celebration already on screen is not opened twice.
+ */
+@Composable
+private fun CelebrationLauncher(navController: NavController) {
+    val center = (LocalContext.current.applicationContext as BetterLifeApp).container.celebrations
+    val pending by center.full.collectAsStateWithLifecycle()
+    val current by navController.currentBackStackEntryAsState()
+    LaunchedEffect(pending.isNotEmpty(), current?.destination?.route) {
+        val route = current?.destination?.route ?: return@LaunchedEffect
+        if (pending.isNotEmpty() && route != Routes.CELEBRATION) navController.navigate(Routes.CELEBRATION)
+    }
+}

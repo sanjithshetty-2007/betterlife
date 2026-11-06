@@ -40,7 +40,7 @@ public class HabitsViewModelTest {
     public fun setUp() {
         db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), BetterLifeDatabase::class.java).build()
         habits = HabitRepository(db, { 1_000L }, { "00000000-0000-4000-8000-%012d".format(++idCounter) })
-        service = HabitService(habits, { today }) { reschedules++ }
+        service = HabitService(habits, { today }, { reschedules++ })
         viewModel = HabitsViewModel(habits, service, settings) { change -> settings.value = change(settings.value) }
     }
 

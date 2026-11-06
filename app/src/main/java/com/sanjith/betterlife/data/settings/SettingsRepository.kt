@@ -64,6 +64,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                     standalone = ReminderDefaults.decode(prefs[DEFAULTS_STANDALONE]) ?: d.reminderDefaults.standalone,
                 ),
                 habitTickHaptics = prefs[HABIT_HAPTICS] ?: d.habitTickHaptics,
+                mascotName = prefs[MASCOT_NAME]?.takeIf { it.isNotBlank() } ?: d.mascotName,
             )
         }.getOrDefault(d)
     }
@@ -71,6 +72,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     private fun write(prefs: MutablePreferences, s: AppSettings) {
         prefs[ROLLOVER_HOUR] = s.rolloverHour
         prefs[HABIT_HAPTICS] = s.habitTickHaptics
+        prefs[MASCOT_NAME] = s.mascotName
         prefs[SNOOZE_TONIGHT] = s.snoozeTonight.toMinuteOfDay()
         prefs[SNOOZE_TOMORROW] = s.snoozeTomorrow.toMinuteOfDay()
         prefs[BIRTHDAY_TIME] = s.birthdayFireTime.toMinuteOfDay()
@@ -110,6 +112,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         const val MINUTES_PER_HOUR = 60
         val ROLLOVER_HOUR = intPreferencesKey("rollover_hour")
         val HABIT_HAPTICS = booleanPreferencesKey("habit_tick_haptics")
+        val MASCOT_NAME = stringPreferencesKey("mascot_name")
         val SNOOZE_TONIGHT = intPreferencesKey("snooze_tonight_minute")
         val SNOOZE_TOMORROW = intPreferencesKey("snooze_tomorrow_minute")
         val BIRTHDAY_TIME = intPreferencesKey("birthday_fire_minute")

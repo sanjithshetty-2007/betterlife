@@ -66,6 +66,7 @@ public fun HabitsScreen(
     onBack: () -> Unit,
     onOpenHabit: (String) -> Unit,
     onNewHabit: () -> Unit,
+    onOpenCelebrations: () -> Unit = {},
     viewModel: HabitsViewModel = viewModel(factory = HabitsViewModel.Factory),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
@@ -76,9 +77,10 @@ public fun HabitsScreen(
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Header(onBack, onNewHabit, hapticsOn = ui?.haptics == true, onHaptics = viewModel::setHaptics)
+            Header(onBack, onNewHabit, hapticsOn = ui?.haptics == true, onHaptics = viewModel::setHaptics, onOpenCelebrations = onOpenCelebrations)
             val state = ui ?: return@Column
             MonthRow(state, viewModel)
+            QuietMilestoneBanner()
             val cards = state.cards ?: return@Column
             if (cards.isEmpty()) {
                 Box(Modifier.fillMaxSize().padding(Spacing.lg), contentAlignment = Alignment.Center) {
@@ -128,7 +130,7 @@ private fun UndoSnackbar(undo: HabitUndo?, snackbar: SnackbarHostState, viewMode
 }
 
 @Composable
-private fun Header(onBack: () -> Unit, onNewHabit: () -> Unit, hapticsOn: Boolean, onHaptics: (Boolean) -> Unit) {
+private fun Header(onBack: () -> Unit, onNewHabit: () -> Unit, hapticsOn: Boolean, onHaptics: (Boolean) -> Unit, onOpenCelebrations: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack) {
@@ -152,6 +154,10 @@ private fun Header(onBack: () -> Unit, onNewHabit: () -> Unit, hapticsOn: Boolea
                     text = { Text(stringResource(R.string.habits_vibrate_on_tick)) },
                     trailingIcon = { Checkbox(checked = hapticsOn, onCheckedChange = null) },
                     onClick = { onHaptics(!hapticsOn) },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.celebrations_menu)) },
+                    onClick = { menu = false; onOpenCelebrations() },
                 )
             }
         }

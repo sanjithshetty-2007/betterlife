@@ -254,6 +254,21 @@ Before you start: Home > Reminder Health shows 10/10 (fix any red row first), an
 
 Owner gate: also use the app normally for 2 to 3 days with real tasks and write anything missed or annoying under Known issues in PROGRESS.md. Keep a backup somewhere safe before Phase 2.
 
+## Prompt 16: Celebrations and mascot v1
+
+Blip lives on the celebration screen, the reminder pop-up, the quiet banner and Debug: mascot. Your own messages: Habits > ⋮ > Celebration messages (Blip's name is at the top of that screen).
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | Debug: Time Machine. Create a test habit, then tick it on 7 days in a row, moving the Time Machine forward one day each time (tick on that day's box) | On day 7 the full-screen celebration appears once: confetti, Blip cheering, "7", "days of <habit>!", one message | **PASS** (device test: 7 single-day ticks give one celebration) |
+| 2 | Untick and tick day 7 again | No second celebration | **PASS** (device test) |
+| 3 | Instead of day 7, back-fill a missing earlier day that completes 7 | Only the small banner on the Habits screen ("7 days of ... Nice work.") | **PASS** (device test) |
+| 4 | Habits > ⋮ > Celebration messages: add two of your own; Debug: mascot > Show a test celebration a few times | One of YOUR lines shows (the built-in ones only while you have none) | |
+| 5 | Debug: mascot: watch it cycle; tap each mood and Pod / Baby | Blip looks good and cute in all five moods; Down is sad, never blaming | **PASS** (AI looked at Proud, Down and the Pod on the phone; your eye decides "cute") |
+| 6 | Developer options > Animator duration scale off; open Debug: mascot and a test celebration | Blip stands still in each mood's pose; the confetti does not move | |
+| 7 | A habit with a reminder: press Done on its pop-up on the day that makes 7 | The celebration shows when the app is next in front | |
+| 8 | Change Blip's name on the Celebrations screen, Save | The name sticks after a restart | |
+
 ## Prompt 15: Habit grids UI
 
 Home > Habits. Each card: icon, name, consistency on the right ("New" for the first 7 days), the streak line, and 31 boxes in rows of 7 (every box is a 48 dp target). Tap a box to tick or clear it; Undo stays for about 6 seconds. Tap a habit's name for its page (numbers, last 12 months, this month). + adds a habit; the pencil on a habit's page edits it.

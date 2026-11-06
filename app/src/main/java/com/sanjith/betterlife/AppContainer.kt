@@ -16,7 +16,10 @@ import com.sanjith.betterlife.data.backup.BackupStatusStore
 import com.sanjith.betterlife.data.db.BetterLifeDatabase
 import com.sanjith.betterlife.data.db.IntegrityChecker
 import com.sanjith.betterlife.data.debug.SeedDataGenerator
+import com.sanjith.betterlife.data.habit.CelebrationCenter
+import com.sanjith.betterlife.data.habit.MascotMoodSource
 import com.sanjith.betterlife.data.habit.StarterHabitSeeder
+import com.sanjith.betterlife.data.repository.CelebrationMessageRepository
 import com.sanjith.betterlife.data.repository.HabitRepository
 import com.sanjith.betterlife.data.repository.PauseRangeRepository
 import com.sanjith.betterlife.domain.habit.StarterHabit
@@ -179,7 +182,7 @@ public class AppContainer(appContext: Context) {
 
     /** Habit actions for the screens; changes to a habit reschedule its daily reminder (Prompt 15). */
     public val habitService: HabitService by lazy {
-        HabitService(habitRepository, ::habitToday) { reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL) }
+        HabitService(habitRepository, ::habitToday, { reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL) }, celebrations)
     }
 
     /** The reminder engine's questions about habits, answered on the REAL clock like every alarm. */
@@ -191,10 +194,15 @@ public class AppContainer(appContext: Context) {
         }
 
         override suspend fun tickFromReminder(habitId: String) {
-            val today = realClock.habitToday(settingsRepository.current().rolloverHour)
-            habitRepository.tick(habitId, today, today)
+            // Through the service, so a milestone reached from the pop-up is celebrated too.
+            habitService.tick(habitId, realClock.habitToday(settingsRepository.current().rolloverHour))
         }
     }
+
+    /** Milestones waiting to be celebrated (Prompt 16). */
+    public val celebrations: CelebrationCenter = CelebrationCenter()
+    public val celebrationMessages: CelebrationMessageRepository by lazy { CelebrationMessageRepository(database, nowMillis, newId) }
+    public val mascotMood: MascotMoodSource by lazy { MascotMoodSource(database, clock, ::habitToday) }
 
     /** Adds the four starter habits once per install. */
     public suspend fun seedStarterHabits() {

@@ -48,6 +48,14 @@ internal object BetterLifeColors {
     /** The border of a habit box that can still be ticked; future boxes use the faint SoftBorder. */
     val BoxOpenBorder = Text.copy(alpha = 0.32f)
 
+    /** Blip (Prompt 16): the soft light sheen on the body and bulb, rosy cheeks, and the thin outline of the arms. */
+    val MascotSheen = Text.copy(alpha = 0.16f)
+    val MascotBlush = StatusBad.copy(alpha = 0.45f)
+    val MascotShade = Background.copy(alpha = 0.35f)
+
+    /** The antenna bulb when Blip is sleepy or down: the mood light turned low. */
+    val BulbDim = AccentYellow.copy(alpha = 0.45f)
+
     /** Dims whatever is behind the reminder pop-up. */
     val Scrim = Background.copy(alpha = 0.82f)
 }

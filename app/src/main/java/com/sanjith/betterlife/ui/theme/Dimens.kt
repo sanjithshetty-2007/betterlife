@@ -32,8 +32,13 @@ public object Dimens {
     /** Reminder Center: the time column of each row. */
     public val centerTimeColumn = 72.dp
 
-    /** Blip on the pop-up card. */
+    /** Blip on the pop-up card, on the debug sheet, and on the celebration screen (Prompt 16). */
     public val mascotSmall = 56.dp
+    public val mascotMedium = 96.dp
+    public val mascotLarge = 200.dp
+
+    /** One piece of celebration confetti. */
+    public val confettiPiece = 10.dp
 
     /** Quiet Hours weekday circle (its touch cell is still 48 dp tall). */
     public val dayCircle = 40.dp

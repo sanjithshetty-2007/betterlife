@@ -46,6 +46,10 @@ public interface TaskDao {
     @Query("UPDATE tasks SET completedAt = :now, updatedAt = :now, syncState = 'DIRTY' WHERE id = :id AND completedAt IS NULL")
     public suspend fun complete(id: String, now: Long)
 
+    /** Tasks completed since [since] (Blip's mood, Prompt 16). */
+    @Query("SELECT COUNT(*) FROM tasks WHERE deletedAt IS NULL AND completedAt >= :since")
+    public suspend fun countCompletedSince(since: Long): Int
+
     @Query("UPDATE tasks SET completedAt = NULL, updatedAt = :now, syncState = 'DIRTY' WHERE id = :id")
     public suspend fun uncomplete(id: String, now: Long)
 

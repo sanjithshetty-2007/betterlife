@@ -26,6 +26,9 @@ public interface HabitDao {
     @Query("SELECT * FROM habits WHERE id = :id")
     public suspend fun getAnyById(id: String): HabitEntity?
 
+    @Query("SELECT * FROM habits WHERE deletedAt IS NULL AND archived = 0")
+    public suspend fun getActive(): List<HabitEntity>
+
     @Query("SELECT * FROM habits WHERE id = :id AND deletedAt IS NULL")
     public fun observeById(id: String): Flow<HabitEntity?>
 
@@ -71,6 +74,13 @@ public interface HabitLogDao {
 
     @Query("SELECT * FROM habit_logs WHERE habitId = :habitId AND deletedAt IS NULL ORDER BY localDate")
     public fun observeActiveForHabit(habitId: String): Flow<List<HabitLogEntity>>
+
+    @Query("SELECT * FROM habit_logs WHERE deletedAt IS NULL AND localDate BETWEEN :from AND :to")
+    public suspend fun getActiveBetween(from: LocalDate, to: LocalDate): List<HabitLogEntity>
+
+    /** Days on which at least one habit was done or kept: Blip's evolution (never goes down). */
+    @Query("SELECT COUNT(DISTINCT localDate) FROM habit_logs WHERE deletedAt IS NULL AND status IN ('DONE', 'KEPT')")
+    public suspend fun consistentDays(): Int
 
     /** Every habit's logs (streaks need the whole history; a year of 12 habits is about 4,400 rows). */
     @Query("SELECT * FROM habit_logs WHERE deletedAt IS NULL")
@@ -135,6 +145,12 @@ public interface CelebrationMessageDao {
 
     @Query("SELECT * FROM celebration_messages WHERE deletedAt IS NULL ORDER BY createdAt")
     public fun observeActive(): Flow<List<CelebrationMessageEntity>>
+
+    @Query("SELECT * FROM celebration_messages WHERE deletedAt IS NULL")
+    public suspend fun getActive(): List<CelebrationMessageEntity>
+
+    @Query("UPDATE celebration_messages SET text = :text, milestone = :milestone, updatedAt = :now WHERE id = :id")
+    public suspend fun update(id: String, text: String, milestone: Int?, now: Long)
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     public suspend fun insert(message: CelebrationMessageEntity)

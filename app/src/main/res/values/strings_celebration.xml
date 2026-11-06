@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Celebration screen (Prompt 16) -->
+    <string name="celebration_days_of">days of %1$s!</string>
+    <string name="celebration_quote">“%1$s”</string>
+    <string name="celebration_keep_going">Let\'s keep going</string>
+    <string name="celebration_quiet_banner">%1$d days of %2$s. Nice work.</string>
+    <string name="celebration_quiet_close">Close</string>
+    <string name="mascot_cheering_description">%1$s cheering</string>
+
+    <!-- Built-in celebration lines: used while the owner has written none. Short and kind. -->
+    <string-array name="celebration_default_messages">
+        <item>Future you is already flexing. Keep stacking.</item>
+        <item>Small steps, every day. Look at you go.</item>
+        <item>That is a real habit now.</item>
+        <item>Consistency looks good on you.</item>
+        <item>One more day in the bank.</item>
+        <item>You showed up. That is the whole trick.</item>
+        <item>Quiet wins add up. This is one.</item>
+        <item>Proud of you. Keep it rolling.</item>
+    </string-array>
+
+    <!-- Celebration messages screen (Prompt 16) -->
+    <string name="celebrations_title">Celebrations</string>
+    <string name="celebrations_menu">Celebration messages</string>
+    <string name="celebrations_yours">Your messages</string>
+    <string name="celebrations_none_yet">None yet. The built-in ones below are used until you add some.</string>
+    <string name="celebrations_new_hint">A line to show when you hit a streak</string>
+    <string name="celebrations_any_milestone">Any milestone</string>
+    <string name="celebrations_milestone_days">%1$d days</string>
+    <string name="celebrations_edit">Edit message</string>
+    <string name="celebrations_delete">Delete message</string>
+    <string name="celebrations_built_in">Built-in messages</string>
+    <string name="celebrations_built_in_hint">Used only while you have no messages of your own for that milestone.</string>
+    <string name="mascot_name">Mascot name</string>
+
+    <!-- Mascot moods and stages (Prompt 16) -->
+    <string name="mascot_mood_cheering">Cheering</string>
+    <string name="mascot_mood_proud">Proud</string>
+    <string name="mascot_mood_curious">Curious</string>
+    <string name="mascot_mood_sleepy">Sleepy</string>
+    <string name="mascot_mood_down">Down</string>
+    <string name="mascot_stage_pod">Pod</string>
+    <string name="mascot_stage_baby">Baby</string>
+
+    <!-- Debug: mascot screen (Prompt 16) -->
+    <string name="mascot_debug_home_button">Debug: mascot</string>
+    <string name="mascot_debug_title">Mascot</string>
+    <string name="mascot_debug_now">Right now: %1$s (%2$s)</string>
+    <string name="mascot_debug_stage">Stage from your data: %1$s</string>
+    <string name="mascot_debug_cycle">Cycle through moods</string>
+    <string name="mascot_debug_stop">Stop cycling</string>
+    <string name="mascot_debug_test_celebration">Show a test celebration</string>
+    <string name="mascot_debug_test_habit">Test habit</string>
+    <string name="mascot_debug_static">Static versions (for widgets)</string>
+    <string name="mascot_reason_paused">today is paused</string>
+    <string name="mascot_reason_late">it is late</string>
+    <string name="mascot_reason_all_done">every habit done today</string>
+    <string name="mascot_reason_strong">70% or more over three days</string>
+    <string name="mascot_reason_tasks">3 or more tasks done in a day</string>
+    <string name="mascot_reason_quiet">two quiet days</string>
+    <string name="mascot_reason_idle">nothing special</string>
+</resources>

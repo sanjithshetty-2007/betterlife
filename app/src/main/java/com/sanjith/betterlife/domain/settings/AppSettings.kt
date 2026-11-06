@@ -41,6 +41,8 @@ public data class AppSettings(
     val reminderDefaults: ReminderDefaults = ReminderDefaults(),
     /** A short vibration when a habit box is ticked (Prompt 15). */
     val habitTickHaptics: Boolean = true,
+    /** The mascot's name (context.md 13: Blip). */
+    val mascotName: String = DEFAULT_MASCOT_NAME,
 ) {
     init {
         require(rolloverHour in 0..MAX_ROLLOVER_HOUR) { "rolloverHour must be 0 to $MAX_ROLLOVER_HOUR" }
@@ -53,6 +55,8 @@ public data class AppSettings(
     }
 
     public companion object {
+        public const val DEFAULT_MASCOT_NAME: String = "Blip"
+
         /** A rollover later than 05:00 would make early-morning ticks land on the wrong day. */
         public const val MAX_ROLLOVER_HOUR: Int = 5
 

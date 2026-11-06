@@ -272,3 +272,23 @@ Project: betterlife, Mumbai, ref `qprtltwuuihbixbfgspm` (found with the Supabase
 | 10 | Search the repo on GitHub for your publishable key and for "service_role" | The key is not in any committed file; service_role appears only in docs that warn against it | |
 
 About the confirmation email: Supabase's email link goes to the project's Site URL (localhost by default), so the browser page may fail to load. The account is confirmed anyway. To change that page later: Supabase dashboard > Authentication > URL Configuration.
+
+## Prompt S2: Offline-first sync engine
+
+Sync runs when the app opens, about 5 s after a change, every 6 hours, and on Account & sync > Sync now. It waits for internet and retries by itself. The phone is the source of truth: the newest edit wins (a delete wins a tie). Debug seed rows never leave the phone.
+
+| # | Test | Expected | Result |
+|---|---|---|---|
+| 1 | Sign in, open Account & sync | Last sync shows a time, Changes waiting 0, all your tasks and events are on Supabase (Table Editor) | **PASS** (AI 2026-11-06: first sync pushed 38 rows) |
+| 2 | Add a task on the phone, wait 10 s, look in Supabase > tasks | The task is there | **PASS** (AI: arrived in about 5 s) |
+| 3 | Edit a task's title in Supabase (set a newer updated_at), then reopen the app or tap Sync now | The new title shows on the phone | **PASS** (AI: "S2 sync test (edited in cloud)" arrived on reopen) |
+| 4 | Delete that task on the phone, wait 10 s, look in Supabase | The row is still there with deleted_at filled in (soft delete) | **PASS** (AI: deleted_at = updated_at = 1793986894942) |
+| 5 | A future task with a reminder; move its due time in Supabase; reopen the app | `adb shell dumpsys alarm` shows ONE BetterLife reminder alarm, at the new time | **PASS** (AI: task for 09:00 moved to 09:30 in the cloud; one alarm, now 09:30; deleting the task left none) |
+| 6 | Airplane mode on, add a task, reopen the app | Home says offline / changes waiting; reminders still fire | |
+| 7 | Airplane mode off | Within a minute the waiting change is pushed; Changes waiting 0 | |
+| 8 | Edit the same task on the phone while offline and in Supabase, then go online | The edit with the later updated_at wins on both sides | |
+| 9 | Second phone or a reinstall: sign in | Everything comes down; reminders are scheduled once each | |
+| 10 | Account & sync > Delete my cloud data (confirm twice) | Signed out; Supabase tables have none of your rows; everything is still on the phone | |
+| 11 | Leave the phone with the app untouched for 6+ hours online | Last sync moved forward without opening the app | |
+
+Seen during the AI check: right after a force stop, the first sync request timed out after about 47 s and reported "offline"; WorkManager retried a minute later and it worked. Nothing was lost.

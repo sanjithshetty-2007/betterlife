@@ -49,7 +49,21 @@ import com.sanjith.betterlife.reminders.popup.RoomItemWatcher
 import com.sanjith.betterlife.sync.AccountRepository
 import com.sanjith.betterlife.sync.createSupabaseOrNull
 import io.github.jan.supabase.SupabaseClient
+import com.sanjith.betterlife.domain.sync.AuthState
+import com.sanjith.betterlife.sync.RoomSyncStore
+import com.sanjith.betterlife.sync.SupabaseSyncRemote
+import com.sanjith.betterlife.sync.SyncEngine
+import com.sanjith.betterlife.sync.SyncScheduler
+import com.sanjith.betterlife.sync.SyncStatusDataStore
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -162,6 +176,47 @@ public class AppContainer(appContext: Context) {
     /** Email + password sign-in; the session is kept on the phone and refreshed by Supabase. */
     public val accountRepository: AccountRepository by lazy { AccountRepository(supabase, appScope) }
 
+    public val syncStatusStore: SyncStatusDataStore = SyncStatusDataStore(appContext.settingsDataStore)
+
+    public val syncScheduler: SyncScheduler = SyncScheduler(appContext)
+
+    /**
+     * The sync engine (Prompt S2), or null when this build has no Supabase settings. A pull that changed
+     * anything reschedules the reminders once (agent.md section 5: "after a sync pull").
+     */
+    public val syncEngine: SyncEngine? by lazy {
+        supabase?.let { client ->
+            SyncEngine(SupabaseSyncRemote(client), RoomSyncStore(database), syncStatusStore, realClock) {
+                reminderEngine.rescheduleAll(RescheduleTrigger.SYNC_PULL)
+            }
+        }
+    }
+
+    private val syncStarted = AtomicBoolean(false)
+
+    /**
+     * Called on app launch: pull now, keep the periodic job, push a few seconds after local changes,
+     * and sync right after a sign-in. Does nothing without Supabase settings. Never on the main thread.
+     */
+    @OptIn(FlowPreview::class)
+    public fun startSync() {
+        if (supabase == null || !syncStarted.compareAndSet(false, true)) return
+        syncScheduler.ensurePeriodic()
+        syncScheduler.requestSoon(0)
+        appScope.launch {
+            // A burst of edits becomes one push, a few seconds after the last change.
+            database.syncDao().observePendingCount().distinctUntilChanged().drop(1)
+                .filter { it > 0 }
+                .debounce(SyncScheduler.DEBOUNCE_SECONDS * MILLIS_PER_SECOND)
+                .collect { syncScheduler.requestSoon() }
+        }
+        appScope.launch {
+            accountRepository.state.map { it is AuthState.SignedIn }.distinctUntilChanged().drop(1).collect { signedIn ->
+                if (signedIn) syncScheduler.requestSoon(0)
+            }
+        }
+    }
+
     /** Pause, digest time and fatigue counters (Prompt 12), on disk. */
     public val calmStore: CalmStore = CalmStore(appContext.settingsDataStore)
 
@@ -229,5 +284,6 @@ public class AppContainer(appContext: Context) {
     private companion object {
         const val DEBUG_LOG_FILE = "debug_log.txt"
         const val SAFETY_BACKUP_DIR = "safety-backups"
+        const val MILLIS_PER_SECOND = 1_000L
     }
 }

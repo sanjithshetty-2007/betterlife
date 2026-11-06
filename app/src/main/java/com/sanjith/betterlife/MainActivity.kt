@@ -54,6 +54,8 @@ public class MainActivity : ComponentActivity() {
             container.reminderEngine.rescheduleAll(RescheduleTrigger.APP_LAUNCH)
             container.dailyPrompts.rescheduleAll()
         }
+        // Pull on app open and keep sync running; it never blocks anything (Prompt S2).
+        container.startSync()
         DailyTopUpWorker.enqueue(this)
     }
 

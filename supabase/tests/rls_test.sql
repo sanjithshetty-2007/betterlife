@@ -27,12 +27,17 @@ begin
     raise exception 'RLS FAIL: user_id was not filled from the signed-in user';
   end if;
   if (select server_updated_at from public.tasks) is null then raise exception 'RLS FAIL: server_updated_at not set'; end if;
-  -- The owner cannot hard-delete either (deletes are tombstones).
-  begin
-    delete from public.tasks;
-    raise exception 'RLS FAIL: delete was allowed';
-  exception when insufficient_privilege then null;
-  end;
+end;
+$$;
+
+-- A plain DELETE removes nothing, even for the owner (deletes are tombstones; S2).
+do $$
+declare
+  n integer;
+begin
+  delete from public.tasks;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'RLS FAIL: a plain delete removed rows'; end if;
 end;
 $$;
 
@@ -56,6 +61,30 @@ begin
     raise exception 'RLS FAIL: another user inserted a row for the owner';
   exception when insufficient_privilege then null;
   end;
+end;
+$$;
+
+-- "Delete my cloud data" called by the OTHER user leaves the owner's rows alone (S2).
+select public.delete_my_cloud_data();
+set local request.jwt.claims = '{"sub": "00000000-0000-4000-8000-00000000000a", "role": "authenticated"}';
+do $$
+begin
+  if (select count(*) from public.tasks) <> 1 then raise exception 'RLS FAIL: another user deleted the owner''s rows'; end if;
+end;
+$$;
+-- ...and called by the owner it removes every one of the owner's rows.
+select public.delete_my_cloud_data();
+do $$
+declare
+  t text;
+  n integer;
+begin
+  foreach t in array array['projects', 'tasks', 'events', 'reminders', 'standalone_reminders'] loop
+    execute format('select count(*) from public.%I', t) into n;
+    if n <> 0 then raise exception 'RLS FAIL: delete_my_cloud_data left rows in %', t; end if;
+  end loop;
+  -- The flag is cleared again, so a plain delete still removes nothing afterwards.
+  if current_setting('betterlife.deleting_my_data', true) = 'on' then raise exception 'RLS FAIL: delete flag left on'; end if;
 end;
 $$;
 

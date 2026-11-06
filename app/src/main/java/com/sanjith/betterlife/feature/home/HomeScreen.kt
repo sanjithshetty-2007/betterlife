@@ -59,6 +59,8 @@ public fun HomeScreen(
     onOpenQuiet: () -> Unit = {},
     onOpenBackup: () -> Unit = {},
     onOpenAccount: () -> Unit = {},
+    /** The small sync status line (Prompt S2); null in previews. */
+    syncIndicator: (@Composable () -> Unit)? = null,
     debugTools: List<DebugTool> = emptyList(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -83,6 +85,7 @@ public fun HomeScreen(
                 color = MaterialTheme.colorScheme.onBackground,
             )
             if (healthProblems.isNotEmpty()) HealthBanner(healthProblems, onOpenSetup)
+            syncIndicator?.invoke()
             pauseBanner?.invoke()
             WelcomeCard()
             Button(

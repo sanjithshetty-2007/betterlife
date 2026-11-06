@@ -12,6 +12,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.sanjith.betterlife.feature.account.AccountScreen
+import com.sanjith.betterlife.feature.account.SyncIndicatorLine
 import com.sanjith.betterlife.feature.backup.BackupScreen
 import com.sanjith.betterlife.feature.calm.PauseBanner
 import com.sanjith.betterlife.feature.calm.PauseSheet
@@ -97,6 +98,7 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                 onOpenQuiet = { navController.navigate(Routes.QUIET) },
                 onOpenBackup = { navController.navigate(Routes.BACKUP) },
                 onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
+                syncIndicator = { SyncIndicatorLine(onOpen = { navController.navigate(Routes.ACCOUNT) }) },
                 onOpenCenter = { navController.navigate(Routes.CENTER) },
                 healthProblems = healthProblems(),
                 onOpenTasks = { navController.navigate(Routes.TASKS) },

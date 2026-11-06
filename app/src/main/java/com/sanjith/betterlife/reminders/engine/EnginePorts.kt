@@ -16,7 +16,7 @@ import java.time.Instant
 // runs in fast PC tests with fakes (agent.md section 3).
 
 /** What started a full reschedule. Only BOOT turns missed reminders into DEVICE_OFF entries. */
-public enum class RescheduleTrigger { BOOT, APP_UPDATED, TIME_CHANGED, TIMEZONE_CHANGED, APP_LAUNCH, DAILY, AFTER_FIRE, MANUAL }
+public enum class RescheduleTrigger { BOOT, APP_UPDATED, TIME_CHANGED, TIMEZONE_CHANGED, APP_LAUNCH, DAILY, AFTER_FIRE, MANUAL, SYNC_PULL }
 
 /**
  * What the engine needs to know about one reminder when it fires; the extra fields fill the pop-up

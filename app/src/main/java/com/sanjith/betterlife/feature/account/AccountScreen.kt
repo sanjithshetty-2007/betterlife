@@ -156,7 +156,7 @@ private fun SignInForm(onSignIn: (String, String) -> Unit, onSignUp: (String, St
 @Composable
 private fun SignedIn(email: String, onSignOut: () -> Unit) {
     Text(stringResource(R.string.account_signed_in, email), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
-    Body(stringResource(R.string.account_sync_later))
+    SyncSection(onDeleted = {})
     OutlinedButton(onClick = onSignOut, modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget)) {
         Text(stringResource(R.string.account_sign_out))
     }

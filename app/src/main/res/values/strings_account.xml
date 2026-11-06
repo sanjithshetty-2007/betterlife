@@ -14,7 +14,6 @@
     <string name="account_create">Create account</string>
     <string name="account_sign_out">Sign out</string>
     <string name="account_signed_in">Signed in as %1$s</string>
-    <string name="account_sync_later">Syncing starts in the next update. Your data stays on this phone until then.</string>
     <string name="account_sign_out_note">Signing out keeps everything on this phone.</string>
     <string name="account_checking">Checking…</string>
     <string name="account_working">Talking to Supabase…</string>
@@ -33,4 +32,39 @@
     <string name="auth_error_too_many_tries">Too many tries. Wait a few minutes and try again.</string>
     <string name="auth_error_no_internet">No internet connection. Try again when you are online; the app keeps working offline.</string>
     <string name="auth_error_unknown">Something went wrong on the Supabase side. Try again later.</string>
+    <!-- Sync status (Prompt S2) -->
+    <string name="sync_section">Sync</string>
+    <string name="sync_indicator_synced">Synced</string>
+    <string name="sync_indicator_synced_at">Synced %1$s</string>
+    <plurals name="sync_indicator_pending">
+        <item quantity="one">1 change waiting to sync</item>
+        <item quantity="other">%d changes waiting to sync</item>
+    </plurals>
+    <string name="sync_indicator_offline">Offline, will sync later</string>
+    <string name="sync_indicator_signed_out">Not signed in, nothing syncs</string>
+    <string name="sync_indicator_paused">Server paused, will sync later</string>
+    <string name="sync_indicator_error">Sync needs attention</string>
+    <string name="sync_last">Last sync: %1$s</string>
+    <string name="sync_never">Not synced yet</string>
+    <plurals name="sync_pending">
+        <item quantity="one">1 change waiting</item>
+        <item quantity="other">%d changes waiting</item>
+    </plurals>
+    <string name="sync_now">Sync now</string>
+    <string name="sync_requested">Sync started. It runs as soon as there is internet.</string>
+    <string name="sync_error_offline">The last try had no internet. It syncs by itself once you are online.</string>
+    <string name="sync_error_signed_out">Not signed in.</string>
+    <string name="sync_error_session">Your sign-in expired. Sign out and sign in again.</string>
+    <string name="sync_error_paused">The Supabase project is paused (free projects pause after about a week without use). Open the Supabase dashboard and restore it; the app keeps working meanwhile.</string>
+    <string name="sync_error_partly">Some changes were refused by the server and stay on this phone. They are kept and tried again.</string>
+    <string name="sync_error_unknown">Sync failed for an unknown reason. It tries again later.</string>
+    <string name="sync_delete_cloud">Delete my cloud data</string>
+    <string name="sync_delete_title_1">Delete your cloud data?</string>
+    <string name="sync_delete_body_1">This removes your tasks, events and reminders from Supabase. Everything on this phone stays. You will be signed out so nothing uploads again.</string>
+    <string name="sync_delete_title_2">Are you sure?</string>
+    <string name="sync_delete_body_2">This cannot be undone. Any other phone signed in to this account loses its cloud copy too.</string>
+    <string name="sync_delete_continue">Continue</string>
+    <string name="sync_delete_confirm">Delete cloud data</string>
+    <string name="sync_deleted">Cloud data deleted. Signed out.</string>
+    <string name="sync_delete_failed">Could not delete the cloud data. Check the internet and try again.</string>
 </resources>

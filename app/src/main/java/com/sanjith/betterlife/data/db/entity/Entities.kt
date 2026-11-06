@@ -179,7 +179,7 @@ public data class ReminderLogEntity(
     val deletedAt: Long?,
 )
 
-/** Last successful pull time per synced table (Prompt S2). */
+/** The pull cursor per synced table (Prompt S2): the server's server_updated_at in MICROseconds since the epoch. */
 @Entity(tableName = "sync_cursors")
 public data class SyncCursorEntity(
     @PrimaryKey val tableName: String,

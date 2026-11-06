@@ -13,6 +13,7 @@ import com.sanjith.betterlife.data.db.dao.ProjectDao
 import com.sanjith.betterlife.data.db.dao.ReminderDao
 import com.sanjith.betterlife.data.db.dao.ReminderLogDao
 import com.sanjith.betterlife.data.db.dao.StandaloneReminderDao
+import com.sanjith.betterlife.data.db.dao.SyncDao
 import com.sanjith.betterlife.data.db.dao.SyncCursorDao
 import com.sanjith.betterlife.data.db.dao.TaskDao
 import com.sanjith.betterlife.data.db.entity.EventEntity
@@ -51,6 +52,7 @@ public abstract class BetterLifeDatabase : RoomDatabase() {
     public abstract fun syncCursorDao(): SyncCursorDao
     public abstract fun standaloneReminderDao(): StandaloneReminderDao
     public abstract fun integrityDao(): IntegrityDao
+    public abstract fun syncDao(): SyncDao
 
     public companion object {
         public const val FILE_NAME: String = "betterlife.db"

@@ -16,6 +16,11 @@ import com.sanjith.betterlife.data.backup.BackupStatusStore
 import com.sanjith.betterlife.data.db.BetterLifeDatabase
 import com.sanjith.betterlife.data.db.IntegrityChecker
 import com.sanjith.betterlife.data.debug.SeedDataGenerator
+import com.sanjith.betterlife.data.habit.StarterHabitSeeder
+import com.sanjith.betterlife.data.repository.HabitRepository
+import com.sanjith.betterlife.data.repository.PauseRangeRepository
+import com.sanjith.betterlife.domain.habit.StarterHabit
+import com.sanjith.betterlife.domain.time.habitToday
 import com.sanjith.betterlife.data.repository.EventRepository
 import com.sanjith.betterlife.data.repository.ProjectRepository
 import com.sanjith.betterlife.data.repository.ReminderLogRepository
@@ -146,6 +151,32 @@ public class AppContainer(appContext: Context) {
     public val eventCategoryStore: EventCategoryStore = EventCategoryStore(appContext.settingsDataStore)
 
     public val projectRepository: ProjectRepository by lazy { ProjectRepository(database, nowMillis, newId) }
+
+    /** Habits and their logs (Prompt 14). App time, so the Time Machine can test streaks. */
+    public val habitRepository: HabitRepository by lazy { HabitRepository(database, nowMillis, newId) }
+    public val pauseRangeRepository: PauseRangeRepository by lazy { PauseRangeRepository(database, nowMillis, newId) }
+
+    /** Today's habit day, after the rollover hour (03:00 by default). */
+    public suspend fun habitToday(): java.time.LocalDate = clock.habitToday(settingsRepository.current().rolloverHour)
+
+    private val starterHabitSeeder: StarterHabitSeeder by lazy {
+        val names = { key: StarterHabit.Key ->
+            appContext.getString(
+                when (key) {
+                    StarterHabit.Key.CREATINE -> R.string.habit_starter_creatine
+                    StarterHabit.Key.MEDITATION -> R.string.habit_starter_meditation
+                    StarterHabit.Key.SKINCARE -> R.string.habit_starter_skincare
+                    StarterHabit.Key.HAIRCARE -> R.string.habit_starter_haircare
+                },
+            )
+        }
+        StarterHabitSeeder(appContext.settingsDataStore, habitRepository, names) { habitToday() }
+    }
+
+    /** Adds the four starter habits once per install. */
+    public suspend fun seedStarterHabits() {
+        starterHabitSeeder.seedIfNeeded()
+    }
 
     /** Manual export and import of the whole database (Prompt 13), on real time. */
     public val backupEngine: BackupEngine by lazy {

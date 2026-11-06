@@ -254,6 +254,18 @@ Before you start: Home > Reminder Health shows 10/10 (fix any red row first), an
 
 Owner gate: also use the app normally for 2 to 3 days with real tasks and write anything missed or annoying under Known issues in PROGRESS.md. Keep a backup somewhere safe before Phase 2.
 
+## Prompt 14: Habit data and streak logic
+
+No habit screens yet (they come in Prompt 15). The rules are pure code with unit tests; the habit tables are on the phone.
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | Install over the old app (database 4 -> 5) | Nothing lost: tasks, events, reminders, remind-me items and the Reminder Center history are all still there | **PASS** (AI 2026-11-06: copy taken first; after the upgrade version 5, integrity ok, same 12 tasks / 4 events / 23 reminders / 3 remind-me / 39 log rows) |
+| 2 | Starter habits | Creatine (Essential, Health), Meditation, Skincare routine, Haircare routine exist once, starting today | **PASS** (AI: read from the phone's database; shown on screen from Prompt 15) |
+| 3 | `gradlew.bat testDebugUnitTest`, then open app/build/reports/tests/testDebugUnitTest/index.html > com.sanjith.betterlife.domain.habit | Every rule from context.md 5.4 has a test name you can read | **PASS** (AI: 25 habit tests, all green) |
+| 4 | Ask the AI to explain the backfill merge in plain words | It matches what you expect | |
+| 5 | Debug > Time Machine: jump to 02:00 tomorrow | (from Prompt 15) a tick still lands on today's box | |
+
 ## Prompt S1: Supabase project, schema, row-level security and sign-in
 
 Project: betterlife, Mumbai, ref `qprtltwuuihbixbfgspm` (found with the Supabase connection, created by the owner on 2026-11-04).

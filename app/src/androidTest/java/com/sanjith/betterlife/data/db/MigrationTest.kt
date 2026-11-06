@@ -122,6 +122,47 @@ public class MigrationTest {
     }
 
     @Test
+    public fun migration4To5AddsEmptyHabitTablesAndKeepsPhase1Data() {
+        helper.createDatabase(DB_NAME, 4).use { db ->
+            db.execSQL(INSERT_V1_TASK)
+            db.execSQL(INSERT_V1_REMINDER)
+            db.execSQL(
+                "INSERT INTO standalone_reminders (id, title, notes, atMillis, zoneId, doneAt, createdAt, updatedAt, deletedAt, syncState, serverUpdatedAt) " +
+                    "VALUES ('s-1', 'Call the bank', NULL, 1800000000000, 'Asia/Kolkata', NULL, 1, 1, NULL, 'CLEAN', 5)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME, 5, true, BetterLifeDatabase.MIGRATION_4_5).use { db ->
+            // Phase 1 data is untouched, sync state included.
+            assertEquals("Written by version 1", db.single("SELECT title FROM tasks WHERE id = 'task-1'"))
+            assertEquals("60", db.single("SELECT offsetMinutes FROM reminders WHERE id = 'rem-1'"))
+            assertEquals("CLEAN", db.single("SELECT syncState FROM standalone_reminders WHERE id = 's-1'"))
+            listOf("habits", "habit_logs", "milestone_ledger", "pause_ranges", "celebration_messages").forEach {
+                assertEquals(it, "0", db.single("SELECT COUNT(*) FROM $it"))
+            }
+            // New synced rows start DIRTY, and a habit has at most one log per day.
+            db.execSQL(
+                "INSERT INTO habit_logs (id, habitId, localDate, status, createdAt, updatedAt, deletedAt, serverUpdatedAt) " +
+                    "VALUES ('l-1', 'h-1', '2026-11-20', 'DONE', 1, 1, NULL, NULL)",
+            )
+            assertEquals("DIRTY", db.single("SELECT syncState FROM habit_logs WHERE id = 'l-1'"))
+            val duplicate = runCatching {
+                db.execSQL(
+                    "INSERT INTO habit_logs (id, habitId, localDate, status, createdAt, updatedAt, deletedAt, serverUpdatedAt) " +
+                        "VALUES ('l-2', 'h-1', '2026-11-20', 'KEPT', 1, 1, NULL, NULL)",
+                )
+            }
+            assertTrue(duplicate.isFailure)
+        }
+    }
+
+    private fun androidx.sqlite.db.SupportSQLiteDatabase.single(sql: String): String =
+        query(sql).use { c ->
+            c.moveToFirst()
+            c.getString(0)
+        }
+
+    @Test
     public fun allMigrationsOpenOldDataWithRoom() = runTest {
         helper.createDatabase(DB_NAME, 1).use { db -> db.execSQL(INSERT_V1_TASK) }
 

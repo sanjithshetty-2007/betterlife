@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Starter habits (Prompt 14): the names the four seeded habits get. The owner can rename them. -->
+    <string name="habit_starter_creatine">Creatine</string>
+    <string name="habit_starter_meditation">Meditation</string>
+    <string name="habit_starter_skincare">Skincare routine</string>
+    <string name="habit_starter_haircare">Haircare routine</string>
+</resources>

@@ -68,3 +68,4 @@ This installs a small test app next to BetterLife Dev and runs the tests on the 
 | 2 | 7 | reminders.scheduledFireAt, lastFiredFireAt |
 | 3 | 8 | reminders.snoozeCount, snoozedUntil |
 | 4 | 10 | New table standalone_reminders ("remind me" items) |
+| 5 | 14 | New tables habits, habit_logs (one row per habit and day: unique habitId + localDate), milestone_ledger, pause_ranges, celebration_messages. The SQL is copied from schema 5.json (HabitSchemaV5.kt). The four starter habits are added by the app after the upgrade, not by the migration |

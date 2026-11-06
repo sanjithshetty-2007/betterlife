@@ -2,10 +2,11 @@ package com.sanjith.betterlife.data.db
 
 import androidx.room.TypeConverter
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 
 /**
- * Only the two non-primitive column types need converting. Enums use Room's built-in name mapping;
+ * Only these non-primitive column types need converting. Enums use Room's built-in name mapping;
  * instants are plain epoch-millis Longs.
  */
 public object Converters {
@@ -27,4 +28,13 @@ public object Converters {
     @TypeConverter
     @JvmStatic
     public fun textToZoneId(text: String?): ZoneId? = text?.let(ZoneId::of)
+
+    /** Wall-clock times (a habit's reminder time) are stored as text such as 07:30. */
+    @TypeConverter
+    @JvmStatic
+    public fun localTimeToText(time: LocalTime?): String? = time?.toString()
+
+    @TypeConverter
+    @JvmStatic
+    public fun textToLocalTime(text: String?): LocalTime? = text?.let(LocalTime::parse)
 }

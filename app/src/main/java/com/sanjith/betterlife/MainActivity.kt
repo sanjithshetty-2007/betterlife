@@ -51,6 +51,7 @@ public class MainActivity : ComponentActivity() {
     private fun onAppLaunch() {
         val container = (application as BetterLifeApp).container
         container.appScope.launch {
+            container.seedStarterHabits()
             container.reminderEngine.rescheduleAll(RescheduleTrigger.APP_LAUNCH)
             container.dailyPrompts.rescheduleAll()
         }

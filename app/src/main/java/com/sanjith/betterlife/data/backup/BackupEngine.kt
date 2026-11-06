@@ -162,7 +162,10 @@ public class BackupEngine(
             "reminder_log" to false,
         )
 
-        private val SYNCED_TABLES = listOf("tasks", "projects", "events", "reminders", "standalone_reminders")
+        // hasTable() skips the habit tables when restoring a backup made before database version 5.
+        private val SYNCED_TABLES = listOf(
+            "tasks", "projects", "events", "reminders", "standalone_reminders", "habits", "habit_logs", "pause_ranges",
+        )
 
         public fun sha256(file: File): String {
             val digest = MessageDigest.getInstance("SHA-256")

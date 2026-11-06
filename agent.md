@@ -62,6 +62,9 @@ If this file, context.md and a prompt ever disagree: STOP and ask the owner whic
 - Touch targets at least 48 dp. Never use color as the only signal (add icon, check mark or text).
 - Support large font sizes without clipping. Support non-Latin scripts and emoji in user text.
 - Keep screens fast: lazy lists, Canvas for dense graphics (31-box grids, heatmaps), animate only what is visible.
+- Visual design: docs/design/ is the visual target for every screen. Before building a screen, open its screenshot in docs/design/shots/<id>.png and its notes (purpose, layout, motion, prompt number) in docs/design/annotations.js. The prototype source is docs/design/prototype/ (styles.css has the exact sizes, radii and timings). context.md and agent.md still win on behaviour; the design decides the look.
+- Values marked "proposed" in docs/design (SurfaceRaised, SurfaceSunk, soft tints, motion tokens, the 32 dp pop-up radius) are not in the theme yet. Add one to ui/theme as a named token only when the current prompt needs it. Never hard-code it in a screen.
+- The design shows screens from later prompts. Build only what the current prompt asks for.
 
 ## 7. Testing rules
 - Every prompt lists REQUIRED tests. Write them first or alongside the code.

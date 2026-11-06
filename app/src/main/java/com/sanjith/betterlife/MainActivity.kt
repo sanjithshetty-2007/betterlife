@@ -77,6 +77,7 @@ public class MainActivity : ComponentActivity() {
                 id == null || type == null -> Routes.HOME
                 type == ReminderItemType.TASK -> Routes.taskEditor(id)
                 type == ReminderItemType.EVENT -> Routes.eventEditor(id)
+                type == ReminderItemType.HABIT -> Routes.habitDetail(id)
                 else -> Routes.reminderEditor(id)
             }
             return openRouteIntent(context, route)

@@ -70,13 +70,14 @@ public interface ReminderLogDao {
     @Query(
         """
         SELECT l.*, r.itemType AS itemType, r.itemId AS itemId,
-          COALESCE(t.title, e.title, s.title) AS itemTitle,
-          COALESCE(t.deletedAt, e.deletedAt, s.deletedAt) AS itemDeletedAt
+          COALESCE(t.title, e.title, s.title, h.name) AS itemTitle,
+          COALESCE(t.deletedAt, e.deletedAt, s.deletedAt, h.deletedAt) AS itemDeletedAt
         FROM reminder_log l
         LEFT JOIN reminders r ON r.id = l.reminderId
         LEFT JOIN tasks t ON r.itemType = 'TASK' AND t.id = r.itemId
         LEFT JOIN events e ON r.itemType = 'EVENT' AND e.id = r.itemId
         LEFT JOIN standalone_reminders s ON r.itemType = 'STANDALONE' AND s.id = r.itemId
+        LEFT JOIN habits h ON r.itemType = 'HABIT' AND h.id = r.itemId
         WHERE l.firedAt >= :since
         ORDER BY l.firedAt DESC
         LIMIT :limit

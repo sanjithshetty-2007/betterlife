@@ -39,6 +39,15 @@ internal object BetterLifeColors {
     /** Soft cherry tint behind row icons (the design's "soft tint", added in Prompt 11). */
     val CherryTint = Cherry.copy(alpha = 0.55f)
 
+    /** Habits (Prompt 15): greyed boxes (no such day, before the start), and the heatmap's empty day. */
+    val Greyed = Text.copy(alpha = 0.06f)
+
+    /** A habit colour at heatmap strength: a kept or paused day is drawn lighter than a done day. */
+    const val HEATMAP_SOFT_ALPHA = 0.45f
+
+    /** The border of a habit box that can still be ticked; future boxes use the faint SoftBorder. */
+    val BoxOpenBorder = Text.copy(alpha = 0.32f)
+
     /** Dims whatever is behind the reminder pop-up. */
     val Scrim = Background.copy(alpha = 0.82f)
 }

@@ -39,6 +39,8 @@ public data class AppSettings(
     val eveningWrapUpTime: LocalTime = LocalTime.of(21, 0),
     /** Reminders new items get (Prompt 10); editable in the Reminder defaults screen. */
     val reminderDefaults: ReminderDefaults = ReminderDefaults(),
+    /** A short vibration when a habit box is ticked (Prompt 15). */
+    val habitTickHaptics: Boolean = true,
 ) {
     init {
         require(rolloverHour in 0..MAX_ROLLOVER_HOUR) { "rolloverHour must be 0 to $MAX_ROLLOVER_HOUR" }

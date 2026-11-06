@@ -254,6 +254,24 @@ Before you start: Home > Reminder Health shows 10/10 (fix any red row first), an
 
 Owner gate: also use the app normally for 2 to 3 days with real tasks and write anything missed or annoying under Known issues in PROGRESS.md. Keep a backup somewhere safe before Phase 2.
 
+## Prompt 15: Habit grids UI
+
+Home > Habits. Each card: icon, name, consistency on the right ("New" for the first 7 days), the streak line, and 31 boxes in rows of 7 (every box is a 48 dp target). Tap a box to tick or clear it; Undo stays for about 6 seconds. Tap a habit's name for its page (numbers, last 12 months, this month). + adds a habit; the pencil on a habit's page edits it.
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | Tick Creatine for today and 3 past days | Boxes fill from the left with a pop and a check mark, the phone gives a short buzz, the streak line updates at once, Undo appears | **PASS** (AI 2026-11-06: 3 to 6 Nov ticked, "4-day streak", Undo shown; the buzz needs a hand on the phone) |
+| 2 | Undo | The day goes back to how it was | **PASS** (device test) |
+| 3 | ⋮ > Vibrate on tick off, tick a box | No buzz | |
+| 4 | Previous month arrow; a 30-day month and February | Day 31 (and 29 to 31 in February) greyed; "Back to this month" chip; the next arrow stops at this month | **PASS** (unit and device tests; September and October seen on the phone in tests) |
+| 5 | + > create "Read 10 pages" today | Days before today are greyed; tapping one still ticks it and moves the start back | **PASS** (unit/device tests) |
+| 6 | Edit a habit: colour, icon, category, Essential, reminder 21:30, Save | The card shows the new look; Reminder Center later shows the habit reminder | |
+| 7 | Let the 21:30 habit reminder fire once without ticking, once after ticking today | Fires when not done; does NOT fire when today is already ticked; Done on the pop-up ticks today | |
+| 8 | Archive, then delete a test habit | Archive hides it; delete asks first and removes it | **PASS** (device test for archive) |
+| 9 | Debug: database > Seed, open Habits, scroll fast up and down | No stutter you can feel | **MEASURED** (AI, debug build, 16 habits incl. 12 seeded with 3,491 logs, 12 fast swipes: 610 frames, 1.6% janky, median 12 ms, 90th percentile 44 ms; Wipe removed exactly 5,449 seeded rows) |
+| 10 | Debug: Time Machine to 01:00 tomorrow, tick today's box | It lands on today's (the previous day's) box; switch the Time Machine off afterwards | |
+| 11 | TalkBack on, move across the grid | Each box says its day and state ("Day 6, today, not done yet") | |
+
 ## Prompt 14: Habit data and streak logic
 
 No habit screens yet (they come in Prompt 15). The rules are pure code with unit tests; the habit tables are on the phone.

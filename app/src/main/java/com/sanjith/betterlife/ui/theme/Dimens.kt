@@ -37,4 +37,13 @@ public object Dimens {
 
     /** Quiet Hours weekday circle (its touch cell is still 48 dp tall). */
     public val dayCircle = 40.dp
+
+    /** Habits (Prompt 15): a grid box inside its 48 dp touch cell, the avatar tile, the editor's big avatar. */
+    public val habitBox = 40.dp
+    public val habitBoxCheck = 20.dp
+    public val habitAvatar = 48.dp
+    public val habitAvatarLarge = 88.dp
+
+    /** Yearly heatmap: the gap between day squares (the squares share the card's width). */
+    public val heatmapGap = 2.dp
 }

@@ -26,11 +26,18 @@ public interface HabitDao {
     @Query("SELECT * FROM habits WHERE id = :id")
     public suspend fun getAnyById(id: String): HabitEntity?
 
+    @Query("SELECT * FROM habits WHERE id = :id AND deletedAt IS NULL")
+    public fun observeById(id: String): Flow<HabitEntity?>
+
     @Query("SELECT COALESCE(MAX(sortOrder), -1) FROM habits WHERE deletedAt IS NULL")
     public suspend fun maxSortOrder(): Int
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     public suspend fun insert(habit: HabitEntity)
+
+    /** Debug only: removes seeded habits (their ids start with the seed marker). */
+    @Query("DELETE FROM habits WHERE id LIKE :idPattern")
+    public suspend fun hardDeleteSeeded(idPattern: String): Int
 
     /** For the starter habits: a row that already exists (even deleted) is left alone. */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -65,12 +72,24 @@ public interface HabitLogDao {
     @Query("SELECT * FROM habit_logs WHERE habitId = :habitId AND deletedAt IS NULL ORDER BY localDate")
     public fun observeActiveForHabit(habitId: String): Flow<List<HabitLogEntity>>
 
+    /** Every habit's logs (streaks need the whole history; a year of 12 habits is about 4,400 rows). */
+    @Query("SELECT * FROM habit_logs WHERE deletedAt IS NULL")
+    public fun observeAllActive(): Flow<List<HabitLogEntity>>
+
     /** Every habit's logs in a date range, both ends included (for grids and Today). */
     @Query("SELECT * FROM habit_logs WHERE deletedAt IS NULL AND localDate BETWEEN :from AND :to")
     public fun observeBetween(from: LocalDate, to: LocalDate): Flow<List<HabitLogEntity>>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     public suspend fun insert(log: HabitLogEntity)
+
+    /** Debug seed only. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    public suspend fun insertAll(logs: List<HabitLogEntity>)
+
+    /** Debug only: removes the logs of seeded habits. */
+    @Query("DELETE FROM habit_logs WHERE habitId LIKE :idPattern")
+    public suspend fun hardDeleteSeeded(idPattern: String): Int
 
     @Update
     public suspend fun update(log: HabitLogEntity)

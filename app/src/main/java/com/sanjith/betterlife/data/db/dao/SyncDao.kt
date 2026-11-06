@@ -37,7 +37,7 @@ public interface SyncDao {
 
     @Query(
         """
-        SELECT * FROM reminders r WHERE r.syncState = 'DIRTY'
+        SELECT * FROM reminders r WHERE r.syncState = 'DIRTY' AND r.itemType != 'HABIT'
           AND NOT EXISTS (SELECT 1 FROM tasks t WHERE r.itemType = 'TASK' AND t.id = r.itemId AND t.category = 'debug-seed')
           AND NOT EXISTS (SELECT 1 FROM events e WHERE r.itemType = 'EVENT' AND e.id = r.itemId AND e.colorCategory = 'debug-seed')
         LIMIT :limit
@@ -52,7 +52,7 @@ public interface SyncDao {
           + (SELECT COUNT(*) FROM tasks WHERE syncState = 'DIRTY' AND (category IS NULL OR category != 'debug-seed'))
           + (SELECT COUNT(*) FROM events WHERE syncState = 'DIRTY' AND (colorCategory IS NULL OR colorCategory != 'debug-seed'))
           + (SELECT COUNT(*) FROM standalone_reminders WHERE syncState = 'DIRTY')
-          + (SELECT COUNT(*) FROM reminders r WHERE r.syncState = 'DIRTY'
+          + (SELECT COUNT(*) FROM reminders r WHERE r.syncState = 'DIRTY' AND r.itemType != 'HABIT'
               AND NOT EXISTS (SELECT 1 FROM tasks t WHERE r.itemType = 'TASK' AND t.id = r.itemId AND t.category = 'debug-seed')
               AND NOT EXISTS (SELECT 1 FROM events e WHERE r.itemType = 'EVENT' AND e.id = r.itemId AND e.colorCategory = 'debug-seed'))
         """,

@@ -39,6 +39,11 @@ import com.sanjith.betterlife.feature.events.EventEditorViewModel
 import com.sanjith.betterlife.feature.events.ReminderDefaultsScreen
 import com.sanjith.betterlife.feature.events.StandaloneEditorScreen
 import com.sanjith.betterlife.feature.events.StandaloneEditorViewModel
+import com.sanjith.betterlife.feature.habits.HabitDetailScreen
+import com.sanjith.betterlife.feature.habits.HabitDetailViewModel
+import com.sanjith.betterlife.feature.habits.HabitEditorScreen
+import com.sanjith.betterlife.feature.habits.HabitEditorViewModel
+import com.sanjith.betterlife.feature.habits.HabitsScreen
 import com.sanjith.betterlife.feature.home.DebugTool
 import com.sanjith.betterlife.feature.home.HomeScreen
 import com.sanjith.betterlife.feature.setup.SetupScreen
@@ -57,6 +62,9 @@ internal object Routes {
     const val PROJECTS = "projects"
     const val CHECK_INS = "check-ins"
     const val AGENDA = "agenda"
+    const val HABITS = "habits"
+    const val HABIT_EDITOR = "habit"
+    const val HABIT_DETAIL = "habit-detail"
     const val EVENT_EDITOR = "event"
     const val REMINDER_EDITOR = "remind"
     const val REMINDER_DEFAULTS = "reminder-defaults"
@@ -76,6 +84,10 @@ internal object Routes {
         "$EVENT_EDITOR/${type.name}/${id ?: EventEditorViewModel.NEW}"
 
     fun reminderEditor(id: String?): String = "$REMINDER_EDITOR/${id ?: EventEditorViewModel.NEW}"
+
+    fun habitEditor(id: String?): String = "$HABIT_EDITOR/${id ?: HabitEditorViewModel.NEW}"
+
+    fun habitDetail(id: String): String = "$HABIT_DETAIL/$id"
 }
 
 /** All screens of the single Activity. NavHost also handles the system (predictive) back gesture. */
@@ -104,6 +116,7 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                 onOpenTasks = { navController.navigate(Routes.TASKS) },
                 onOpenSetup = { navController.navigate(Routes.SETUP) },
                 onOpenAgenda = { navController.navigate(Routes.AGENDA) },
+                onOpenHabits = { navController.navigate(Routes.HABITS) },
                 // Debug tools are unreachable in release builds.
                 debugTools = if (BuildConfig.DEBUG) debugTools(navController) else emptyList(),
             )
@@ -122,6 +135,7 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                             ReminderItemType.TASK -> Routes.taskEditor(id)
                             ReminderItemType.EVENT -> Routes.eventEditor(id)
                             ReminderItemType.STANDALONE -> Routes.reminderEditor(id)
+                            ReminderItemType.HABIT -> Routes.habitDetail(id)
                         },
                     )
                 },
@@ -160,6 +174,17 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
         }
         composable("${Routes.REMINDER_EDITOR}/{${StandaloneEditorViewModel.ARG_ID}}") { StandaloneEditorScreen(onClose = back) }
         composable(Routes.REMINDER_DEFAULTS) { ReminderDefaultsScreen(onBack = back) }
+        composable(Routes.HABITS) {
+            HabitsScreen(
+                onBack = back,
+                onOpenHabit = { id -> navController.navigate(Routes.habitDetail(id)) },
+                onNewHabit = { navController.navigate(Routes.habitEditor(null)) },
+            )
+        }
+        composable("${Routes.HABIT_EDITOR}/{${HabitEditorViewModel.ARG_ID}}") { HabitEditorScreen(onClose = back) }
+        composable("${Routes.HABIT_DETAIL}/{${HabitDetailViewModel.ARG_ID}}") {
+            HabitDetailScreen(onBack = back, onEdit = { id -> navController.navigate(Routes.habitEditor(id)) })
+        }
         if (BuildConfig.DEBUG) {
             composable(Routes.POPUP_SPIKE) { PopupSpikeScreen(onBack = back) }
             composable(Routes.ALARM_SPIKE) { AlarmSpikeScreen(onBack = back) }

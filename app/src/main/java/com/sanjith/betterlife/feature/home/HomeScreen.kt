@@ -50,6 +50,7 @@ public fun HomeScreen(
     onOpenTasks: () -> Unit,
     onOpenSetup: () -> Unit,
     onOpenAgenda: () -> Unit = {},
+    onOpenHabits: () -> Unit = {},
     onOpenCenter: () -> Unit = {},
     /** Titles of the RED Reminder Health rows; the banner shows when this is not empty. */
     healthProblems: List<String> = emptyList(),
@@ -111,6 +112,14 @@ public fun HomeScreen(
                     .heightIn(min = Dimens.minTouchTarget),
             ) {
                 Text(text = stringResource(R.string.agenda_title))
+            }
+            Button(
+                onClick = onOpenHabits,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.minTouchTarget),
+            ) {
+                Text(text = stringResource(R.string.habits_title))
             }
             OutlinedButton(
                 onClick = onOpenSetup,

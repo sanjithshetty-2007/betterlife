@@ -69,6 +69,9 @@ public class RoomItemWatcher(private val db: BetterLifeDatabase) : ItemWatcher {
             ReminderItemType.STANDALONE -> db.standaloneReminderDao().observeById(id).map { item ->
                 item?.takeIf { it.doneAt == null }?.let { WatchedItem(it.title) }
             }
+            ReminderItemType.HABIT -> db.habitDao().observeById(id).map { habit ->
+                habit?.takeIf { !it.archived }?.let { WatchedItem(it.name) }
+            }
             null -> flowOf(WatchedItem(card.title))
         }
     }

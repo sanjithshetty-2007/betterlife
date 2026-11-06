@@ -16,7 +16,9 @@ import com.sanjith.betterlife.domain.habit.MilestoneEvent
 import com.sanjith.betterlife.domain.habit.PausePeriod
 import com.sanjith.betterlife.domain.habit.StarterHabit
 import com.sanjith.betterlife.domain.habit.StreakCalculator
+import com.sanjith.betterlife.domain.model.ReminderItemType
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -46,6 +48,8 @@ public sealed interface HabitEditResult {
  * Habits and their daily logs (Prompt 14). Every write marks rows DIRTY for sync (S3). A tick and
  * its milestone check run in ONE transaction, so a milestone is never lost or recorded twice.
  * Streaks and consistency are never stored: [history] gives the calculators what they need.
+ * A habit with a reminder time owns one NORMAL reminder row (item type HABIT, offset 0); callers
+ * reschedule alarms afterwards (HabitService does).
  *
  * The caller passes the habit day ([LocalDate]) worked out with the rollover hour
  * (Clock.habitToday), so a tick at 01:00 lands on the previous day.
@@ -59,12 +63,19 @@ public class HabitRepository(
     private val logDao = db.habitLogDao()
     private val ledgerDao = db.milestoneLedgerDao()
     private val pauseDao = db.pauseRangeDao()
+    private val reminderDao = db.reminderDao()
 
     public fun observeActive(): Flow<List<HabitEntity>> = habitDao.observeActive()
 
     public fun observeArchived(): Flow<List<HabitEntity>> = habitDao.observeArchived()
 
     public fun observeLogs(habitId: String): Flow<List<HabitLogEntity>> = logDao.observeActiveForHabit(habitId)
+
+    public fun observeAllLogs(): Flow<List<HabitLogEntity>> = logDao.observeAllActive()
+
+    public fun observeById(id: String): Flow<HabitEntity?> = habitDao.observeById(id)
+
+    public fun observePauses(): Flow<List<PausePeriod>> = pauseDao.observeActive().map { list -> list.map { PausePeriod(it.startDate, it.endDate) } }
 
     public fun observeLogsBetween(from: LocalDate, to: LocalDate): Flow<List<HabitLogEntity>> = logDao.observeBetween(from, to)
 
@@ -82,6 +93,7 @@ public class HabitRepository(
                     createdAt = now, updatedAt = now, deletedAt = null, syncState = SyncState.DIRTY, serverUpdatedAt = null,
                 ),
             )
+            if (draft.reminderTime != null) insertReminder(id, now)
         }
         return id
     }
@@ -100,9 +112,17 @@ public class HabitRepository(
         )
     }
 
-    /** Rename, recolour, change category, Essential or reminder time. */
+    /** Rename, recolour, change category, Essential or reminder time (its reminder row is replaced only when the time changes). */
     public suspend fun update(habit: HabitEntity) {
-        habitDao.update(habit.copy(name = habit.name.trim(), updatedAt = nowMillis(), syncState = SyncState.DIRTY))
+        val now = nowMillis()
+        db.withTransaction {
+            val before = habitDao.getAnyById(habit.id)
+            habitDao.update(habit.copy(name = habit.name.trim(), updatedAt = now, syncState = SyncState.DIRTY))
+            if (before?.reminderTime != habit.reminderTime) {
+                reminderDao.softDeleteForItem(ReminderItemType.HABIT, habit.id, now)
+                if (habit.reminderTime != null) insertReminder(habit.id, now)
+            }
+        }
     }
 
     public suspend fun setArchived(id: String, archived: Boolean) {
@@ -115,13 +135,27 @@ public class HabitRepository(
         db.withTransaction { idsInOrder.forEachIndexed { index, id -> habitDao.setSortOrder(id, index, now) } }
     }
 
-    /** To Trash. Its logs stay, so a restore brings the history back. */
+    /** To Trash with its reminder. Its logs stay, so a restore brings the history back. */
     public suspend fun softDelete(id: String) {
-        habitDao.softDelete(id, nowMillis())
+        val now = nowMillis()
+        db.withTransaction {
+            habitDao.softDelete(id, now)
+            reminderDao.softDeleteForItem(ReminderItemType.HABIT, id, now)
+        }
     }
 
+    /** Restores the habit and exactly the reminder deleted with it. */
     public suspend fun restore(id: String) {
-        habitDao.restore(id, nowMillis())
+        db.withTransaction {
+            val deletedAt = habitDao.getAnyById(id)?.deletedAt ?: return@withTransaction
+            val now = nowMillis()
+            habitDao.restore(id, now)
+            reminderDao.restoreForItem(ReminderItemType.HABIT, id, deletedAt, now)
+        }
+    }
+
+    private suspend fun insertReminder(habitId: String, now: Long) {
+        reminderDao.insertAll(listOf(ReminderDraft(0).toEntity(newId(), ReminderItemType.HABIT, habitId, now)))
     }
 
     /** Logs, pause ranges and start date of one habit, for the streak and consistency rules. */

@@ -10,7 +10,7 @@ public enum class Importance { NORMAL, FULL_SCREEN, ALARM }
 public enum class EventType { EVENT, MEETING, BIRTHDAY }
 
 /** What a reminder belongs to. STANDALONE reminders ("remind me") have no linked item. */
-public enum class ReminderItemType { TASK, EVENT, STANDALONE }
+public enum class ReminderItemType { TASK, EVENT, STANDALONE, HABIT }
 
 /** Current state of a reminder row (fire state is local only, never synced). */
 public enum class ReminderState { SCHEDULED, FIRED, SNOOZED, COMPLETED, DISMISSED, MISSED, HELD, FAILED, CANCELLED }

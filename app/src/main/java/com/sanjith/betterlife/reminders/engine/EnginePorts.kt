@@ -18,6 +18,15 @@ import java.time.Instant
 /** What started a full reschedule. Only BOOT turns missed reminders into DEVICE_OFF entries. */
 public enum class RescheduleTrigger { BOOT, APP_UPDATED, TIME_CHANGED, TIMEZONE_CHANGED, APP_LAUNCH, DAILY, AFTER_FIRE, MANUAL, SYNC_PULL }
 
+/** What the engine asks about habits (Prompt 15); the app answers with the habit day and its logs. */
+public interface HabitReminderHooks {
+    /** True when the habit needs no reminder at [at]: its habit day is already done, kept or paused. */
+    public suspend fun settled(habitId: String, at: java.time.Instant): Boolean
+
+    /** The pop-up's Done on a habit reminder: tick today's habit day. */
+    public suspend fun tickFromReminder(habitId: String)
+}
+
 /**
  * What the engine needs to know about one reminder when it fires; the extra fields fill the pop-up
  * and its "Why am I seeing this?" panel.

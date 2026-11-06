@@ -2,6 +2,7 @@ package com.sanjith.betterlife.reminders.engine
 
 import com.sanjith.betterlife.data.db.BetterLifeDatabase
 import com.sanjith.betterlife.data.db.entity.EventEntity
+import com.sanjith.betterlife.data.db.entity.HabitEntity
 import com.sanjith.betterlife.data.db.entity.ReminderEntity
 import com.sanjith.betterlife.data.db.entity.StandaloneReminderEntity
 import com.sanjith.betterlife.data.db.entity.TaskEntity
@@ -21,11 +22,16 @@ import java.time.Instant
  * must be the real clock (see ReminderEngine). [completeTaskById] is how a pop-up's Done completes a
  * task; the app passes the same call the Tasks screen uses, so a repeating task gets its next
  * instance either way. Done on a standalone "remind me" marks it done.
+ *
+ * A habit with a reminder time is a daily item at that wall-clock time (Prompt 15). [habits] says when
+ * a habit's reminder is not needed (already done, kept or paused that habit day) and ticks it when
+ * the pop-up's Done is pressed.
  */
 public class RoomReminderStore(
     private val db: BetterLifeDatabase,
     private val clock: Clock,
     private val completeTaskById: suspend (String) -> Unit = { db.taskDao().complete(it, clock.millis()) },
+    private val habits: HabitReminderHooks? = null,
 ) : ReminderStore {
 
     private val reminderDao = db.reminderDao()
@@ -35,8 +41,9 @@ public class RoomReminderStore(
         val tasks = loadTasks(reminders)
         val events = loadEvents(reminders)
         val standalone = loadStandalone(reminders)
+        val habitRows = loadHabits(reminders)
         return reminders.map { reminder ->
-            val item = itemFor(reminder, tasks, events, standalone)
+            val item = itemFor(reminder, tasks, events, standalone, habitRows)
             ScheduleTarget(
                 reminderId = reminder.id,
                 importance = reminder.importance,
@@ -63,9 +70,16 @@ public class RoomReminderStore(
             ReminderItemType.TASK -> reminder.itemId?.let { db.taskDao().getAnyById(it) }?.toItem() ?: MISSING
             ReminderItemType.EVENT -> reminder.itemId?.let { db.eventDao().getAnyById(it) }?.toItem() ?: MISSING
             ReminderItemType.STANDALONE -> reminder.itemId?.let { db.standaloneReminderDao().getAnyById(it) }?.toItem() ?: MISSING
+            ReminderItemType.HABIT -> reminder.itemId?.let { db.habitDao().getAnyById(it) }?.toItem() ?: MISSING
         }
         // A reminder deleted on its own counts like a deleted item: it must not show.
-        val status = if (reminder.deletedAt != null || reminder.state == ReminderState.CANCELLED) ItemStatus.DELETED else item.status
+        val status = when {
+            reminder.deletedAt != null || reminder.state == ReminderState.CANCELLED -> ItemStatus.DELETED
+            // Already ticked (or paused) for today: nothing to remind. The next day still fires.
+            reminder.itemType == ReminderItemType.HABIT && item.status == ItemStatus.ACTIVE &&
+                reminder.itemId?.let { habits?.settled(it, clock.now()) } == true -> ItemStatus.COMPLETED
+            else -> item.status
+        }
         return FireContext(
             reminderId = reminder.id,
             importance = reminder.importance,
@@ -103,6 +117,7 @@ public class RoomReminderStore(
             ReminderItemType.TASK -> completeTaskById(itemId)
             ReminderItemType.STANDALONE -> db.standaloneReminderDao().markDone(itemId, clock.millis())
             ReminderItemType.EVENT -> Unit
+            ReminderItemType.HABIT -> habits?.tickFromReminder(itemId)
         }
     }
 
@@ -131,11 +146,16 @@ public class RoomReminderStore(
         tasks: Map<String, TaskEntity>,
         events: Map<String, EventEntity>,
         standalone: Map<String, StandaloneReminderEntity>,
+        habitRows: Map<String, HabitEntity>,
     ): ItemInfo = when (reminder.itemType) {
         ReminderItemType.TASK -> tasks[reminder.itemId]?.toItem() ?: MISSING
         ReminderItemType.EVENT -> events[reminder.itemId]?.toItem() ?: MISSING
         ReminderItemType.STANDALONE -> standalone[reminder.itemId]?.toItem() ?: MISSING
+        ReminderItemType.HABIT -> habitRows[reminder.itemId]?.toItem() ?: MISSING
     }
+
+    private suspend fun loadHabits(reminders: List<ReminderEntity>): Map<String, HabitEntity> =
+        idsOf(reminders, ReminderItemType.HABIT).mapNotNull { db.habitDao().getAnyById(it) }.associateBy { it.id }
 
     private suspend fun loadTasks(reminders: List<ReminderEntity>): Map<String, TaskEntity> =
         idsOf(reminders, ReminderItemType.TASK).chunked(SQL_CHUNK).flatMap { db.taskDao().getAnyByIds(it) }.associateBy { it.id }
@@ -176,6 +196,14 @@ public class RoomReminderStore(
         time = ItemTime.At(Instant.ofEpochMilli(atMillis), zoneId),
         recurrence = null,
         notes = notes,
+    )
+
+    /** Daily at the reminder time from the start date, in the phone's zone (wall time kept over DST). */
+    private fun HabitEntity.toItem() = ItemInfo(
+        title = name,
+        status = if (deletedAt != null || archived || reminderTime == null) ItemStatus.DELETED else ItemStatus.ACTIVE,
+        time = reminderTime?.let { ItemTime.At(startDate.atTime(it).atZone(clock.zone).toInstant(), clock.zone) },
+        recurrence = RecurrenceRule.Daily(),
     )
 
     private fun EventEntity.toItem() = ItemInfo(

@@ -5,4 +5,63 @@
     <string name="habit_starter_meditation">Meditation</string>
     <string name="habit_starter_skincare">Skincare routine</string>
     <string name="habit_starter_haircare">Haircare routine</string>
+
+    <!-- Habits screen (Prompt 15) -->
+    <string name="habits_title">Habits</string>
+    <string name="habits_empty">No habits yet. Tap + to add one.</string>
+    <string name="habits_more">More options</string>
+    <string name="habits_vibrate_on_tick">Vibrate on tick</string>
+    <string name="habits_previous_month">Previous month</string>
+    <string name="habits_next_month">Next month</string>
+    <string name="habits_back_to_this_month">Back to this month</string>
+    <string name="habits_done_today">%1$d of %2$d done today</string>
+    <string name="habit_month_count">%1$d of %2$d days</string>
+    <string name="habit_essential_badge">ESSENTIAL</string>
+    <string name="habit_streak">%1$d-day streak</string>
+    <string name="habit_restarting">Best: %1$d. Restarting.</string>
+    <string name="habit_streak_none">Tick today to start a streak</string>
+    <string name="habit_consistency">consistency</string>
+    <string name="habit_consistency_new">New</string>
+    <string name="habit_percent">%1$d%%</string>
+    <string name="habit_ticked_snack">%1$s · %2$s ticked</string>
+    <string name="habit_unticked_snack">%1$s · %2$s cleared</string>
+    <!-- One grid box, read by TalkBack. -->
+    <string name="habit_box_done">Day %1$d, done</string>
+    <string name="habit_box_kept">Day %1$d, kept with a Minimum Day</string>
+    <string name="habit_box_paused">Day %1$d, paused</string>
+    <string name="habit_box_open">Day %1$d, not done</string>
+    <string name="habit_box_today">Day %1$d, today, not done yet</string>
+    <string name="habit_box_future">Day %1$d, still to come</string>
+    <string name="habit_box_no_such_day">Day %1$d, not in this month</string>
+    <string name="habit_box_before_start">Day %1$d, before this habit started</string>
+    <string name="habit_box_state_done">Ticked</string>
+    <string name="habit_box_state_not_done">Not ticked</string>
+
+    <!-- Habit editor (Prompt 15) -->
+    <string name="habit_new">New habit</string>
+    <string name="habit_edit">Edit habit</string>
+    <string name="habit_name">Name</string>
+    <string name="habit_color">Colour</string>
+    <string name="habit_icon">Icon</string>
+    <string name="habit_icon_n">Icon %1$s</string>
+    <string name="habit_category">Category</string>
+    <string name="habit_category_health">Health</string>
+    <string name="habit_category_self_care">Self-care</string>
+    <string name="habit_category_other">Other</string>
+    <string name="habit_essential">Essential</string>
+    <string name="habit_essential_hint">Picked first on a Minimum Day.</string>
+    <string name="habit_daily_reminder">Daily reminder</string>
+    <string name="habit_no_reminder">No reminder</string>
+    <string name="habit_archive">Archive habit</string>
+    <string name="habit_unarchive">Bring back from archive</string>
+    <string name="habit_delete">Delete habit</string>
+    <string name="habit_delete_confirm_title">Delete \"%1$s\"?</string>
+    <string name="habit_delete_confirm_body">It goes to Trash with its history and its reminder.</string>
+
+    <!-- Habit detail (Prompt 15) -->
+    <string name="habit_stat_streak">streak</string>
+    <string name="habit_stat_best">best</string>
+    <string name="habit_last_12_months">Last 12 months</string>
+    <string name="habit_this_month">This month</string>
+    <string name="habit_heatmap_description">Last 12 months: %1$d days done</string>
 </resources>

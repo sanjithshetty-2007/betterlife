@@ -21,6 +21,10 @@ import com.sanjith.betterlife.data.repository.HabitRepository
 import com.sanjith.betterlife.data.repository.PauseRangeRepository
 import com.sanjith.betterlife.domain.habit.StarterHabit
 import com.sanjith.betterlife.domain.time.habitToday
+import com.sanjith.betterlife.domain.time.habitDay
+import com.sanjith.betterlife.domain.habit.DayState
+import com.sanjith.betterlife.feature.habits.HabitService
+import com.sanjith.betterlife.reminders.engine.HabitReminderHooks
 import com.sanjith.betterlife.data.repository.EventRepository
 import com.sanjith.betterlife.data.repository.ProjectRepository
 import com.sanjith.betterlife.data.repository.ReminderLogRepository
@@ -173,6 +177,25 @@ public class AppContainer(appContext: Context) {
         StarterHabitSeeder(appContext.settingsDataStore, habitRepository, names) { habitToday() }
     }
 
+    /** Habit actions for the screens; changes to a habit reschedule its daily reminder (Prompt 15). */
+    public val habitService: HabitService by lazy {
+        HabitService(habitRepository, ::habitToday) { reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL) }
+    }
+
+    /** The reminder engine's questions about habits, answered on the REAL clock like every alarm. */
+    private val habitReminderHooks: HabitReminderHooks = object : HabitReminderHooks {
+        override suspend fun settled(habitId: String, at: java.time.Instant): Boolean {
+            val day = habitDay(at, realClock.zone, settingsRepository.current().rolloverHour)
+            val state = habitRepository.history(habitId)?.state(day, day) ?: return false
+            return state == DayState.DONE || state == DayState.KEPT || state == DayState.PAUSED
+        }
+
+        override suspend fun tickFromReminder(habitId: String) {
+            val today = realClock.habitToday(settingsRepository.current().rolloverHour)
+            habitRepository.tick(habitId, today, today)
+        }
+    }
+
     /** Adds the four starter habits once per install. */
     public suspend fun seedStarterHabits() {
         starterHabitSeeder.seedIfNeeded()
@@ -283,7 +306,12 @@ public class AppContainer(appContext: Context) {
         val realLog = ReminderLogRepository(database, realNowMillis, newId)
         ReminderEngine(
             // Done on a pop-up completes the task like the Tasks screen does (next instance included).
-            store = RoomReminderStore(database, realClock) { taskId -> taskRepository.completeWithNext(taskId, clock.today()) },
+            store = RoomReminderStore(
+                db = database,
+                clock = realClock,
+                completeTaskById = { taskId -> taskRepository.completeWithNext(taskId, clock.today()) },
+                habits = habitReminderHooks,
+            ),
             alarms = AndroidAlarmScheduler(appContext),
             device = AndroidDeviceState(appContext),
             presenter = AndroidReminderPresenter(appContext, debugLog, { popupCoordinator }, realClock),

@@ -101,7 +101,7 @@ public class RoomReminderStoreTest {
     @Test
     public fun popupDoneUsesTheInjectedCompletionSoRepeatsContinue() = runTest {
         val completed = mutableListOf<String>()
-        val withHook = RoomReminderStore(db, FixedClock(Instant.parse("2026-10-09T10:00:00Z"), zone)) { completed += it }
+        val withHook = RoomReminderStore(db, FixedClock(Instant.parse("2026-10-09T10:00:00Z"), zone), completeTaskById = { completed += it })
         val taskId = tasks.create(TaskDraft("Pills", dueAtMillis = due.toEpochMilli(), dueZoneId = zone), listOf(ReminderDraft(0)))
         val reminderId = withHook.loadTargets().single().reminderId
 

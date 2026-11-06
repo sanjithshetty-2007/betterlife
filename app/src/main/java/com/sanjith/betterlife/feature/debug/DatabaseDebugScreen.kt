@@ -64,7 +64,7 @@ public class DatabaseDebugViewModel(
 
     public fun seed() = runBusy {
         val r = seeder.seed()
-        "Seeded ${r.tasks} tasks, ${r.events} events, ${r.reminders} reminders in ${r.millis} ms"
+        "Seeded ${r.tasks} tasks, ${r.events} events, ${r.reminders} reminders, ${r.habits} habits, ${r.habitLogs} habit logs in ${r.millis} ms"
     }
 
     public fun wipe() = runBusy { "Removed ${seeder.wipe()} seeded rows" }

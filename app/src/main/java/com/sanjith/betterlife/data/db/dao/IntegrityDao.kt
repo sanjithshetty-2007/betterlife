@@ -16,7 +16,8 @@ public interface IntegrityDao {
         SELECT r.id FROM reminders r WHERE r.deletedAt IS NULL AND (
           (r.itemType = 'TASK' AND NOT EXISTS (SELECT 1 FROM tasks t WHERE t.id = r.itemId)) OR
           (r.itemType = 'EVENT' AND NOT EXISTS (SELECT 1 FROM events e WHERE e.id = r.itemId)) OR
-          (r.itemType = 'STANDALONE' AND (r.itemId IS NULL OR NOT EXISTS (SELECT 1 FROM standalone_reminders s WHERE s.id = r.itemId))))
+          (r.itemType = 'STANDALONE' AND (r.itemId IS NULL OR NOT EXISTS (SELECT 1 FROM standalone_reminders s WHERE s.id = r.itemId))) OR
+          (r.itemType = 'HABIT' AND (r.itemId IS NULL OR NOT EXISTS (SELECT 1 FROM habits h WHERE h.id = r.itemId))))
         """,
     )
     public suspend fun orphanReminderIds(): List<String>
@@ -27,7 +28,8 @@ public interface IntegrityDao {
         SELECT r.id FROM reminders r WHERE r.deletedAt IS NULL AND (
           (r.itemType = 'TASK' AND EXISTS (SELECT 1 FROM tasks t WHERE t.id = r.itemId AND t.deletedAt IS NOT NULL)) OR
           (r.itemType = 'EVENT' AND EXISTS (SELECT 1 FROM events e WHERE e.id = r.itemId AND e.deletedAt IS NOT NULL)) OR
-          (r.itemType = 'STANDALONE' AND EXISTS (SELECT 1 FROM standalone_reminders s WHERE s.id = r.itemId AND s.deletedAt IS NOT NULL)))
+          (r.itemType = 'STANDALONE' AND EXISTS (SELECT 1 FROM standalone_reminders s WHERE s.id = r.itemId AND s.deletedAt IS NOT NULL)) OR
+          (r.itemType = 'HABIT' AND EXISTS (SELECT 1 FROM habits h WHERE h.id = r.itemId AND h.deletedAt IS NOT NULL)))
         """,
     )
     public suspend fun remindersOfDeletedItemIds(): List<String>

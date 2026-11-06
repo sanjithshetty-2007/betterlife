@@ -109,6 +109,11 @@ public class RoomReminderStore(
     override suspend fun markFired(reminderId: String, fireAt: Instant, state: ReminderState): Boolean =
         reminderDao.markFired(reminderId, fireAt.toEpochMilli(), state) > 0
 
+    override suspend fun recentPopupStarts(since: Instant): List<Instant> =
+        db.reminderLogDao().popupStartsSince(since.toEpochMilli()).map(Instant::ofEpochMilli)
+
+    override suspend fun heldReminderIds(): List<String> = reminderDao.getHeldIds()
+
     /** The parts of a task or event the engine needs. */
     private data class ItemInfo(
         val title: String,

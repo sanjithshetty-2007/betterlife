@@ -200,3 +200,24 @@ Reason codes and the sentence the Reminder Center shows (a unit test checks ever
 | 8 | Complete a task from its pop-up, snooze another | Completed and Snoozed rows with the right item names | |
 | 9 | Tap a Reminder Center row | Opens that task / event / reminder; a deleted item says it was deleted | |
 | 10 | Real swipe-away: Test after closing, then swipe BetterLife away in recent apps | Pop-up arrives within a few seconds of the due time | |
+
+## Prompt 12: Quiet Hours, Pause, fatigue protection and in-call handling
+
+How: Home > I'm busy (the pause sheet; a banner with Resume appears while paused) and Home > Quiet & calm (Quiet Hours, ALARM bypass, Pause default, fatigue settings). The Reminder Center shows Held rows with the reason. Defaults: Quiet Hours off (22:00 to 07:00 when on, every day), ALARM ignores Quiet Hours, Pause leaves calendar items and ALARM alone, max 3 pop-ups per hour, group within 10 min, 3 ignored in a row -> calm for 24 h.
+
+Rules in short: Pause beats Quiet Hours beats fatigue. Held reminders come back as ONE digest notification when the pause or Quiet Hours end. A pop-up within 10 minutes of the last one joins it (Grouped) and does not count toward the hourly limit. "Ignored" means closed with Back or left to time out.
+
+| # | Test | Expected | Result |
+|---|---|---|---|
+| 1 | I'm busy > 30 min > Pause | Banner "Paused until …" with Resume; a pause-end alarm is set | **PASS** (AI 2026-11-06: banner, alarm at 4:41:37 PM) |
+| 2 | While paused, Reminder Health > Test in 10 s | No pop-up; Reminder Center row Held: "Held because you paused reminders." | **PASS** (AI) |
+| 3 | Resume | Banner gone; ONE notification "1 reminder waited for you" listing Test reminder | **PASS** (AI, notification read with dumpsys) |
+| 4 | Pause 30 min with a birthday reminder due inside it | The birthday still fires (calendar items are exempt by default) | |
+| 5 | Pause 30 min and do nothing | At the end the banner goes and anything held arrives as one digest | |
+| 6 | Quiet Hours: switch on, set From = now + 2 min, To = now + 6 min; add a task reminder for now + 3 min | Held (Reminder Center says Quiet Hours); one digest at the To time | |
+| 7 | Same, with an ALARM level reminder | It rings anyway (switch "ALARM level ignores Quiet Hours" on) | |
+| 8 | 4 pop-up reminders 12 minutes apart within one hour | The 4th arrives as a normal notification; Center says why | |
+| 9 | 3 pop-up reminders 3 minutes apart | One pop-up window with the cards stacked; the 2nd and 3rd show "Grouped" in the Center | |
+| 10 | Close 3 pop-ups in a row with Back | A one-time notice "Pop-ups are taking a break"; Quiet & calm shows "Calm until …" with End now | |
+| 11 | Call yourself from another phone while a pop-up reminder fires | Notification only; Center reason "You were on a call…" | |
+| 12 | Pause, then restart the phone before it ends | The pause still ends on time and the digest arrives | |

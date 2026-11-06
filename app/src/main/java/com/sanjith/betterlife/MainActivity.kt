@@ -60,6 +60,8 @@ public class MainActivity : ComponentActivity() {
     public companion object {
         private const val EXTRA_ROUTE = "open_route"
         public const val ROUTE_CHECK_INS: String = Routes.CHECK_INS
+        public const val ROUTE_CENTER: String = Routes.CENTER
+        public const val ROUTE_QUIET: String = Routes.QUIET
 
         public fun openRouteIntent(context: Context, route: String): Intent =
             Intent(context, MainActivity::class.java)

@@ -2,6 +2,7 @@ package com.sanjith.betterlife.domain.delivery
 
 import com.sanjith.betterlife.domain.model.Importance
 import com.sanjith.betterlife.domain.model.ReasonCode
+import java.time.Duration
 import java.time.Instant
 
 /** Whether the item behind a reminder still wants it. */
@@ -14,6 +15,10 @@ public data class DeliveryInput(
     val device: PresentationInputs,
     val callActive: Boolean,
     val now: Instant,
+    /** A calendar event or birthday (Pause leaves these alone unless the owner chose otherwise). */
+    val calendarItem: Boolean = false,
+    /** Pause, Quiet Hours and fatigue state (Prompt 12). */
+    val calm: CalmInputs = CalmInputs.NONE,
 )
 
 public enum class DeliveryAction {
@@ -23,7 +28,7 @@ public enum class DeliveryAction {
     /** Show it now, by [DeliveryDecision.path]. */
     DELIVER,
 
-    /** Keep it and deliver at [DeliveryDecision.holdUntil] (Pause, Quiet Hours: Prompt 12). */
+    /** Keep it and deliver it in the digest at [DeliveryDecision.holdUntil] (Pause, Quiet Hours). */
     HOLD,
 }
 
@@ -38,6 +43,8 @@ public data class DeliveryDecision(
     val path: PresentationPath,
     val reasonCode: ReasonCode?,
     val holdUntil: Instant? = null,
+    /** Joins the pop-up of a reminder shown within the grouping window, so it is not a new interruption. */
+    val grouped: Boolean = false,
 )
 
 /**
@@ -115,16 +122,43 @@ public object DeliveryPipeline {
         return StepResult.Continue(d.copy(level = Importance.NORMAL, path = path, reasonCode = ReasonCode.IN_CALL))
     }
 
-    // 4-6: real rules arrive in Prompt 12 (reason codes PAUSED, QUIET_HOURS, FATIGUE_GROUPED,
-    // FATIGUE_DOWNGRADED). Until then they pass every reminder through unchanged.
-    @Suppress("UNUSED_PARAMETER")
-    private fun pause(input: DeliveryInput, d: DeliveryDecision): StepResult = StepResult.Continue(d)
+    // 4: "I am busy". Holds NORMAL and FULL_SCREEN reminders of tasks (and habits, Prompt 14); calendar
+    // items and the ALARM level only when the owner chose to hold them too.
+    private fun pause(input: DeliveryInput, d: DeliveryDecision): StepResult {
+        val pause = input.calm.pause?.takeIf { PauseRules.isActive(it, input.now) } ?: return StepResult.Continue(d)
+        val exempt = (input.calendarItem && !pause.holdsCalendar) || (input.importance == Importance.ALARM && !pause.holdsAlarm)
+        if (exempt) return StepResult.Continue(d)
+        return StepResult.Stop(d.copy(action = DeliveryAction.HOLD, reasonCode = ReasonCode.PAUSED, holdUntil = pause.until))
+    }
 
-    @Suppress("UNUSED_PARAMETER")
-    private fun quietHours(input: DeliveryInput, d: DeliveryDecision): StepResult = StepResult.Continue(d)
+    // 5: Quiet Hours hold everything until the window ends; ALARM level passes when the setting allows.
+    private fun quietHours(input: DeliveryInput, d: DeliveryDecision): StepResult {
+        val until = input.calm.quietUntil?.takeIf { input.now.isBefore(it) } ?: return StepResult.Continue(d)
+        if (input.importance == Importance.ALARM && input.calm.alarmBypassesQuiet) return StepResult.Continue(d)
+        return StepResult.Stop(d.copy(action = DeliveryAction.HOLD, reasonCode = ReasonCode.QUIET_HOURS, holdUntil = until))
+    }
 
-    @Suppress("UNUSED_PARAMETER")
-    private fun fatigue(input: DeliveryInput, d: DeliveryDecision): StepResult = StepResult.Continue(d)
+    // 6: fatigue protection, for pop-ups only. In order: the calm period after repeated ignores, joining
+    // a pop-up shown within the grouping window, then the hourly maximum of new pop-ups.
+    private fun fatigue(input: DeliveryInput, d: DeliveryDecision): StepResult {
+        val f = input.calm.fatigue ?: return StepResult.Continue(d)
+        val popsUp = d.path == PresentationPath.OVERLAY || d.path == PresentationPath.FULL_SCREEN_INTENT
+        if (!popsUp || (d.level == Importance.ALARM && f.alarmExempt)) return StepResult.Continue(d)
+        val calm = f.downgradeEnabled && f.calmUntil?.let { input.now.isBefore(it) } == true
+        if (calm) return StepResult.Continue(downgrade(input, d))
+        val lastGroupStart = f.recentPopups.filter { !it.isAfter(input.now) }.maxOrNull()
+        if (lastGroupStart != null && !Duration.between(lastGroupStart, input.now).minus(f.groupWindow).isPositive) {
+            return StepResult.Continue(d.copy(grouped = true, reasonCode = ReasonCode.FATIGUE_GROUPED))
+        }
+        val windowStart = input.now.minus(FATIGUE_WINDOW)
+        val inLastHour = f.recentPopups.count { it.isAfter(windowStart) && !it.isAfter(input.now) }
+        return StepResult.Continue(if (inLastHour >= f.maxPerHour) downgrade(input, d) else d)
+    }
+
+    private fun downgrade(input: DeliveryInput, d: DeliveryDecision): DeliveryDecision {
+        val path = if (input.device.notificationsEnabled) PresentationPath.NOTIFICATION_ONLY else PresentationPath.NONE
+        return d.copy(level = Importance.NORMAL, path = path, reasonCode = ReasonCode.FATIGUE_DOWNGRADED)
+    }
 
     // 7: deliver whatever survived.
     @Suppress("UNUSED_PARAMETER")

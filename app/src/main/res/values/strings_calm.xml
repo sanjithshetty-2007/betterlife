@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Digest and calm notice (Prompt 12) -->
+    <plurals name="digest_title">
+        <item quantity="one">1 reminder waited for you</item>
+        <item quantity="other">%d reminders waited for you</item>
+    </plurals>
+    <string name="digest_more">+%1$d more in the Reminder Center</string>
+    <string name="calm_notice_title">Pop-ups are taking a break</string>
+    <string name="calm_notice_text">Several pop-ups in a row went unanswered, so reminders come as normal notifications until %1$s tomorrow. ALARM level still rings. You can turn this off in Quiet &amp; calm.</string>
+
+    <!-- I'm busy sheet -->
+    <string name="pause_home_button">I\'m busy</string>
+    <string name="pause_title">I\'m busy</string>
+    <string name="pause_subtitle">Hold task reminders for a while. They arrive together when the pause ends.</string>
+    <string name="pause_30_min">30 min</string>
+    <string name="pause_1_hour">1 hour</string>
+    <string name="pause_3_hours">3 hours</string>
+    <string name="pause_tonight">Until %1$s</string>
+    <string name="pause_hold_calendar">Also hold calendar events &amp; birthdays</string>
+    <string name="pause_hold_alarm">Also hold ALARM level</string>
+    <string name="pause_start">Pause until %1$s</string>
+    <string name="pause_banner">Paused until %1$s</string>
+    <string name="pause_banner_detail">Task reminders are held and arrive together when the pause ends.</string>
+    <string name="pause_resume">Resume</string>
+
+    <!-- Quiet & calm screen -->
+    <string name="quiet_home_button">Quiet &amp; calm</string>
+    <string name="quiet_title">Quiet &amp; calm</string>
+    <string name="quiet_hours">Quiet Hours</string>
+    <string name="quiet_from">From</string>
+    <string name="quiet_to">To</string>
+    <string name="quiet_days_label">Days it starts on</string>
+    <string name="quiet_digest_note">Held reminders arrive as one digest at %1$s.</string>
+    <string name="quiet_same_time">From and To are the same, so there are no Quiet Hours.</string>
+    <string name="quiet_alarm_bypass">ALARM level ignores Quiet Hours</string>
+    <string name="quiet_during_calls">During calls</string>
+    <string name="quiet_during_calls_detail">Pop-ups become notifications. Always on.</string>
+    <string name="quiet_pause_section">Pause (I\'m busy)</string>
+    <string name="quiet_pause_exempt">Pause leaves calendar events, birthdays and ALARM level alone</string>
+    <string name="quiet_pause_exempt_detail">You can still choose to hold them each time you pause.</string>
+    <string name="quiet_fatigue_section">Fatigue protection</string>
+    <string name="quiet_max_per_hour">Max pop-ups per hour</string>
+    <string name="quiet_max_per_hour_detail">Extra ones arrive as normal notifications.</string>
+    <string name="quiet_group_within">Group reminders within</string>
+    <string name="quiet_group_detail">Reminders this close together share one pop-up.</string>
+    <string name="quiet_minutes">%1$d min</string>
+    <string name="quiet_ignore_downgrade">Ignored %1$d× → calm for 24 h</string>
+    <string name="quiet_ignore_downgrade_detail">You\'ll be told once.</string>
+    <string name="quiet_alarm_exempt">ALARM level skips fatigue rules</string>
+    <string name="quiet_calm_active">Calm until %1$s</string>
+    <string name="quiet_calm_end_now">End now</string>
+    <string name="quiet_decrease">Fewer</string>
+    <string name="quiet_increase">More</string>
+</resources>

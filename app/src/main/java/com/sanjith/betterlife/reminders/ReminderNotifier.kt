@@ -78,6 +78,56 @@ public class ReminderNotifier(private val context: Context) {
         return notify(MISSED_SUMMARY_ID, notification)
     }
 
+    /**
+     * ONE notification for the reminders Pause or Quiet Hours held (context.md 5.1), opening the
+     * Reminder Center. Titles are listed when unlocked; the lock screen shows only the count.
+     */
+    public fun postDigest(titles: List<String>): Boolean {
+        val count = titles.size
+        val heading = context.resources.getQuantityString(R.plurals.digest_title, count, count)
+        val style = NotificationCompat.InboxStyle().setBigContentTitle(heading)
+        titles.take(DIGEST_LINES).forEach { style.addLine(it) }
+        if (count > DIGEST_LINES) style.setSummaryText(context.getString(R.string.digest_more, count - DIGEST_LINES))
+        val notification = NotificationCompat.Builder(context, NotificationChannels.DIGEST)
+            .setSmallIcon(R.drawable.ic_notifications)
+            .setContentTitle(heading)
+            .setContentText(titles.joinToString(", "))
+            .setStyle(style)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(
+                NotificationCompat.Builder(context, NotificationChannels.DIGEST)
+                    .setSmallIcon(R.drawable.ic_notifications)
+                    .setContentTitle(heading)
+                    .build(),
+            )
+            .setContentIntent(routeIntent(MainActivity.ROUTE_CENTER, DIGEST_ID))
+            .setAutoCancel(true)
+            .build()
+        return notify(DIGEST_ID, notification)
+    }
+
+    /** Told once: pop-ups are calmer for a day after being ignored several times in a row. */
+    public fun postCalmNotice(untilText: String): Boolean {
+        val text = context.getString(R.string.calm_notice_text, untilText)
+        val notification = NotificationCompat.Builder(context, NotificationChannels.NUDGES)
+            .setSmallIcon(R.drawable.ic_notifications)
+            .setContentTitle(context.getString(R.string.calm_notice_title))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(routeIntent(MainActivity.ROUTE_QUIET, CALM_NOTICE_ID))
+            .setAutoCancel(true)
+            .build()
+        return notify(CALM_NOTICE_ID, notification)
+    }
+
+    private fun routeIntent(route: String, requestCode: Int): PendingIntent = PendingIntent.getActivity(
+        context,
+        requestCode,
+        MainActivity.openRouteIntent(context, route),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
     private fun openAppIntent(): PendingIntent = PendingIntent.getActivity(
         context,
         0,
@@ -100,6 +150,9 @@ public class ReminderNotifier(private val context: Context) {
     public companion object {
         private const val MISSED_SUMMARY_ID = 9_100
         private const val POPUP_STACK_ID = 9_200
+        private const val DIGEST_ID = 9_300
+        private const val CALM_NOTICE_ID = 9_400
+        private const val DIGEST_LINES = 6
 
         /** Stable notification id for a reminder, so a re-post replaces instead of stacking. */
         public fun idFor(reminderId: String): Int = reminderId.hashCode()

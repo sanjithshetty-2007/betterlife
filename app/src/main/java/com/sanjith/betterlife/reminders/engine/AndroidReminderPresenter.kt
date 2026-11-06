@@ -10,6 +10,7 @@ import com.sanjith.betterlife.domain.time.Clock
 import com.sanjith.betterlife.reminders.ReminderNotifier
 import com.sanjith.betterlife.reminders.popup.PopupCoordinator
 import com.sanjith.betterlife.reminders.popup.ReminderPopupService
+import java.time.Instant
 import java.util.Date
 
 /** [ReminderPresenter] that adds a card to the shared pop-up stack, or posts a notification. */
@@ -40,6 +41,14 @@ public class AndroidReminderPresenter(
 
     override fun postMissedSummary(count: Int) {
         notifier.postMissedSummary(count)
+    }
+
+    override fun postDigest(titles: List<String>) {
+        notifier.postDigest(titles)
+    }
+
+    override fun postCalmNotice(until: Instant) {
+        notifier.postCalmNotice(DateFormat.getTimeFormat(context).format(Date.from(until)))
     }
 
     private fun FireContext.toCard(level: Importance) = PopupCard(

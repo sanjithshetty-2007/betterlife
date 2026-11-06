@@ -19,6 +19,8 @@ public data class AppSettings(
     /** May cross midnight: 22:00 to 07:00 is valid. */
     val quietHoursStart: LocalTime = LocalTime.of(22, 0),
     val quietHoursEnd: LocalTime = LocalTime.of(7, 0),
+    /** Days a Quiet Hours window starts on (a 22:00-07:00 window belongs to its first evening). */
+    val quietHoursDays: Set<DayOfWeek> = DayOfWeek.entries.toSet(),
     val alarmBypassesQuietHours: Boolean = true,
     val fatigueMaxFullScreenPerHour: Int = 3,
     val fatigueGroupWindowMinutes: Int = 10,
@@ -44,10 +46,16 @@ public data class AppSettings(
         require(fatigueMaxFullScreenPerHour > 0) { "fatigueMaxFullScreenPerHour must be positive" }
         require(fatigueGroupWindowMinutes >= 0) { "fatigueGroupWindowMinutes cannot be negative" }
         require(fatigueIgnoredLimit > 0) { "fatigueIgnoredLimit must be positive" }
+        require(fatigueMaxFullScreenPerHour <= MAX_POPUPS_PER_HOUR) { "fatigueMaxFullScreenPerHour must be at most $MAX_POPUPS_PER_HOUR" }
+        require(fatigueGroupWindowMinutes <= MAX_GROUP_WINDOW_MINUTES) { "fatigueGroupWindowMinutes must be at most $MAX_GROUP_WINDOW_MINUTES" }
     }
 
     public companion object {
         /** A rollover later than 05:00 would make early-morning ticks land on the wrong day. */
         public const val MAX_ROLLOVER_HOUR: Int = 5
+
+        /** Upper limits for the Quiet & calm steppers. */
+        public const val MAX_POPUPS_PER_HOUR: Int = 12
+        public const val MAX_GROUP_WINDOW_MINUTES: Int = 60
     }
 }

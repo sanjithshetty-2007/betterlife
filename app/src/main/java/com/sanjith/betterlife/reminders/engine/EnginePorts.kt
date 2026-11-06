@@ -1,6 +1,7 @@
 package com.sanjith.betterlife.reminders.engine
 
 import com.sanjith.betterlife.domain.delivery.ItemStatus
+import com.sanjith.betterlife.domain.delivery.Pause
 import com.sanjith.betterlife.domain.delivery.PresentationInputs
 import com.sanjith.betterlife.domain.model.Importance
 import com.sanjith.betterlife.domain.model.ReasonCode
@@ -54,6 +55,39 @@ public interface ReminderStore {
 
     /** Marks the task or standalone item behind a reminder done (Done on the pop-up). Does nothing for events. */
     public suspend fun completeTask(reminderId: String)
+
+    /**
+     * When the pop-ups that started a group were shown since [since] (from the reminder log), for
+     * fatigue protection: grouped pop-ups are not counted.
+     */
+    public suspend fun recentPopupStarts(since: Instant): List<Instant> = emptyList()
+
+    /** Reminders held by Pause or Quiet Hours and not yet delivered in a digest. */
+    public suspend fun heldReminderIds(): List<String> = emptyList()
+}
+
+/**
+ * Pause, the pending digest time and the ignore streak (Prompt 12). Kept on disk, so a restart or a
+ * killed process never loses a pause or resets the fatigue counters.
+ */
+public data class CalmState(
+    val pause: Pause? = null,
+    val digestAt: Instant? = null,
+    val ignoreStreak: Int = 0,
+    val calmUntil: Instant? = null,
+)
+
+public interface CalmStateStore {
+    public suspend fun read(): CalmState
+    public suspend fun update(change: (CalmState) -> CalmState)
+}
+
+/** For tests and previews only; the app uses the DataStore-backed store. */
+public class InMemoryCalmStateStore(private var state: CalmState = CalmState()) : CalmStateStore {
+    override suspend fun read(): CalmState = state
+    override suspend fun update(change: (CalmState) -> CalmState) {
+        state = change(state)
+    }
 }
 
 public interface AlarmScheduler {
@@ -62,6 +96,10 @@ public interface AlarmScheduler {
     /** Setting the same reminder again replaces its alarm; it never adds a second one. */
     public fun set(reminderId: String, fireAt: Instant, kind: AlarmKind)
     public fun cancel(reminderId: String)
+
+    /** The one digest alarm: delivers held reminders when Pause or Quiet Hours end. Setting again replaces it. */
+    public fun setDigest(at: Instant) {}
+    public fun cancelDigest() {}
 }
 
 public interface DeviceStateReader {
@@ -76,6 +114,12 @@ public interface ReminderPresenter {
 
     /** ONE notification for reminders missed while the phone was off; shows a count, never titles. */
     public fun postMissedSummary(count: Int)
+
+    /** ONE notification for the reminders held by Pause or Quiet Hours (context.md 5.1). */
+    public fun postDigest(titles: List<String>) {}
+
+    /** Tells the owner once that pop-ups stay calm until [until] after being ignored several times. */
+    public fun postCalmNotice(until: Instant) {}
 }
 
 public fun interface ReminderLogSink {

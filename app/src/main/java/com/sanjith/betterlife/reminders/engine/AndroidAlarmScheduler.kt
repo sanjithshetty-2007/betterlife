@@ -46,6 +46,37 @@ public class AndroidAlarmScheduler(private val context: Context) : AlarmSchedule
         operation.cancel()
     }
 
+    // The digest is a notification, so an exact alarm that works in Doze is enough (no alarm clock).
+    override fun setDigest(at: Instant) {
+        val operation = digestIntent()
+        val millis = at.toEpochMilli()
+        try {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, millis, operation)
+            } else {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, millis, operation)
+            }
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Exact digest alarm refused, using an inexact one", e)
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, millis, operation)
+        }
+    }
+
+    override fun cancelDigest() {
+        val operation = digestIntent()
+        alarmManager.cancel(operation)
+        operation.cancel()
+    }
+
+    private fun digestIntent(): PendingIntent = PendingIntent.getBroadcast(
+        context,
+        REQUEST_CODE,
+        Intent(context, ReminderAlarmReceiver::class.java)
+            .setAction(ReminderAlarmReceiver.ACTION_DIGEST)
+            .setData(Uri.Builder().scheme(SCHEME).authority(DIGEST_HOST).build()),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
     private fun fireIntent(reminderId: String, fireAt: Instant): PendingIntent = PendingIntent.getBroadcast(
         context,
         REQUEST_CODE,
@@ -69,6 +100,7 @@ public class AndroidAlarmScheduler(private val context: Context) : AlarmSchedule
         private const val REQUEST_CODE = 0
         private const val SCHEME = "betterlife"
         private const val HOST = "reminder"
+        private const val DIGEST_HOST = "digest"
 
         public fun reminderUri(reminderId: String): Uri = Uri.Builder().scheme(SCHEME).authority(HOST).appendPath(reminderId).build()
 

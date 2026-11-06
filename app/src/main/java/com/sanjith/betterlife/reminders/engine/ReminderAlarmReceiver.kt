@@ -14,6 +14,10 @@ import java.time.Instant
 public class ReminderAlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == ACTION_DIGEST) {
+            onDigest(context)
+            return
+        }
         if (intent.action != ACTION_FIRE) return
         val reminderId = AndroidAlarmScheduler.reminderIdFrom(intent.data) ?: return
         val fireAt = Instant.ofEpochMilli(intent.getLongExtra(EXTRA_FIRE_AT, 0L))
@@ -30,7 +34,23 @@ public class ReminderAlarmReceiver : BroadcastReceiver() {
         }
     }
 
+    // Pause or Quiet Hours ended (or should have): the engine re-checks and sends the one digest.
+    private fun onDigest(context: Context) {
+        val container = (context.applicationContext as BetterLifeApp).container
+        val pendingResult = goAsync()
+        container.appScope.launch {
+            try {
+                container.reminderEngine.deliverDigest()
+                container.debugLog.add("Digest alarm handled")
+                container.debugLog.awaitWrites()
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
     public companion object {
+        public const val ACTION_DIGEST: String = "com.sanjith.betterlife.action.REMINDER_DIGEST"
         public const val ACTION_FIRE: String = "com.sanjith.betterlife.action.REMINDER_ALARM"
         public const val EXTRA_FIRE_AT: String = "fire_at"
         private const val ID_PREVIEW = 8

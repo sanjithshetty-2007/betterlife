@@ -53,6 +53,10 @@ public fun HomeScreen(
     onOpenCenter: () -> Unit = {},
     /** Titles of the RED Reminder Health rows; the banner shows when this is not empty. */
     healthProblems: List<String> = emptyList(),
+    /** Shown above the welcome card while a pause is on (Prompt 12). */
+    pauseBanner: (@Composable () -> Unit)? = null,
+    onPause: () -> Unit = {},
+    onOpenQuiet: () -> Unit = {},
     debugTools: List<DebugTool> = emptyList(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -77,6 +81,7 @@ public fun HomeScreen(
                 color = MaterialTheme.colorScheme.onBackground,
             )
             if (healthProblems.isNotEmpty()) HealthBanner(healthProblems, onOpenSetup)
+            pauseBanner?.invoke()
             WelcomeCard()
             Button(
                 onClick = { scope.launch { snackbarHostState.showSnackbar(snackbarText) } },
@@ -117,6 +122,22 @@ public fun HomeScreen(
                     .heightIn(min = Dimens.minTouchTarget),
             ) {
                 Text(text = stringResource(R.string.center_home_button))
+            }
+            OutlinedButton(
+                onClick = onPause,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.minTouchTarget),
+            ) {
+                Text(text = stringResource(R.string.pause_home_button))
+            }
+            OutlinedButton(
+                onClick = onOpenQuiet,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.minTouchTarget),
+            ) {
+                Text(text = stringResource(R.string.quiet_home_button))
             }
             debugTools.forEach { tool ->
                 OutlinedButton(

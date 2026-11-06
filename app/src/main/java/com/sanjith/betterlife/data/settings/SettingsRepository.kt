@@ -43,6 +43,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 quietHoursEnabled = prefs[QUIET_ENABLED] ?: d.quietHoursEnabled,
                 quietHoursStart = prefs.time(QUIET_START, d.quietHoursStart),
                 quietHoursEnd = prefs.time(QUIET_END, d.quietHoursEnd),
+                quietHoursDays = prefs[QUIET_DAYS]?.let(::daysFromMask) ?: d.quietHoursDays,
                 alarmBypassesQuietHours = prefs[ALARM_BYPASS_QUIET] ?: d.alarmBypassesQuietHours,
                 fatigueMaxFullScreenPerHour = prefs[FATIGUE_MAX_PER_HOUR] ?: d.fatigueMaxFullScreenPerHour,
                 fatigueGroupWindowMinutes = prefs[FATIGUE_GROUP_MINUTES] ?: d.fatigueGroupWindowMinutes,
@@ -75,6 +76,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         prefs[QUIET_ENABLED] = s.quietHoursEnabled
         prefs[QUIET_START] = s.quietHoursStart.toMinuteOfDay()
         prefs[QUIET_END] = s.quietHoursEnd.toMinuteOfDay()
+        prefs[QUIET_DAYS] = s.quietHoursDays.fold(0) { mask, day -> mask or (1 shl day.ordinal) }
         prefs[ALARM_BYPASS_QUIET] = s.alarmBypassesQuietHours
         prefs[FATIGUE_MAX_PER_HOUR] = s.fatigueMaxFullScreenPerHour
         prefs[FATIGUE_GROUP_MINUTES] = s.fatigueGroupWindowMinutes
@@ -97,6 +99,9 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     private fun Preferences.time(key: Preferences.Key<Int>, default: LocalTime): LocalTime =
         this[key]?.let { minutes -> LocalTime.of(minutes / MINUTES_PER_HOUR, minutes % MINUTES_PER_HOUR) } ?: default
 
+    // Bit n set = DayOfWeek.entries[n] (Monday is bit 0).
+    private fun daysFromMask(mask: Int): Set<DayOfWeek> = DayOfWeek.entries.filter { mask and (1 shl it.ordinal) != 0 }.toSet()
+
     private fun LocalTime.toMinuteOfDay(): Int = hour * MINUTES_PER_HOUR + minute
 
     private companion object {
@@ -109,6 +114,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val QUIET_ENABLED = booleanPreferencesKey("quiet_hours_enabled")
         val QUIET_START = intPreferencesKey("quiet_hours_start_minute")
         val QUIET_END = intPreferencesKey("quiet_hours_end_minute")
+        val QUIET_DAYS = intPreferencesKey("quiet_hours_days_mask")
         val ALARM_BYPASS_QUIET = booleanPreferencesKey("alarm_bypasses_quiet_hours")
         val FATIGUE_MAX_PER_HOUR = intPreferencesKey("fatigue_max_full_screen_per_hour")
         val FATIGUE_GROUP_MINUTES = intPreferencesKey("fatigue_group_window_minutes")

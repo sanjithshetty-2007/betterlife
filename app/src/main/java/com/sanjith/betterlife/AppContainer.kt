@@ -19,6 +19,7 @@ import com.sanjith.betterlife.data.repository.ReminderLogRepository
 import com.sanjith.betterlife.data.repository.ReminderRepository
 import com.sanjith.betterlife.data.repository.StandaloneReminderRepository
 import com.sanjith.betterlife.data.repository.TaskRepository
+import com.sanjith.betterlife.data.settings.CalmStore
 import com.sanjith.betterlife.data.settings.EventCategoryStore
 import com.sanjith.betterlife.data.settings.SettingsRepository
 import com.sanjith.betterlife.data.settings.TopTasksStore
@@ -126,6 +127,9 @@ public class AppContainer(appContext: Context) {
 
     public val projectRepository: ProjectRepository by lazy { ProjectRepository(database, nowMillis, newId) }
 
+    /** Pause, digest time and fatigue counters (Prompt 12), on disk. */
+    public val calmStore: CalmStore = CalmStore(appContext.settingsDataStore)
+
     public val topTasksStore: TopTasksStore = TopTasksStore(appContext.settingsDataStore)
 
     /** Task actions plus the alarm reschedule after each (screens use this, not the repository). */
@@ -167,6 +171,8 @@ public class AppContainer(appContext: Context) {
             },
             clock = realClock,
             allDayFireTime = { settingsRepository.current().birthdayFireTime },
+            calmStore = calmStore,
+            settings = { settingsRepository.current() },
         )
     }
 

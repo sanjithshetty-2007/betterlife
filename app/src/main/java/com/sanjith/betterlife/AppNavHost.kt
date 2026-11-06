@@ -7,6 +7,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.sanjith.betterlife.feature.calm.PauseBanner
+import com.sanjith.betterlife.feature.calm.PauseSheet
+import com.sanjith.betterlife.feature.calm.QuietCalmScreen
+import kotlinx.coroutines.delay
+import java.time.Instant
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,6 +58,7 @@ internal object Routes {
     const val REMINDER_EDITOR = "remind"
     const val REMINDER_DEFAULTS = "reminder-defaults"
     const val CENTER = "reminder-center"
+    const val QUIET = "quiet-calm"
     const val POPUP_SPIKE = "debug/popup-spike"
     const val ALARM_SPIKE = "debug/alarm-spike"
     const val DATABASE = "debug/database"
@@ -76,7 +86,11 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
     val back: () -> Unit = { navController.popBackStack() }
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
+            var pauseSheet by remember { mutableStateOf(false) }
             HomeScreen(
+                pauseBanner = activePause()?.let { until -> { PauseBanner(until) } },
+                onPause = { pauseSheet = true },
+                onOpenQuiet = { navController.navigate(Routes.QUIET) },
                 onOpenCenter = { navController.navigate(Routes.CENTER) },
                 healthProblems = healthProblems(),
                 onOpenTasks = { navController.navigate(Routes.TASKS) },
@@ -85,8 +99,10 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                 // Debug tools are unreachable in release builds.
                 debugTools = if (BuildConfig.DEBUG) debugTools(navController) else emptyList(),
             )
+            if (pauseSheet) PauseSheetHost(onDismiss = { pauseSheet = false })
         }
         composable(Routes.SETUP) { SetupScreen(onBack = back, onOpenCenter = { navController.navigate(Routes.CENTER) }) }
+        composable(Routes.QUIET) { QuietCalmScreen(onBack = back) }
         composable(Routes.CENTER) {
             ReminderCenterScreen(
                 onBack = back,
@@ -142,6 +158,30 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
             composable(Routes.ENGINE) { ReminderEngineDebugScreen(onBack = back) }
         }
     }
+}
+
+/** The end of the running pause, or null. Re-read every few seconds so the banner leaves on time. */
+@Composable
+private fun activePause(): Instant? {
+    val container = (LocalContext.current.applicationContext as BetterLifeApp).container
+    val state by container.calmStore.state.collectAsStateWithLifecycle(null)
+    val now by produceState(container.realClock.now()) {
+        while (true) {
+            delay(PAUSE_TICK_MS)
+            value = container.realClock.now()
+        }
+    }
+    return state?.pause?.until?.takeIf { it.isAfter(now) }
+}
+
+private const val PAUSE_TICK_MS = 5_000L
+
+@Composable
+private fun PauseSheetHost(onDismiss: () -> Unit) {
+    val container = (LocalContext.current.applicationContext as BetterLifeApp).container
+    val settings by container.settingsRepository.settings.collectAsStateWithLifecycle(null)
+    val s = settings ?: return
+    PauseSheet(tonight = s.snoozeTonight, holdsByDefault = !s.pauseExemptsEventsAndAlarms, onDismiss = onDismiss)
 }
 
 /** Titles of the RED Reminder Health rows, for the Home banner. Re-checked on every resume (MainActivity). */

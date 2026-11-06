@@ -122,8 +122,8 @@ public class DeliveryPipelineTest {
     }
 
     @Test
-    public fun pauseQuietHoursAndFatigueStepsPassThroughForNow() {
-        // Prompt 12 gives them real rules; their reason codes already exist.
+    public fun withNoPauseQuietHoursOrFatigueStateEverythingIsDelivered() {
+        // Their real rules are tested in DeliveryPipelineCalmTest (Prompt 12).
         listOf(Importance.NORMAL, Importance.FULL_SCREEN, Importance.ALARM).forEach { level ->
             assertEquals(DeliveryAction.DELIVER, DeliveryPipeline.decide(input(level)).action)
         }

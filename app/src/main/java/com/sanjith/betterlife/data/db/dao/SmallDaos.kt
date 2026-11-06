@@ -84,6 +84,20 @@ public interface ReminderLogDao {
     )
     public fun observeCenter(since: Long, limit: Int): Flow<List<CenterLogRow>>
 
+    /**
+     * Pop-ups that started a group since [since] (fatigue protection, Prompt 12): FIRED rows whose
+     * detail is the pop-up path, leaving out pop-ups that only joined a group.
+     */
+    @Query(
+        """
+        SELECT firedAt FROM reminder_log
+        WHERE status = 'FIRED' AND firedAt >= :since AND detail IN ('OVERLAY', 'FULL_SCREEN_INTENT')
+          AND (reasonCode IS NULL OR reasonCode != 'FATIGUE_GROUPED')
+        ORDER BY firedAt DESC
+        """,
+    )
+    public suspend fun popupStartsSince(since: Long): List<Long>
+
     /** The 60-day purge (Prompt 11). Returns how many rows were removed. */
     @Query("DELETE FROM reminder_log WHERE firedAt < :cutoff")
     public suspend fun deleteFiredBefore(cutoff: Long): Int

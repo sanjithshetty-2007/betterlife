@@ -10,6 +10,7 @@ import com.sanjith.betterlife.domain.recurrence.RecurrenceRule
 import com.sanjith.betterlife.domain.reminder.AlarmKind
 import com.sanjith.betterlife.domain.reminder.ItemTime
 import com.sanjith.betterlife.domain.reminder.ScheduleTarget
+import com.sanjith.betterlife.domain.settings.AppSettings
 import com.sanjith.betterlife.domain.time.Clock
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -94,6 +95,7 @@ public class ReminderEngineTest {
             row.taskCompleted = true
             row.status = ItemStatus.COMPLETED
         }
+        override suspend fun heldReminderIds() = rows.values.filter { it.state == ReminderState.HELD }.map { it.target.reminderId }
     }
 
     /** Like AlarmManager: one alarm per reminder id, so setting again replaces. */
@@ -105,6 +107,13 @@ public class ReminderEngineTest {
         }
         override fun cancel(reminderId: String) {
             set.remove(reminderId)
+        }
+        var digestAlarm: Instant? = null
+        override fun setDigest(at: Instant) {
+            digestAlarm = at
+        }
+        override fun cancelDigest() {
+            digestAlarm = null
         }
     }
 
@@ -124,6 +133,12 @@ public class ReminderEngineTest {
         override fun postMissedSummary(count: Int) {
             shown += "summary:$count"
         }
+        override fun postDigest(titles: List<String>) {
+            shown += "digest:${titles.joinToString("|")}"
+        }
+        override fun postCalmNotice(until: Instant) {
+            shown += "calm:$until"
+        }
     }
 
     private data class LogRow(val id: String, val status: ReminderLogStatus, val level: Importance, val reason: ReasonCode?)
@@ -135,11 +150,15 @@ public class ReminderEngineTest {
     private val device = FakeDevice(inUse)
     private val presenter = FakePresenter()
     private val logRows = mutableListOf<LogRow>()
+    private val calmStore = InMemoryCalmStateStore()
+    private var appSettings = AppSettings()
     private val engine = ReminderEngine(
         store, alarms, device, presenter,
         log = { id, status, level, reason, _, _ -> logRows += LogRow(id, status, level, reason) },
         clock = clock,
         allDayFireTime = { LocalTime.of(9, 0) },
+        calmStore = calmStore,
+        settings = { appSettings },
     )
 
     private fun add(
@@ -375,5 +394,134 @@ public class ReminderEngineTest {
 
         assertEquals(1, logRows.count { it.status == ReminderLogStatus.DISMISSED })
         assertEquals(1, logRows.count { it.status == ReminderLogStatus.RESCHEDULED })
+    }
+
+    // Prompt 12: Pause, Quiet Hours digest, fatigue counters
+
+    @Test
+    public fun aPausedReminderIsHeldAndTheDigestAlarmIsSetForThePauseEnd() = runTest {
+        add("a", "2026-10-08T18:00", title = "Call mom")
+        engine.startPause(at("2026-10-08T19:00"), holdsCalendar = false, holdsAlarm = false)
+        assertEquals(at("2026-10-08T19:00"), alarms.digestAlarm)
+
+        assertEquals(FireOutcome.HELD, engine.onAlarm("a", at("2026-10-08T18:00")))
+
+        assertTrue(presenter.shown.isEmpty())
+        assertEquals(ReminderState.HELD, store.rows.getValue("a").state)
+        assertEquals(LogRow("a", ReminderLogStatus.HELD, Importance.FULL_SCREEN, ReasonCode.PAUSED), logRows.last())
+    }
+
+    @Test
+    public fun whenThePauseEndsHeldRemindersArriveAsOneDigest() = runTest {
+        add("a", "2026-10-08T18:00", title = "Call mom")
+        add("b", "2026-10-08T18:10", title = "Pay bill")
+        engine.startPause(at("2026-10-08T19:00"), holdsCalendar = false, holdsAlarm = false)
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+        clock.instant = at("2026-10-08T18:10")
+        engine.onAlarm("b", at("2026-10-08T18:10"))
+
+        clock.instant = at("2026-10-08T19:00")
+        engine.deliverDigest()
+
+        assertEquals(listOf("digest:Call mom|Pay bill"), presenter.shown)
+        assertEquals(ReminderState.FIRED, store.rows.getValue("a").state)
+        assertEquals(2, logRows.count { it.status == ReminderLogStatus.FIRED && it.level == Importance.NORMAL })
+        assertEquals(null, alarms.digestAlarm)
+        assertEquals(null, calmStore.read().pause)
+    }
+
+    @Test
+    public fun theDigestWaitsWhileThePauseOrQuietHoursAreStillOn() = runTest {
+        appSettings = AppSettings(quietHoursEnabled = true, quietHoursStart = LocalTime.of(18, 30), quietHoursEnd = LocalTime.of(21, 0))
+        add("a", "2026-10-08T18:00", title = "Call mom")
+        engine.startPause(at("2026-10-08T19:00"), false, false)
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+
+        // Pause over at 19:00, but Quiet Hours run until 21:00: the digest moves there.
+        clock.instant = at("2026-10-08T19:00")
+        engine.deliverDigest()
+        assertTrue(presenter.shown.isEmpty())
+        assertEquals(at("2026-10-08T21:00"), alarms.digestAlarm)
+
+        clock.instant = at("2026-10-08T21:00")
+        engine.deliverDigest()
+        assertEquals(listOf("digest:Call mom"), presenter.shown)
+    }
+
+    @Test
+    public fun thePauseEndsByItselfEvenWithNothingHeld() = runTest {
+        engine.startPause(at("2026-10-08T18:30"), false, false)
+        assertEquals(at("2026-10-08T18:30"), alarms.digestAlarm)
+
+        clock.instant = at("2026-10-08T18:30")
+        engine.deliverDigest()
+
+        assertEquals(null, calmStore.read().pause)
+        assertEquals(null, alarms.digestAlarm)
+        assertTrue(presenter.shown.isEmpty())
+    }
+
+    @Test
+    public fun resumeDeliversHeldRemindersStraightAway() = runTest {
+        add("a", "2026-10-08T18:00", title = "Call mom")
+        engine.startPause(at("2026-10-08T21:00"), false, false)
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+
+        engine.resume()
+
+        assertEquals(listOf("digest:Call mom"), presenter.shown)
+        assertEquals(null, calmStore.read().pause)
+    }
+
+    @Test
+    public fun aRebootReArmsThePendingDigest() = runTest {
+        engine.startPause(at("2026-10-08T19:00"), false, false)
+        alarms.digestAlarm = null // what a reboot does
+        engine.rescheduleAll(RescheduleTrigger.BOOT)
+        assertEquals(at("2026-10-08T19:00"), alarms.digestAlarm)
+    }
+
+    @Test
+    public fun aHeldReminderWhoseTaskWasDoneMeanwhileIsLeftOutOfTheDigest() = runTest {
+        add("a", "2026-10-08T18:00", title = "Call mom")
+        add("b", "2026-10-08T18:00", title = "Pay bill")
+        engine.startPause(at("2026-10-08T19:00"), false, false)
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+        engine.onAlarm("b", at("2026-10-08T18:00"))
+        store.rows.getValue("a").status = ItemStatus.COMPLETED
+
+        clock.instant = at("2026-10-08T19:00")
+        engine.deliverDigest()
+
+        assertEquals(listOf("digest:Pay bill"), presenter.shown)
+        assertEquals(LogRow("a", ReminderLogStatus.DISMISSED, Importance.FULL_SCREEN, ReasonCode.ITEM_COMPLETED), logRows.first { it.id == "a" && it.status == ReminderLogStatus.DISMISSED })
+    }
+
+    @Test
+    public fun threeIgnoredPopUpsInARowStartADayOfCalmToldOnce() = runTest {
+        listOf("a", "b", "c", "d").forEach { add(it, "2026-10-08T18:00") }
+        engine.dismiss("a")
+        engine.timedOut("b", 5)
+        engine.complete("c") // an answer resets the count
+        engine.dismiss("a")
+        engine.dismiss("b")
+        assertTrue(presenter.shown.none { it.startsWith("calm:") })
+        engine.timedOut("d", 5)
+
+        val calmUntil = at("2026-10-09T18:00")
+        assertEquals(1, presenter.shown.count { it == "calm:$calmUntil" })
+        assertEquals(calmUntil, calmStore.read().calmUntil)
+        assertEquals(0, calmStore.read().ignoreStreak)
+    }
+
+    @Test
+    public fun duringTheCalmPeriodPopUpsArriveAsNotifications() = runTest {
+        calmStore.update { it.copy(calmUntil = at("2026-10-09T18:00")) }
+        add("a", "2026-10-08T18:00", title = "Call mom")
+
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+
+        assertEquals(listOf("notification:Call mom:NORMAL"), presenter.shown)
+        assertEquals(ReasonCode.FATIGUE_DOWNGRADED, logRows.last().reason)
     }
 }

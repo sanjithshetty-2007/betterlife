@@ -137,6 +137,17 @@ public class ReminderEngine(
         return execute(store.fireContext(reminderId) ?: context, decision)
     }
 
+    /**
+     * Before a restore replaces the database (Prompt 13): cancel every alarm the current data set, so
+     * none is left behind. The restarted app then schedules the restored reminders.
+     */
+    public suspend fun cancelAllAlarms() {
+        lock.withLock {
+            store.scheduledIds().forEach { alarms.cancel(it) }
+            alarms.cancelDigest()
+        }
+    }
+
     /** Pause, Quiet Hours and fatigue state at [now], read from settings, the calm store and the log. */
     private suspend fun calmInputs(now: Instant): CalmInputs {
         val s = settings()

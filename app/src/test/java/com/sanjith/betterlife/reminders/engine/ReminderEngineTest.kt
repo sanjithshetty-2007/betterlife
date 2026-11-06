@@ -96,6 +96,7 @@ public class ReminderEngineTest {
             row.status = ItemStatus.COMPLETED
         }
         override suspend fun heldReminderIds() = rows.values.filter { it.state == ReminderState.HELD }.map { it.target.reminderId }
+        override suspend fun scheduledIds() = rows.values.filter { it.scheduledFireAt != null }.map { it.target.reminderId }
     }
 
     /** Like AlarmManager: one alarm per reminder id, so setting again replaces. */
@@ -523,5 +524,21 @@ public class ReminderEngineTest {
 
         assertEquals(listOf("notification:Call mom:NORMAL"), presenter.shown)
         assertEquals(ReasonCode.FATIGUE_DOWNGRADED, logRows.last().reason)
+    }
+
+    // Prompt 13: before a restore replaces the data, no alarm may be left behind.
+
+    @Test
+    public fun cancelAllAlarmsClearsEveryReminderAlarmAndTheDigest() = runTest {
+        add("a", "2026-10-09T09:00")
+        add("b", "2026-10-09T10:00", Importance.NORMAL)
+        engine.rescheduleAll(RescheduleTrigger.APP_LAUNCH)
+        engine.startPause(at("2026-10-08T19:00"), false, false)
+        assertEquals(2, alarms.set.size)
+
+        engine.cancelAllAlarms()
+
+        assertTrue(alarms.set.isEmpty())
+        assertEquals(null, alarms.digestAlarm)
     }
 }

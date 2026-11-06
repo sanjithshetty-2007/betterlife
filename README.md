@@ -43,4 +43,12 @@ I am not certain of every OriginOS 6 menu name; if one differs, note the real na
 | Tests on the connected phone | `gradlew.bat connectedDebugAndroidTest` |
 | List scheduled alarms | `adb shell dumpsys alarm \| findstr betterlife` |
 
+## Backups
+
+Home > **Backup** writes one `.zip` file wherever you choose (Downloads, Google Drive, a USB stick): a consistent copy of the database plus a small `manifest.properties` (app version, schema version, time, row counts, size, SHA-256 checksum). **Restore** checks the checksum and refuses a file from a newer app version, shows a preview of the counts, keeps a safety copy of the current data inside the app (`files/safety-backups`, newest 5), then REPLACES everything and restarts the app so every alarm is set again. Automatic backups arrive in Prompt 29.
+
+## Project status
+
+Phase 1 (the reminder core: tasks, events, birthdays, pop-ups, Reminder Center and Health, Quiet Hours, Pause, fatigue protection, backups) is finished and tagged `phase-1`. The manual regression checklist is in [docs/TESTING.md](docs/TESTING.md) under Prompt 13.
+
 The debug build installs as **BetterLife Dev** (`com.sanjith.betterlife.debug`), so it never replaces the real release app or its data.

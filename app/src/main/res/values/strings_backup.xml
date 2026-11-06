@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Backup (Prompt 13: manual export and import; automatic backups come in Prompt 29) -->
+    <string name="backup_home_button">Backup</string>
+    <string name="backup_title">Backup</string>
+    <string name="backup_never">No backup yet</string>
+    <string name="backup_last">Last backup: %1$s</string>
+    <string name="backup_last_failed">Last attempt failed: %1$s</string>
+    <string name="backup_intro">A backup is one file with everything on this phone. Save it somewhere safe, like Google Drive or a computer. Restore replaces all data with the file\'s.</string>
+    <string name="backup_now">Back up now</string>
+    <string name="backup_restore">Restore</string>
+    <string name="backup_working">Working…</string>
+    <string name="backup_saved">Backup saved: %1$d tasks, %2$d events, %3$d reminders.</string>
+    <string name="backup_failed">The backup could not be written. Try another folder.</string>
+    <string name="backup_preview">Restore preview</string>
+    <string name="backup_from">Backup from %1$s</string>
+    <string name="backup_count_tasks">%1$d tasks</string>
+    <string name="backup_count_events">%1$d events</string>
+    <string name="backup_count_reminders">%1$d reminders</string>
+    <string name="backup_count_remind_me">%1$d remind-me</string>
+    <string name="backup_count_projects">%1$d projects</string>
+    <string name="backup_safety_note">A safety copy of today\'s data is made first. Restore REPLACES everything on this phone, then the app restarts and sets every alarm again.</string>
+    <string name="backup_restore_this">Restore this backup</string>
+    <string name="backup_cancel_preview">Cancel</string>
+    <string name="backup_confirm_title">Replace everything?</string>
+    <string name="backup_confirm_body">All tasks, events and reminders on this phone are replaced by the backup from %1$s. A safety copy is kept inside the app.</string>
+    <string name="backup_confirm_yes">Replace and restart</string>
+
+    <!-- Why a file cannot be restored -->
+    <string name="backup_problem_not_a_backup">This file is not a BetterLife backup.</string>
+    <string name="backup_problem_newer_format">This backup was made by a newer version of BetterLife. Update the app first.</string>
+    <string name="backup_problem_newer_schema">This backup comes from a newer version of the app, so this one cannot read it. Update the app first.</string>
+    <string name="backup_problem_checksum">This backup is damaged (its checksum does not match). Try another copy.</string>
+    <string name="backup_problem_unreadable">The database inside this backup cannot be opened.</string>
+    <string name="backup_problem_io">The file could not be read.</string>
+
+    <!-- Debug integrity check -->
+    <string name="integrity_title">Database integrity</string>
+    <string name="integrity_check">Check</string>
+    <string name="integrity_fix">Fix</string>
+    <string name="integrity_clean">No broken references.</string>
+    <string name="integrity_orphan_reminders">Reminders whose item is missing: %1$d</string>
+    <string name="integrity_deleted_items">Reminders of deleted items: %1$d</string>
+    <string name="integrity_missing_project">Tasks in a missing project: %1$d</string>
+    <string name="integrity_missing_parent">Subtasks of a missing task: %1$d</string>
+    <string name="integrity_log_rows">Log rows of removed reminders (kept as history): %1$d</string>
+    <string name="integrity_fixed">Fixed. Alarms rescheduled.</string>
+
+    <string name="task_project_tag">\@%1$s</string>
+</resources>

@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.sanjith.betterlife.data.db.dao.EventDao
+import com.sanjith.betterlife.data.db.dao.IntegrityDao
 import com.sanjith.betterlife.data.db.dao.ProjectDao
 import com.sanjith.betterlife.data.db.dao.ReminderDao
 import com.sanjith.betterlife.data.db.dao.ReminderLogDao
@@ -28,7 +29,7 @@ import com.sanjith.betterlife.data.db.entity.TaskEntity
  * Destructive migration is never enabled: a missing migration crashes loudly instead of wiping data.
  */
 @Database(
-    version = 4,
+    version = BetterLifeDatabase.VERSION,
     exportSchema = true,
     entities = [
         ProjectEntity::class,
@@ -49,9 +50,13 @@ public abstract class BetterLifeDatabase : RoomDatabase() {
     public abstract fun reminderLogDao(): ReminderLogDao
     public abstract fun syncCursorDao(): SyncCursorDao
     public abstract fun standaloneReminderDao(): StandaloneReminderDao
+    public abstract fun integrityDao(): IntegrityDao
 
     public companion object {
         public const val FILE_NAME: String = "betterlife.db"
+
+        /** The current schema version; backups from a newer one are refused (Prompt 13). */
+        public const val VERSION: Int = 4
 
         /** Version 2 (Prompt 7): the reminder engine's local schedule columns. Both start empty. */
         public val MIGRATION_1_2: Migration = object : Migration(1, 2) {

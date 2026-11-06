@@ -108,7 +108,7 @@ private fun RowDetails(row: TaskRowUi, dueText: String?) {
                 modifier = Modifier.size(Dimens.smallIconSize),
             )
         }
-        row.projectName?.let { DetailText("@$it", MaterialTheme.colorScheme.onSurfaceVariant) }
+        row.projectName?.let { DetailText(stringResource(R.string.task_project_tag, it), MaterialTheme.colorScheme.onSurfaceVariant) }
         if (row.subtasksTotal > 0) {
             DetailText(stringResource(R.string.task_subtasks, row.subtasksDone, row.subtasksTotal), MaterialTheme.colorScheme.onSurfaceVariant)
         }

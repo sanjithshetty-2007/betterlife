@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.sanjith.betterlife.feature.backup.BackupScreen
 import com.sanjith.betterlife.feature.calm.PauseBanner
 import com.sanjith.betterlife.feature.calm.PauseSheet
 import com.sanjith.betterlife.feature.calm.QuietCalmScreen
@@ -59,6 +60,7 @@ internal object Routes {
     const val REMINDER_DEFAULTS = "reminder-defaults"
     const val CENTER = "reminder-center"
     const val QUIET = "quiet-calm"
+    const val BACKUP = "backup"
     const val POPUP_SPIKE = "debug/popup-spike"
     const val ALARM_SPIKE = "debug/alarm-spike"
     const val DATABASE = "debug/database"
@@ -91,6 +93,7 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                 pauseBanner = activePause()?.let { until -> { PauseBanner(until) } },
                 onPause = { pauseSheet = true },
                 onOpenQuiet = { navController.navigate(Routes.QUIET) },
+                onOpenBackup = { navController.navigate(Routes.BACKUP) },
                 onOpenCenter = { navController.navigate(Routes.CENTER) },
                 healthProblems = healthProblems(),
                 onOpenTasks = { navController.navigate(Routes.TASKS) },
@@ -103,6 +106,7 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
         }
         composable(Routes.SETUP) { SetupScreen(onBack = back, onOpenCenter = { navController.navigate(Routes.CENTER) }) }
         composable(Routes.QUIET) { QuietCalmScreen(onBack = back) }
+        composable(Routes.BACKUP) { BackupScreen(onBack = back) }
         composable(Routes.CENTER) {
             ReminderCenterScreen(
                 onBack = back,

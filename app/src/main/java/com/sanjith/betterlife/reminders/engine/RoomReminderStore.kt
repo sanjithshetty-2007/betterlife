@@ -114,6 +114,8 @@ public class RoomReminderStore(
 
     override suspend fun heldReminderIds(): List<String> = reminderDao.getHeldIds()
 
+    override suspend fun scheduledIds(): List<String> = reminderDao.getScheduledIds()
+
     /** The parts of a task or event the engine needs. */
     private data class ItemInfo(
         val title: String,

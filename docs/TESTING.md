@@ -221,3 +221,35 @@ Rules in short: Pause beats Quiet Hours beats fatigue. Held reminders come back 
 | 10 | Close 3 pop-ups in a row with Back | A one-time notice "Pop-ups are taking a break"; Quiet & calm shows "Calm until …" with End now | |
 | 11 | Call yourself from another phone while a pop-up reminder fires | Notification only; Center reason "You were on a call…" | |
 | 12 | Pause, then restart the phone before it ends | The pause still ends on time and the digest arrives | |
+
+## Prompt 13: Phase 1 regression checklist (GATE)
+
+Run every row on the V50e with the latest debug build before Phase 2 starts. Tick Result with PASS, or write what happened. Anything that fails goes through Template 4 first. Times are phone time. "Pop-up" means a reminder at the Pop-up level; create test reminders in Tasks (+), Agenda (+ > Remind me) or with Reminder Health's test buttons.
+
+Before you start: Home > Reminder Health shows 10/10 (fix any red row first), and Home > Backup > Back up now, saved somewhere safe.
+
+| # | Area | Steps | Expected | Result |
+|---|---|---|---|---|
+| R1 | Overlay over an app | Remind me in 2 min (Pop-up). Open Chrome and keep using it | The pop-up appears on top of Chrome with sound; Done closes it; Chrome is untouched | |
+| R2 | Locked screen | Remind me in 2 min (Pop-up). Lock the phone, screen off | The screen wakes and the pop-up shows over the lock screen; Done works after unlocking if asked | |
+| R3 | Alarm level on silent | Ringer on silent. Remind me in 2 min at Alarm level | Loud alarm sound plays anyway; Done stops it at once | |
+| R4 | After swipe-away | Reminder Health > Test after closing. Swipe BetterLife away in recent apps | Pop-up arrives on its own; Health says "arrived … 0-2 s after it was due" | AI PASS 2026-11-06 (process killed with adb, 0 s) |
+| R5 | After reboot | Remind me in 10 min (Pop-up). Restart the phone, unlock, wait | It fires on time after the reboot | |
+| R6 | Missed while off | Remind me in 3 min. Turn the phone OFF for 5 min, turn on | ONE "missed" notification (count only); Reminder Center lists it as Missed: "The phone was off…" | |
+| R7 | Early reminder 1 day before | Add a birthday for tomorrow | Alarm for today 09:00 (if still ahead) and tomorrow 09:00 in the alarm list | AI PASS 2026-11-04 (tomorrow 09:00; today's 09:00 had passed) |
+| R8 | Repeating task | Daily task at now + 3 min with a Pop-up reminder; tap Done on the pop-up | Tomorrow's copy appears in Upcoming with its reminder | |
+| R9 | Quiet Hours | Quiet & calm: switch on, From = now + 2 min, To = now + 6 min. Task reminder at now + 3 min | Nothing at +3 min; Center: Held "Held because Quiet Hours were active."; ONE digest at +6 min | |
+| R10 | Pause | I'm busy > 30 min, then Reminder Health > Test in 10 s | No pop-up; Center Held (paused); Resume gives ONE digest | AI PASS 2026-11-06 |
+| R11 | Pause exemptions | Pause 30 min, Agenda event at now + 2 min | The event still pops up (calendar is exempt by default) | |
+| R12 | Fatigue: 4 per hour | 4 Pop-up reminders 12 min apart | The 4th is a normal notification; Center reason says several pop-ups | |
+| R13 | Grouping | 3 Pop-up reminders 3 min apart, do not answer the first | One pop-up window with the cards stacked; Center shows Grouped for the 2nd and 3rd | |
+| R14 | Ignored 3 times | Close 3 pop-ups in a row with Back | A one-time notice "Pop-ups are taking a break"; Quiet & calm shows Calm until … | |
+| R15 | In a call | Call the phone from another phone; while it rings or you talk, a Pop-up reminder fires | Normal notification only; Center: "You were on a call…" | |
+| R16 | Health banner | Phone settings: turn off "Display over other apps" for BetterLife Dev, come back | Red banner on Home naming it; Health row red with Fix; Fix opens the right page | |
+| R17 | Snooze | On a pop-up: Snooze > 10 min | It returns 10 min later; Center shows Snoozed ×1 | AI PASS 2026-11-06 (row seen) |
+| R18 | Edit and delete | Edit a task's time; then delete it | Alarm moves to the new time; after delete no alarm is left | AI PASS 2026-11-04 |
+| R19 | Export and import | Backup > Back up now (save the file). Add one test task. Backup > Restore > pick the file > Restore this backup > Replace and restart | App restarts; the test task is gone, everything from the backup is back, reminders still fire; Debug: database > Check says No broken references | AI PASS 2026-11-06 (counts identical, integrity clean) |
+| R20 | Refuse a bad file | Backup > Restore > pick any other file (a photo) | "This file is not a BetterLife backup." Nothing changes | |
+| R21 | Airplane mode | Airplane mode on for a day of normal use | Everything works; reminders fire (Supabase is not used yet) | |
+
+Owner gate: also use the app normally for 2 to 3 days with real tasks and write anything missed or annoying under Known issues in PROGRESS.md. Keep a backup somewhere safe before Phase 2.

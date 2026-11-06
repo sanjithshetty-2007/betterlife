@@ -64,6 +64,9 @@ public interface ReminderStore {
 
     /** Reminders held by Pause or Quiet Hours and not yet delivered in a digest. */
     public suspend fun heldReminderIds(): List<String> = emptyList()
+
+    /** Every reminder that has an alarm set right now (cancelled before a restore replaces the data). */
+    public suspend fun scheduledIds(): List<String> = emptyList()
 }
 
 /**

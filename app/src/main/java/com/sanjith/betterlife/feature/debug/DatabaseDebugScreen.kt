@@ -152,6 +152,7 @@ public fun DatabaseDebugScreen(
             status?.let {
                 Text(text = it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
             }
+            IntegritySection()
         }
     }
 }

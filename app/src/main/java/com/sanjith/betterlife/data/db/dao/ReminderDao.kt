@@ -61,6 +61,9 @@ public interface ReminderDao {
     @Query("UPDATE reminders SET snoozedUntil = NULL, snoozeCount = 0, state = :state WHERE id = :id")
     public suspend fun finish(id: String, state: ReminderState)
 
+    @Query("SELECT id FROM reminders WHERE scheduledFireAt IS NOT NULL")
+    public suspend fun getScheduledIds(): List<String>
+
     /** Reminders held by Pause or Quiet Hours, waiting for the digest (Prompt 12). */
     @Query("SELECT id FROM reminders WHERE state = 'HELD'")
     public suspend fun getHeldIds(): List<String>

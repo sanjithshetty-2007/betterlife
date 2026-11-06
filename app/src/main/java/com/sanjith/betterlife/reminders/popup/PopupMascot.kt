@@ -18,8 +18,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
+import com.sanjith.betterlife.ui.theme.Dimens
 
 private const val BLINK_CYCLE_MS = 4_000
 private const val BLINK_START_MS = 3_700
@@ -33,7 +33,7 @@ private const val EYE_CLOSED = 0.12f
  * few seconds unless animations are off.
  */
 @Composable
-public fun PopupMascot(reduceMotion: Boolean, description: String, mascotSize: Dp = 56.dp) {
+public fun PopupMascot(reduceMotion: Boolean, description: String, mascotSize: Dp = Dimens.mascotSmall) {
     val eyeOpen = if (reduceMotion) {
         EYE_OPEN
     } else {
@@ -70,7 +70,7 @@ private fun DrawScope.drawAntenna() {
     // The mood light: a soft glow around a bright bulb.
     drawCircle(
         brush = Brush.radialGradient(
-            listOf(BetterLifeColors.AccentYellow.copy(alpha = 0.6f), BetterLifeColors.AccentYellow.copy(alpha = 0f)),
+            listOf(BetterLifeColors.AccentYellow.copy(alpha = GLOW_ALPHA), BetterLifeColors.AccentYellow.copy(alpha = 0f)),
             center = top,
             radius = size.width * 0.16f,
         ),
@@ -97,3 +97,6 @@ private fun DrawScope.drawEye(at: Offset, open: Float) {
     drawCircle(BetterLifeColors.Background, radius = w * 0.3f, center = pupil)
     drawCircle(BetterLifeColors.Text, radius = w * 0.1f, center = Offset(pupil.x - w * 0.1f, pupil.y - w * 0.1f))
 }
+
+/** How bright the antenna glow starts before fading out. */
+private const val GLOW_ALPHA = 0.6f

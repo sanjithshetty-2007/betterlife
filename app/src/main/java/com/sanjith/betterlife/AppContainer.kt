@@ -11,7 +11,10 @@ import com.sanjith.betterlife.domain.time.Clock
 import com.sanjith.betterlife.domain.time.millis
 import com.sanjith.betterlife.domain.time.today
 import com.sanjith.betterlife.data.alarm.PendingAlarmStore
+import com.sanjith.betterlife.data.backup.BackupEngine
+import com.sanjith.betterlife.data.backup.BackupStatusStore
 import com.sanjith.betterlife.data.db.BetterLifeDatabase
+import com.sanjith.betterlife.data.db.IntegrityChecker
 import com.sanjith.betterlife.data.debug.SeedDataGenerator
 import com.sanjith.betterlife.data.repository.EventRepository
 import com.sanjith.betterlife.data.repository.ProjectRepository
@@ -127,6 +130,24 @@ public class AppContainer(appContext: Context) {
 
     public val projectRepository: ProjectRepository by lazy { ProjectRepository(database, nowMillis, newId) }
 
+    /** Manual export and import of the whole database (Prompt 13), on real time. */
+    public val backupEngine: BackupEngine by lazy {
+        BackupEngine(
+            database = { database },
+            databaseFile = appContext.getDatabasePath(BetterLifeDatabase.FILE_NAME),
+            workDir = appContext.cacheDir,
+            safetyDir = File(appContext.filesDir, SAFETY_BACKUP_DIR),
+            appVersion = BuildConfig.VERSION_NAME,
+            nowMillis = realNowMillis,
+            ioDispatcher = ioDispatcher,
+        )
+    }
+
+    public val backupStatusStore: BackupStatusStore = BackupStatusStore(appContext.settingsDataStore)
+
+    /** Debug integrity check for references SQLite cannot enforce (Prompt 13). */
+    public val integrityChecker: IntegrityChecker by lazy { IntegrityChecker(database, nowMillis) }
+
     /** Pause, digest time and fatigue counters (Prompt 12), on disk. */
     public val calmStore: CalmStore = CalmStore(appContext.settingsDataStore)
 
@@ -193,5 +214,6 @@ public class AppContainer(appContext: Context) {
 
     private companion object {
         const val DEBUG_LOG_FILE = "debug_log.txt"
+        const val SAFETY_BACKUP_DIR = "safety-backups"
     }
 }

@@ -153,7 +153,7 @@ public class ReminderEngineTest {
     private val presenter = FakePresenter()
     private val logRows = mutableListOf<LogRow>()
     private val calmStore = InMemoryCalmStateStore()
-    private var appSettings = AppSettings()
+    private var appSettings = AppSettings(normalRemindersRing = false)
     private var rangeUntil: Instant? = null
     private val engine = ReminderEngine(
         store, alarms, device, presenter,
@@ -426,6 +426,42 @@ public class ReminderEngineTest {
         assertEquals(List(4) { "popup:Pills:FULL_SCREEN" }, presenter.shown)
         assertEquals(3, logRows.count { it.status == ReminderLogStatus.SNOOZED })
         assertEquals(0, logRows.count { it.status == ReminderLogStatus.MISSED })
+    }
+
+    @Test
+    public fun aReminderLevelItemRingsLikeAPopUpAndComesBack() = runTest {
+        appSettings = AppSettings(normalRemindersRing = true)
+        val row = add("a", "2026-10-08T18:00", importance = Importance.NORMAL, title = "Pills")
+        engine.rescheduleAll(RescheduleTrigger.MANUAL)
+        assertEquals(AlarmKind.ALARM_CLOCK, alarms.set["a"]?.second)
+
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+        assertEquals(listOf("popup:Pills:FULL_SCREEN"), presenter.shown)
+
+        engine.timedOut("a", 5)
+        assertEquals(at("2026-10-08T18:10"), row.snoozedUntil)
+    }
+
+    @Test
+    public fun withTheSwitchOffAReminderLevelItemIsAPlainNotification() = runTest {
+        add("a", "2026-10-08T18:00", importance = Importance.NORMAL, title = "Pills")
+        engine.rescheduleAll(RescheduleTrigger.MANUAL)
+        assertEquals(AlarmKind.EXACT_WHILE_IDLE, alarms.set["a"]?.second)
+
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+        assertEquals(listOf("notification:Pills:NORMAL"), presenter.shown)
+    }
+
+    @Test
+    public fun aRingingReminderLevelItemIsStillAQuietNotificationInACall() = runTest {
+        appSettings = AppSettings(normalRemindersRing = true)
+        device.call = true
+        val row = add("a", "2026-10-08T18:00", importance = Importance.NORMAL, title = "Pills")
+
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+
+        assertEquals(listOf("notification:Pills:NORMAL"), presenter.shown)
+        assertEquals(at("2026-10-08T18:10"), row.snoozedUntil)
     }
 
     @Test

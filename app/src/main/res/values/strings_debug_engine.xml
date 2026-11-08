@@ -3,7 +3,7 @@
     <!-- Debug-only reminder engine screen (Prompt 7) -->
     <string name="engine_home_button">Debug: reminder engine</string>
     <string name="engine_title">Reminder engine</string>
-    <string name="engine_help">Each button creates a test task with one reminder at that level. Normal = notification, Full = pop-up, Alarm = pop-up plus loud sound (even on silent).</string>
+    <string name="engine_help">Each button creates a test task with one reminder at that level. All three ring unless a switch on More says otherwise; Alarm also skips pauses and fatigue.</string>
     <string name="engine_create">+%1$d min %2$s</string>
     <string name="engine_level_normal">Normal</string>
     <string name="engine_level_full">Full</string>

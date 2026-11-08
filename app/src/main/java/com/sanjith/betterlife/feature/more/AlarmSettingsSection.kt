@@ -26,6 +26,7 @@ import com.sanjith.betterlife.domain.settings.AppSettings
 import com.sanjith.betterlife.feature.calm.Stepper
 import com.sanjith.betterlife.feature.events.SwitchRow
 import com.sanjith.betterlife.feature.tasks.SectionLabel
+import com.sanjith.betterlife.reminders.engine.RescheduleTrigger
 import com.sanjith.betterlife.ui.theme.Dimens
 import kotlinx.coroutines.launch
 
@@ -89,6 +90,13 @@ internal fun AlarmSettingsSection(s: AppSettings) {
         sidePadding = 0.dp,
     ) { delta -> update { it.copy(autoSnoozeMinutes = (it.autoSnoozeMinutes + delta).coerceIn(1, AppSettings.MAX_AUTO_SNOOZE_MINUTES)) } }
     SwitchRow(stringResource(R.string.alarm_ring_on_silent), s.popupsRingOnSilent) { on -> update { it.copy(popupsRingOnSilent = on) } }
+    SwitchRow(stringResource(R.string.alarm_normal_rings), s.normalRemindersRing) { on ->
+        scope.launch {
+            container.settingsRepository.update { it.copy(normalRemindersRing = on) }
+            // The alarm kind depends on it.
+            container.reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL)
+        }
+    }
 }
 
 private const val AUDIO_FILES = "audio/*"

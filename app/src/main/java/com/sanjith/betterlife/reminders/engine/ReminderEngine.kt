@@ -10,6 +10,7 @@ import com.sanjith.betterlife.domain.delivery.FatigueInputs
 import com.sanjith.betterlife.domain.delivery.IgnoreStreak
 import com.sanjith.betterlife.domain.delivery.ItemStatus
 import com.sanjith.betterlife.domain.delivery.Pause
+import com.sanjith.betterlife.domain.delivery.deliveryLevel
 import com.sanjith.betterlife.domain.delivery.PresentationPath
 import com.sanjith.betterlife.domain.delivery.QuietHours
 import com.sanjith.betterlife.domain.delivery.QuietHoursSettings
@@ -76,7 +77,9 @@ public class ReminderEngine(
             alarms.cancel(id)
             store.setScheduledFireAt(id, null)
         }
-        val targets = store.loadTargets()
+        // Ringing reminders get the most reliable alarm kind, whatever level they are stored at.
+        val normalRings = settings().normalRemindersRing
+        val targets = store.loadTargets().map { it.copy(importance = deliveryLevel(it.importance, normalRings)) }
         val byId = targets.associateBy { it.reminderId }
         val plan = SchedulePlanner.plan(targets, now, clock.zone, allDayFireTime())
         val exactAllowed = alarms.canScheduleExact()
@@ -129,10 +132,11 @@ public class ReminderEngine(
         if (!store.markFired(reminderId, fireAt, state)) return FireOutcome.DUPLICATE
         val now = clock.now()
         // Re-read after markFired: a normal (not snoozed) firing has just reset the snooze count.
-        val fired = store.fireContext(reminderId) ?: context
+        val stored = store.fireContext(reminderId) ?: context
+        val fired = stored.copy(importance = deliveryLevel(stored.importance, settings().normalRemindersRing))
         val decision = DeliveryPipeline.decide(
             DeliveryInput(
-                importance = context.importance,
+                importance = fired.importance,
                 itemStatus = context.itemStatus,
                 device = device.presentationInputs(),
                 callActive = device.callActive(),

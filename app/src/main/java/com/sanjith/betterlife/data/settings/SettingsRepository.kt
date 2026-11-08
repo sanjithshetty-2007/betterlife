@@ -43,6 +43,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 autoSnoozeMinutes = prefs[AUTO_SNOOZE] ?: d.autoSnoozeMinutes,
                 alarmSoundUri = prefs[ALARM_SOUND] ?: d.alarmSoundUri,
                 popupsRingOnSilent = prefs[RING_ON_SILENT] ?: d.popupsRingOnSilent,
+                normalRemindersRing = prefs[NORMAL_RINGS] ?: d.normalRemindersRing,
                 quietHoursEnabled = prefs[QUIET_ENABLED] ?: d.quietHoursEnabled,
                 quietHoursStart = prefs.time(QUIET_START, d.quietHoursStart),
                 quietHoursEnd = prefs.time(QUIET_END, d.quietHoursEnd),
@@ -89,6 +90,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         prefs[AUTO_SNOOZE] = s.autoSnoozeMinutes
         if (s.alarmSoundUri == null) prefs.remove(ALARM_SOUND) else prefs[ALARM_SOUND] = s.alarmSoundUri
         prefs[RING_ON_SILENT] = s.popupsRingOnSilent
+        prefs[NORMAL_RINGS] = s.normalRemindersRing
         prefs[QUIET_ENABLED] = s.quietHoursEnabled
         prefs[QUIET_START] = s.quietHoursStart.toMinuteOfDay()
         prefs[QUIET_END] = s.quietHoursEnd.toMinuteOfDay()
@@ -127,6 +129,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val AUTO_SNOOZE = intPreferencesKey("auto_snooze_minutes")
         val ALARM_SOUND = stringPreferencesKey("alarm_sound_uri")
         val RING_ON_SILENT = booleanPreferencesKey("popups_ring_on_silent")
+        val NORMAL_RINGS = booleanPreferencesKey("normal_reminders_ring")
         val MASCOT_NAME = stringPreferencesKey("mascot_name")
         val OWNER_NAME = stringPreferencesKey("owner_name")
         val HABIT_NUDGE_ENABLED = booleanPreferencesKey("habit_nudge_enabled")

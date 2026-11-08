@@ -22,6 +22,8 @@ public data class AppSettings(
     val alarmSoundUri: String? = null,
     /** Pop-ups ring on the alarm stream, so also on silent; off = they follow the ringer (vibration always). */
     val popupsRingOnSilent: Boolean = true,
+    /** Reminder-level (NORMAL) items ring like pop-ups instead of being a plain notification (owner, 2026-11-08). */
+    val normalRemindersRing: Boolean = true,
     val quietHoursEnabled: Boolean = false,
     /** May cross midnight: 22:00 to 07:00 is valid. */
     val quietHoursStart: LocalTime = LocalTime.of(22, 0),

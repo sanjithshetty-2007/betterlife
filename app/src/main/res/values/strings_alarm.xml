@@ -10,4 +10,5 @@
     <string name="alarm_snooze_for">Then come back after</string>
     <string name="alarm_snooze_for_detail">It repeats until you answer.</string>
     <string name="alarm_ring_on_silent">Pop-ups ring when the phone is on silent</string>
+    <string name="alarm_normal_rings">Reminder level rings like a pop-up</string>
 </resources>

@@ -269,6 +269,8 @@ Owner gate: also use the app normally for 2 to 3 days with real tasks and write 
 | 9 | Habits: tap a past box (done or not) | Nothing happens; only today's box reacts | **PASS** (AI on the phone: days 5 and 7 unchanged, no Undo) |
 | 10 | Tick today's box, then tick a task, on Habits, Today and Tasks | A firm buzz, a burst of colour, the title struck through before the row leaves | **PASS** (AI: burst and strike-through seen, buzz logged; feel is yours to judge) |
 | 11 | Habits > ⋮ > Vibrate on done off | Ticks are silent to the hand; the alarm still vibrates | |
+| 12 | A reminder at the plain Reminder level, or a habit's daily reminder | It rings, vibrates and lights the screen like a pop-up, and comes back if unanswered | **PASS** (AI: a Normal test reminder from Debug: reminder engine showed the pop-up and rang) |
+| 13 | More > Alarm > Reminder level rings like a pop-up: off, then a Reminder-level item | A plain notification again | **PASS** (unit test) |
 
 ## Prompt 17: Today, nudges, comeback, Minimum Day, pause mode (GATE)
 

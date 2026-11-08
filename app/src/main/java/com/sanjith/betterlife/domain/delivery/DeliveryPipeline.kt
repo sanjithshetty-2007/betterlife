@@ -8,6 +8,14 @@ import java.time.Instant
 /** Whether the item behind a reminder still wants it. */
 public enum class ItemStatus { ACTIVE, COMPLETED, DELETED }
 
+/**
+ * The level a reminder is delivered at: with [normalRings] on, a Reminder-level item rings like a
+ * pop-up (owner, 2026-11-08). The stored level stays NORMAL, so turning it off restores it. Being
+ * degraded by a phone call or by fatigue still ends in a notification.
+ */
+public fun deliveryLevel(stored: Importance, normalRings: Boolean): Importance =
+    if (normalRings && stored == Importance.NORMAL) Importance.FULL_SCREEN else stored
+
 /** Everything the pipeline needs to know at the moment a reminder fires. */
 public data class DeliveryInput(
     val importance: Importance,

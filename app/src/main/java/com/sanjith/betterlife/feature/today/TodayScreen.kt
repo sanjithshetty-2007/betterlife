@@ -3,10 +3,10 @@ package com.sanjith.betterlife.feature.today
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,9 +26,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -38,11 +40,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanjith.betterlife.R
-import com.sanjith.betterlife.core.isReducedMotion
+import com.sanjith.betterlife.core.rememberReducedMotion
 import com.sanjith.betterlife.domain.habit.Consistency
 import com.sanjith.betterlife.domain.today.TodayItem
 import com.sanjith.betterlife.feature.account.SyncIndicatorLine
 import com.sanjith.betterlife.ui.mascot.Mascot
+import com.sanjith.betterlife.ui.nav.tabContentPadding
+import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
 import java.time.format.DateTimeFormatter
@@ -86,7 +90,7 @@ public fun TodayScreen(
         val snapshot = state.snapshot
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(Spacing.md),
+            contentPadding = tabContentPadding(),
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             item { Header(state, actions.openAccount) }
@@ -158,14 +162,15 @@ private fun Header(ui: TodayUi, onOpenAccount: () -> Unit) {
 /** Progress ring for today, consistency first with the streak beside it, and the counts. */
 @Composable
 private fun Hero(snapshot: TodaySnapshot) {
-    val reduced = LocalContext.current.isReducedMotion()
+    val reduced = rememberReducedMotion()
     val progress by animateFloatAsState(snapshot.progressPercent / PERCENT, animationSpec = tween(if (reduced) 0 else RING_MILLIS), label = "ring")
     Card(
         shape = MaterialTheme.shapes.extraLarge,
         border = BorderStroke(Dimens.borderWidth, MaterialTheme.colorScheme.outline),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
-        Row(Modifier.fillMaxWidth().padding(Spacing.md), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        val glow = remember { Brush.horizontalGradient(listOf(Color.Transparent, BetterLifeColors.HeroGlow)) }
+        Row(Modifier.fillMaxWidth().background(glow).padding(Spacing.md), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
             val ringDescription = stringResource(R.string.today_progress_description, snapshot.progressPercent)
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(Dimens.healthRing).semantics(mergeDescendants = true) { contentDescription = ringDescription }) {
                 CircularProgressIndicator(

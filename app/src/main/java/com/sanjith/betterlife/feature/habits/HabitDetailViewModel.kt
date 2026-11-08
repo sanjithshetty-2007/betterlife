@@ -15,9 +15,11 @@ import com.sanjith.betterlife.domain.habit.DayState
 import com.sanjith.betterlife.domain.habit.HabitHistory
 import com.sanjith.betterlife.domain.habit.StreakCalculator
 import com.sanjith.betterlife.domain.habit.StreakSummary
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -65,7 +67,7 @@ public class HabitDetailViewModel(
             boxes = HabitGridModel.boxes(history, YearMonth.from(today), today),
             haptics = s.habitTickHaptics,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     public fun toggle(box: GridBox) {
         val date = box.date ?: return

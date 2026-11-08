@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.sanjith.betterlife.AppContainer
-import com.sanjith.betterlife.core.isReducedMotion
+import com.sanjith.betterlife.core.rememberReducedMotion
 import com.sanjith.betterlife.domain.popup.SnoozeRules
 import com.sanjith.betterlife.domain.settings.AppSettings
 import com.sanjith.betterlife.domain.time.zonedNow
@@ -28,7 +28,7 @@ public fun PopupHost(container: AppContainer, onScreenLock: Boolean) {
     val dateFormat = remember { DateFormat.getMediumDateFormat(context) }
     val ui = PopupUi(
         hideTitles = onScreenLock && settings.hideTitleOnLockScreen,
-        reduceMotion = context.isReducedMotion(),
+        reduceMotion = rememberReducedMotion(),
         snoozeOptions = { card ->
             SnoozeRules.options(clock.zonedNow(), settings.snoozeTonight, settings.snoozeTomorrow, settings.rolloverHour, card.eventEnd)
         },

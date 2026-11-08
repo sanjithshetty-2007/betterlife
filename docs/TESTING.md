@@ -254,6 +254,19 @@ Before you start: Home > Reminder Health shows 10/10 (fix any red row first), an
 
 Owner gate: also use the app normally for 2 to 3 days with real tasks and write anything missed or annoying under Known issues in PROGRESS.md. Keep a backup somewhere safe before Phase 2.
 
+## Owner's change 2026-11-08: floating bar, smoother app, profile build
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | Look at the bar on each tab, then scroll Habits and More under it | A floating rounded bar you can see the screen through, no blur; labels still readable | **PASS** (AI: seen on the phone; whether it is see-through enough is yours to judge) |
+| 2 | Tap between tabs quickly | The pill slides, screens swap at once; no back arrows on Tasks, Habits, Calendar | **PASS** (AI: 50 tab taps, smoothness is yours to judge) |
+| 3 | Open a task or a habit, then go back | A short slide and fade both ways; the bar leaves and returns | |
+| 4 | Scroll to the very bottom of every tab | The last row clears the bar | **PASS** (AI on More; code for the rest) |
+| 5 | Tick a habit on Habits, or a task on Tasks | The Undo snackbar shows above the bar | |
+| 6 | More > Your name: tap the field | It scrolls above the keyboard | |
+| 7 | The build on the phone | "BetterLife Dev", same habits, signed in, Reminder Health 10/10, no Debug tools on More | **PASS** (AI) |
+| 8 | Reminder Health > Test in 10 s on this build | Pop-up, ring on the alarm stream, Done stops it | **PASS** (AI) |
+
 ## Owner's change 2026-11-08: stronger alarm, habits locked to today, stronger done feedback
 
 | # | Check | Expected | Result |

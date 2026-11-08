@@ -9,12 +9,11 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import com.sanjith.betterlife.core.isReducedMotion
+import com.sanjith.betterlife.core.rememberReducedMotion
 import com.sanjith.betterlife.domain.mascot.MascotMood
 import com.sanjith.betterlife.domain.mascot.MascotStage
 import kotlin.math.PI
@@ -48,9 +47,13 @@ private const val TWO_PI = 2 * PI
  */
 @Composable
 public fun Mascot(mood: MascotMood, stage: MascotStage, description: String?, modifier: Modifier = Modifier) {
-    val reduced = LocalContext.current.isReducedMotion()
-    val pose = if (reduced) restingPose(mood) else animatedPose(mood)
-    Canvas(modifier.described(description)) { drawMascot(mood, stage, pose) }
+    if (rememberReducedMotion()) {
+        MascotStatic(mood, stage, description, modifier)
+    } else {
+        val pose = animatedPose(mood)
+        // Read while drawing: the loop repeats the drawing and recomposes nothing.
+        Canvas(modifier.described(description)) { drawMascot(mood, stage, pose()) }
+    }
 }
 
 /** Blip without any animation, for places that cannot animate (home-screen widgets later). [description] null = decorative. */
@@ -73,15 +76,15 @@ public fun restingPose(mood: MascotMood): MascotPose = when (mood) {
 }
 
 @Composable
-private fun animatedPose(mood: MascotMood): MascotPose {
+private fun animatedPose(mood: MascotMood): () -> MascotPose {
     val transition = rememberInfiniteTransition(label = "mascot")
-    val t by transition.animateFloat(
+    val cycle = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(CYCLE_MS, easing = LinearEasing), RepeatMode.Restart),
         label = "cycle",
     )
-    val blink by transition.animateFloat(
+    val blinkState = transition.animateFloat(
         initialValue = 1f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -94,6 +97,10 @@ private fun animatedPose(mood: MascotMood): MascotPose {
         ),
         label = "blink",
     )
+    return remember(mood) { { poseAt(mood, cycle.value, blinkState.value) } }
+}
+
+private fun poseAt(mood: MascotMood, t: Float, blink: Float): MascotPose {
     val wave = sin(TWO_PI * t).toFloat()
     return when (mood) {
         // Bounces twice per loop with arms waving and the bulb pulsing.

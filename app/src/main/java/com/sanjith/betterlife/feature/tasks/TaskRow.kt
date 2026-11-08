@@ -2,7 +2,6 @@ package com.sanjith.betterlife.feature.tasks
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -53,7 +52,8 @@ public fun TaskRow(
         label = "title",
     )
     Card(
-        modifier = modifier.fillMaxWidth().clickable(onClick = onOpen),
+        onClick = onOpen,
+        modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         border = BorderStroke(Dimens.borderWidth, if (row.isTop || ticked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

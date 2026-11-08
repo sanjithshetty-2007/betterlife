@@ -21,6 +21,7 @@ import com.sanjith.betterlife.domain.today.TodayKind
 import com.sanjith.betterlife.feature.habits.HabitService
 import com.sanjith.betterlife.feature.tasks.TaskService
 import com.sanjith.betterlife.domain.time.Clock
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -68,6 +70,7 @@ public class TodayViewModel(
             val snapshot = source.snapshot(d, habitService.today())
             TodayUi(snapshot, s.ownerName, mood.mood().mood, mood.stage(), clock.now().atZone(clock.zone).hour)
         }
+        .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     private val _comeback = MutableStateFlow<ComebackTrigger?>(null)

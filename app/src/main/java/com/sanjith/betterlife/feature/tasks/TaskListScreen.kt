@@ -3,7 +3,6 @@ package com.sanjith.betterlife.feature.tasks
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,12 +30,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanjith.betterlife.BetterLifeApp
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.time.today
+import com.sanjith.betterlife.ui.nav.tabBarClearance
+import com.sanjith.betterlife.ui.nav.tabContentPadding
 import com.sanjith.betterlife.ui.theme.Spacing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -47,7 +50,6 @@ private const val UNDO_WINDOW_MILLIS = 6_000L
 /** Today / Upcoming / Overdue / Inbox with quick-add on top (context.md 5.3). */
 @Composable
 public fun TaskListScreen(
-    onBack: () -> Unit,
     onOpenTask: (String?) -> Unit,
     onOpenProjects: () -> Unit,
     onOpenCheckIns: () -> Unit,
@@ -64,9 +66,9 @@ public fun TaskListScreen(
     val snackbar = remember { SnackbarHostState() }
     UndoSnackbar(undo, snackbar, viewModel)
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = tabBarClearance())) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Header(onBack, onOpenTask, onOpenProjects, onOpenCheckIns)
+            Header(onOpenTask, onOpenProjects, onOpenCheckIns)
             QuickAddBar(
                 text = text,
                 preview = preview,
@@ -87,7 +89,7 @@ public fun TaskListScreen(
             }
             val rows = tabs.rows(tab)
             if (rows.isEmpty()) {
-                Box(Modifier.fillMaxSize().padding(Spacing.lg), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().padding(tabContentPadding()).padding(Spacing.sm), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(emptyText(tab)),
                         style = MaterialTheme.typography.bodyLarge,
@@ -97,7 +99,7 @@ public fun TaskListScreen(
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(Spacing.md),
+                    contentPadding = tabContentPadding(),
                     verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                 ) {
                     items(rows, key = { it.id }) { row ->
@@ -135,16 +137,13 @@ private fun UndoSnackbar(undo: UndoOffer?, snackbar: SnackbarHostState, viewMode
 }
 
 @Composable
-private fun Header(onBack: () -> Unit, onOpenTask: (String?) -> Unit, onOpenProjects: () -> Unit, onOpenCheckIns: () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onBack) {
-            Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.setup_back), tint = MaterialTheme.colorScheme.onBackground)
-        }
+private fun Header(onOpenTask: (String?) -> Unit, onOpenProjects: () -> Unit, onOpenCheckIns: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth().padding(start = Spacing.md, end = Spacing.sm, top = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.tasks_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).semantics { heading() },
         )
         TextButton(onClick = onOpenProjects) { Text(stringResource(R.string.projects_title)) }
         TextButton(onClick = onOpenCheckIns) { Text(stringResource(R.string.check_ins_short)) }

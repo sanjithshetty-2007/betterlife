@@ -56,6 +56,15 @@ internal object BetterLifeColors {
     /** The antenna bulb when Blip is sleepy or down: the mood light turned low. */
     val BulbDim = AccentYellow.copy(alpha = 0.45f)
 
+    /**
+     * The floating tab bar: the screen shows through it (owner, 2026-11-08, no blur). This one alpha
+     * is the whole trade-off: lower is more see-through, higher keeps the labels easier to read over a card.
+     */
+    val FloatingBar = Background.copy(alpha = 0.72f)
+
+    /** The warm glow on the right of Today's progress card (docs/design). */
+    val HeroGlow = Cherry.copy(alpha = 0.4f)
+
     /** Dims whatever is behind the reminder pop-up. */
     val Scrim = Background.copy(alpha = 0.82f)
 }

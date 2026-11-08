@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sanjith.betterlife.BetterLifeApp
 import com.sanjith.betterlife.R
-import com.sanjith.betterlife.core.isReducedMotion
+import com.sanjith.betterlife.core.rememberReducedMotion
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
 import kotlinx.coroutines.delay
@@ -98,7 +98,7 @@ private const val FILL_END = 0.45f
  */
 @Composable
 public fun DoneMark(checked: Boolean, size: Dp, modifier: Modifier = Modifier) {
-    val reduced = LocalContext.current.isReducedMotion()
+    val reduced = rememberReducedMotion()
     val progress = remember { Animatable(if (checked) 1f else 0f) }
     LaunchedEffect(checked) {
         when {
@@ -161,7 +161,7 @@ private const val HOLD_MILLIS = 450L
 @Composable
 public fun DoneTick(description: String, onDone: () -> Unit, modifier: Modifier = Modifier, onTicked: () -> Unit = {}) {
     val haptics = rememberDoneHaptics()
-    val reduced = LocalContext.current.isReducedMotion()
+    val reduced = rememberReducedMotion()
     var ticked by remember { mutableStateOf(false) }
     val delivered = remember { booleanArrayOf(false) }
     val done by rememberUpdatedState(onDone)

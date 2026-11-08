@@ -52,6 +52,12 @@ public object Dimens {
     public val habitAvatar = 48.dp
     public val habitAvatarLarge = 88.dp
 
+    /** The floating tab bar and the pill that slides behind the selected icon. */
+    public val floatingBarHeight = 64.dp
+    public val tabIndicatorWidth = 56.dp
+    public val tabIndicatorHeight = 32.dp
+    public val tabIndicatorTop = 6.dp
+
     /** Yearly heatmap: the gap between day squares (the squares share the card's width). */
     public val heatmapGap = 2.dp
 }

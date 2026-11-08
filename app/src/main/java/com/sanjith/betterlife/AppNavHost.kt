@@ -1,16 +1,10 @@
 package com.sanjith.betterlife
 
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import com.sanjith.betterlife.domain.today.TodayKind
 import com.sanjith.betterlife.feature.home.HealthBanner
 import com.sanjith.betterlife.feature.more.MoreEntry
@@ -26,6 +20,7 @@ import com.sanjith.betterlife.feature.debug.MascotDebugScreen
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -45,6 +40,7 @@ import kotlinx.coroutines.delay
 import java.time.Instant
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.sanjith.betterlife.core.rememberReducedMotion
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sanjith.betterlife.domain.model.EventType
 import com.sanjith.betterlife.domain.model.ReminderItemType
@@ -127,191 +123,156 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
     // Another part of the app (a pop-up's Reschedule, a daily nudge) asked to open a screen.
     LaunchedEffect(routeToOpen) {
         val route = routeToOpen ?: return@LaunchedEffect
-        if (route != Routes.HOME) navController.navigate(route)
+        // A main screen is switched to, so it never sits on the stack twice.
+        when (route) {
+            Routes.HOME -> Unit
+            in TAB_ROUTES -> navController.navigateTab(route)
+            else -> navController.navigate(route)
+        }
         onRouteOpened()
     }
     val back: () -> Unit = { navController.popBackStack() }
     CelebrationLauncher(navController)
-    val current by navController.currentBackStackEntryAsState()
-    val route = current?.destination?.route
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { if (route in TAB_ROUTES) BottomBar(route) { navController.navigateTab(it) } },
-    ) { shellPadding ->
-    NavHost(
-        navController = navController,
-        startDestination = Routes.HOME,
-        modifier = Modifier.padding(shellPadding).consumeWindowInsets(shellPadding),
-    ) {
-        composable(Routes.HOME) {
-            val problems = healthProblems()
-            val busyUntil = activePause()
-            TodayScreen(
-                actions = TodayActions(
-                    openItem = { item ->
-                        when (item.kind) {
-                            TodayKind.TASK -> navController.navigate(Routes.taskEditor(item.id))
-                            TodayKind.EVENT -> navController.navigate(Routes.eventEditor(item.id))
-                            TodayKind.REMINDER -> navController.navigate(Routes.reminderEditor(item.id))
-                            TodayKind.HABIT -> navController.navigate(Routes.habitDetail(item.id))
-                        }
+    val reduced = rememberReducedMotion()
+    // The bar floats over the screen, so a tab screen runs to the bottom edge and scrolls under it.
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        NavHost(
+            navController = navController,
+            startDestination = Routes.HOME,
+            modifier = Modifier.fillMaxSize(),
+            enterTransition = { screenEnter(reduced, forward = true) },
+            exitTransition = { screenExit(reduced, forward = true) },
+            popEnterTransition = { screenEnter(reduced, forward = false) },
+            popExitTransition = { screenExit(reduced, forward = false) },
+        ) {
+            tab(Routes.HOME) {
+                val problems = healthProblems()
+                val busyUntil = activePause()
+                TodayScreen(
+                    actions = TodayActions(
+                        openItem = { item ->
+                            when (item.kind) {
+                                TodayKind.TASK -> navController.navigate(Routes.taskEditor(item.id))
+                                TodayKind.EVENT -> navController.navigate(Routes.eventEditor(item.id))
+                                TodayKind.REMINDER -> navController.navigate(Routes.reminderEditor(item.id))
+                                TodayKind.HABIT -> navController.navigate(Routes.habitDetail(item.id))
+                            }
+                        },
+                        newTask = { navController.navigate(Routes.taskEditor(null)) },
+                        minimumDay = { navController.navigate(Routes.MINIMUM_DAY) },
+                        comeback = { navController.navigate(Routes.COMEBACK) },
+                        seeAllTasks = { navController.navigateTab(Routes.TASKS) },
+                        openAccount = { navController.navigate(Routes.ACCOUNT) },
+                        askName = { navController.navigate(Routes.ONBOARDING_NAME) { launchSingleTop = true } },
+                    ),
+                    banners = {
+                        if (problems.isNotEmpty()) HealthBanner(problems) { navController.navigate(Routes.SETUP) }
+                        busyUntil?.let { PauseBanner(it) }
                     },
-                    newTask = { navController.navigate(Routes.taskEditor(null)) },
-                    minimumDay = { navController.navigate(Routes.MINIMUM_DAY) },
-                    comeback = { navController.navigate(Routes.COMEBACK) },
-                    seeAllTasks = { navController.navigateTab(Routes.TASKS) },
-                    openAccount = { navController.navigate(Routes.ACCOUNT) },
-                    askName = { navController.navigate(Routes.ONBOARDING_NAME) { launchSingleTop = true } },
-                ),
-                banners = {
-                    if (problems.isNotEmpty()) HealthBanner(problems) { navController.navigate(Routes.SETUP) }
-                    busyUntil?.let { PauseBanner(it) }
-                },
-            )
-        }
-        composable(Routes.MINIMUM_DAY) { MinimumDayScreen(onClose = back) }
-        composable(Routes.COMEBACK) { ComebackScreen(onClose = back) }
-        composable(Routes.ONBOARDING_NAME) { OnboardingNameScreen(onDone = back) }
-        composable(Routes.MORE) {
-            var busySheet by remember { mutableStateOf(false) }
-            MoreScreen(
-                entries = listOf(
-                    MoreEntry(R.drawable.ic_notifications, R.string.more_reminders) { navController.navigate(Routes.CENTER) },
-                    MoreEntry(R.drawable.ic_check_circle, R.string.more_health) { navController.navigate(Routes.SETUP) },
-                    MoreEntry(R.drawable.ic_tune, R.string.more_quiet) { navController.navigate(Routes.QUIET) },
-                    MoreEntry(R.drawable.ic_local_fire, R.string.more_celebrations) { navController.navigate(Routes.CELEBRATION_MESSAGES) },
-                    MoreEntry(R.drawable.ic_layers, R.string.more_backup) { navController.navigate(Routes.BACKUP) },
-                    MoreEntry(R.drawable.ic_refresh, R.string.more_account) { navController.navigate(Routes.ACCOUNT) },
-                ),
-                onBusy = { busySheet = true },
-                // Debug tools are unreachable in release builds.
-                debugTools = if (BuildConfig.DEBUG) debugTools(navController) else emptyList(),
-            )
-            if (busySheet) PauseSheetHost(onDismiss = { busySheet = false })
-        }
-        composable(Routes.SETUP) { SetupScreen(onBack = back, onOpenCenter = { navController.navigate(Routes.CENTER) }) }
-        composable(Routes.QUIET) { QuietCalmScreen(onBack = back) }
-        composable(Routes.BACKUP) { BackupScreen(onBack = back) }
-        composable(Routes.ACCOUNT) { AccountScreen(onBack = back) }
-        composable(Routes.CENTER) {
-            ReminderCenterScreen(
-                onBack = back,
-                onOpenItem = { type, id ->
-                    navController.navigate(
-                        when (type) {
-                            ReminderItemType.TASK -> Routes.taskEditor(id)
-                            ReminderItemType.EVENT -> Routes.eventEditor(id)
-                            ReminderItemType.STANDALONE -> Routes.reminderEditor(id)
-                            ReminderItemType.HABIT -> Routes.habitDetail(id)
-                        },
-                    )
-                },
-            )
-        }
-        composable(Routes.TASKS) {
-            TaskListScreen(
-                onBack = back,
-                onOpenTask = { id -> navController.navigate(Routes.taskEditor(id)) },
-                onOpenProjects = { navController.navigate(Routes.PROJECTS) },
-                onOpenCheckIns = { navController.navigate(Routes.CHECK_INS) },
-            )
-        }
-        composable("${Routes.TASK_EDITOR}/{${TaskEditorViewModel.ARG_TASK_ID}}") { TaskEditorScreen(onClose = back) }
-        composable(Routes.PROJECTS) { ProjectsScreen(onBack = back) }
-        composable(Routes.CHECK_INS) { CheckInScreen(onBack = back) }
-        composable(Routes.AGENDA) {
-            AgendaScreen(
-                onBack = back,
-                onOpen = { target ->
-                    navController.navigate(
-                        when (target) {
-                            is AgendaTarget.Event -> Routes.eventEditor(target.id)
-                            is AgendaTarget.Task -> Routes.taskEditor(target.id)
-                            is AgendaTarget.Reminder -> Routes.reminderEditor(target.id)
-                        },
-                    )
-                },
-                onNewEvent = { type -> navController.navigate(Routes.eventEditor(null, type)) },
-                onNewReminder = { navController.navigate(Routes.reminderEditor(null)) },
-                onOpenDefaults = { navController.navigate(Routes.REMINDER_DEFAULTS) },
-            )
-        }
-        composable("${Routes.EVENT_EDITOR}/{${EventEditorViewModel.ARG_TYPE}}/{${EventEditorViewModel.ARG_EVENT_ID}}") {
-            EventEditorScreen(onClose = back)
-        }
-        composable("${Routes.REMINDER_EDITOR}/{${StandaloneEditorViewModel.ARG_ID}}") { StandaloneEditorScreen(onClose = back) }
-        composable(Routes.REMINDER_DEFAULTS) { ReminderDefaultsScreen(onBack = back) }
-        composable(Routes.HABITS) {
-            HabitsScreen(
-                onBack = back,
-                onOpenHabit = { id -> navController.navigate(Routes.habitDetail(id)) },
-                onNewHabit = { navController.navigate(Routes.habitEditor(null)) },
-                onOpenCelebrations = { navController.navigate(Routes.CELEBRATION_MESSAGES) },
-            )
-        }
-        composable("${Routes.HABIT_EDITOR}/{${HabitEditorViewModel.ARG_ID}}") { HabitEditorScreen(onClose = back) }
-        composable(Routes.CELEBRATION_MESSAGES) { CelebrationMessagesScreen(onBack = back) }
-        composable(Routes.CELEBRATION) {
-            val center = (LocalContext.current.applicationContext as BetterLifeApp).container.celebrations
-            val pending by center.full.collectAsStateWithLifecycle()
-            val event = pending.firstOrNull()
-            if (event == null) {
-                LaunchedEffect(Unit) { navController.popBackStack() }
-            } else {
-                CelebrationScreen(event, onClose = { center.shown(event); navController.popBackStack() })
+                )
+            }
+            screen(Routes.MINIMUM_DAY) { MinimumDayScreen(onClose = back) }
+            screen(Routes.COMEBACK) { ComebackScreen(onClose = back) }
+            screen(Routes.ONBOARDING_NAME) { OnboardingNameScreen(onDone = back) }
+            tab(Routes.MORE) {
+                var busySheet by remember { mutableStateOf(false) }
+                MoreScreen(
+                    entries = listOf(
+                        MoreEntry(R.drawable.ic_notifications, R.string.more_reminders) { navController.navigate(Routes.CENTER) },
+                        MoreEntry(R.drawable.ic_check_circle, R.string.more_health) { navController.navigate(Routes.SETUP) },
+                        MoreEntry(R.drawable.ic_tune, R.string.more_quiet) { navController.navigate(Routes.QUIET) },
+                        MoreEntry(R.drawable.ic_local_fire, R.string.more_celebrations) { navController.navigate(Routes.CELEBRATION_MESSAGES) },
+                        MoreEntry(R.drawable.ic_layers, R.string.more_backup) { navController.navigate(Routes.BACKUP) },
+                        MoreEntry(R.drawable.ic_refresh, R.string.more_account) { navController.navigate(Routes.ACCOUNT) },
+                    ),
+                    onBusy = { busySheet = true },
+                    // Debug tools are unreachable in release builds.
+                    debugTools = if (BuildConfig.DEBUG) debugTools(navController) else emptyList(),
+                )
+                if (busySheet) PauseSheetHost(onDismiss = { busySheet = false })
+            }
+            screen(Routes.SETUP) { SetupScreen(onBack = back, onOpenCenter = { navController.navigate(Routes.CENTER) }) }
+            screen(Routes.QUIET) { QuietCalmScreen(onBack = back) }
+            screen(Routes.BACKUP) { BackupScreen(onBack = back) }
+            screen(Routes.ACCOUNT) { AccountScreen(onBack = back) }
+            screen(Routes.CENTER) {
+                ReminderCenterScreen(
+                    onBack = back,
+                    onOpenItem = { type, id ->
+                        navController.navigate(
+                            when (type) {
+                                ReminderItemType.TASK -> Routes.taskEditor(id)
+                                ReminderItemType.EVENT -> Routes.eventEditor(id)
+                                ReminderItemType.STANDALONE -> Routes.reminderEditor(id)
+                                ReminderItemType.HABIT -> Routes.habitDetail(id)
+                            },
+                        )
+                    },
+                )
+            }
+            tab(Routes.TASKS) {
+                TaskListScreen(
+                    onOpenTask = { id -> navController.navigate(Routes.taskEditor(id)) },
+                    onOpenProjects = { navController.navigate(Routes.PROJECTS) },
+                    onOpenCheckIns = { navController.navigate(Routes.CHECK_INS) },
+                )
+            }
+            screen("${Routes.TASK_EDITOR}/{${TaskEditorViewModel.ARG_TASK_ID}}") { TaskEditorScreen(onClose = back) }
+            screen(Routes.PROJECTS) { ProjectsScreen(onBack = back) }
+            screen(Routes.CHECK_INS) { CheckInScreen(onBack = back) }
+            tab(Routes.AGENDA) {
+                AgendaScreen(
+                    onOpen = { target ->
+                        navController.navigate(
+                            when (target) {
+                                is AgendaTarget.Event -> Routes.eventEditor(target.id)
+                                is AgendaTarget.Task -> Routes.taskEditor(target.id)
+                                is AgendaTarget.Reminder -> Routes.reminderEditor(target.id)
+                            },
+                        )
+                    },
+                    onNewEvent = { type -> navController.navigate(Routes.eventEditor(null, type)) },
+                    onNewReminder = { navController.navigate(Routes.reminderEditor(null)) },
+                    onOpenDefaults = { navController.navigate(Routes.REMINDER_DEFAULTS) },
+                )
+            }
+            screen("${Routes.EVENT_EDITOR}/{${EventEditorViewModel.ARG_TYPE}}/{${EventEditorViewModel.ARG_EVENT_ID}}") {
+                EventEditorScreen(onClose = back)
+            }
+            screen("${Routes.REMINDER_EDITOR}/{${StandaloneEditorViewModel.ARG_ID}}") { StandaloneEditorScreen(onClose = back) }
+            screen(Routes.REMINDER_DEFAULTS) { ReminderDefaultsScreen(onBack = back) }
+            tab(Routes.HABITS) {
+                HabitsScreen(
+                    onOpenHabit = { id -> navController.navigate(Routes.habitDetail(id)) },
+                    onNewHabit = { navController.navigate(Routes.habitEditor(null)) },
+                    onOpenCelebrations = { navController.navigate(Routes.CELEBRATION_MESSAGES) },
+                )
+            }
+            screen("${Routes.HABIT_EDITOR}/{${HabitEditorViewModel.ARG_ID}}") { HabitEditorScreen(onClose = back) }
+            screen(Routes.CELEBRATION_MESSAGES) { CelebrationMessagesScreen(onBack = back) }
+            screen(Routes.CELEBRATION) {
+                val center = (LocalContext.current.applicationContext as BetterLifeApp).container.celebrations
+                val pending by center.full.collectAsStateWithLifecycle()
+                val event = pending.firstOrNull()
+                if (event == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                } else {
+                    CelebrationScreen(event, onClose = { center.shown(event); navController.popBackStack() })
+                }
+            }
+            screen("${Routes.HABIT_DETAIL}/{${HabitDetailViewModel.ARG_ID}}") {
+                HabitDetailScreen(onBack = back, onEdit = { id -> navController.navigate(Routes.habitEditor(id)) })
+            }
+            if (BuildConfig.DEBUG) {
+                screen(Routes.POPUP_SPIKE) { PopupSpikeScreen(onBack = back) }
+                screen(Routes.ALARM_SPIKE) { AlarmSpikeScreen(onBack = back) }
+                screen(Routes.DATABASE) { DatabaseDebugScreen(onBack = back) }
+                screen(Routes.TIME_MACHINE) { TimeMachineScreen(onBack = back) }
+                screen(Routes.ENGINE) { ReminderEngineDebugScreen(onBack = back) }
+                screen(Routes.MASCOT) { MascotDebugScreen(onBack = back) }
             }
         }
-        composable("${Routes.HABIT_DETAIL}/{${HabitDetailViewModel.ARG_ID}}") {
-            HabitDetailScreen(onBack = back, onEdit = { id -> navController.navigate(Routes.habitEditor(id)) })
-        }
-        if (BuildConfig.DEBUG) {
-            composable(Routes.POPUP_SPIKE) { PopupSpikeScreen(onBack = back) }
-            composable(Routes.ALARM_SPIKE) { AlarmSpikeScreen(onBack = back) }
-            composable(Routes.DATABASE) { DatabaseDebugScreen(onBack = back) }
-            composable(Routes.TIME_MACHINE) { TimeMachineScreen(onBack = back) }
-            composable(Routes.ENGINE) { ReminderEngineDebugScreen(onBack = back) }
-            composable(Routes.MASCOT) { MascotDebugScreen(onBack = back) }
-        }
-    }
-    }
-}
-
-/** The five main screens; the bottom bar shows only on these (Prompt 17). */
-private val TAB_ROUTES = listOf(Routes.HOME, Routes.TASKS, Routes.HABITS, Routes.AGENDA, Routes.MORE)
-
-/** Switches tabs without piling screens up: one copy of each, back goes to Today. */
-private fun NavController.navigateTab(route: String) {
-    navigate(route) {
-        popUpTo(Routes.HOME) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
-    }
-}
-
-@Composable
-private fun BottomBar(current: String?, onSelect: (String) -> Unit) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-        listOf(
-            Triple(Routes.HOME, R.drawable.ic_sun, R.string.nav_today),
-            Triple(Routes.TASKS, R.drawable.ic_check_circle, R.string.nav_tasks),
-            Triple(Routes.HABITS, R.drawable.ic_grid, R.string.nav_habits),
-            Triple(Routes.AGENDA, R.drawable.ic_calendar, R.string.nav_calendar),
-            Triple(Routes.MORE, R.drawable.ic_apps, R.string.nav_more),
-        ).forEach { (tab, icon, label) ->
-            NavigationBarItem(
-                selected = current == tab,
-                onClick = { onSelect(tab) },
-                icon = { Icon(painterResource(icon), contentDescription = null) },
-                label = { Text(stringResource(label)) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                    indicatorColor = MaterialTheme.colorScheme.secondary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-            )
-        }
+        TabBar(navController)
     }
 }
 
@@ -320,13 +281,15 @@ private fun BottomBar(current: String?, onSelect: (String) -> Unit) {
 private fun activePause(): Instant? {
     val container = (LocalContext.current.applicationContext as BetterLifeApp).container
     val state by container.calmStore.state.collectAsStateWithLifecycle(null)
-    val now by produceState(container.realClock.now()) {
+    val now = produceState(container.realClock.now()) {
         while (true) {
             delay(PAUSE_TICK_MS)
             value = container.realClock.now()
         }
     }
-    return state?.pause?.until?.takeIf { it.isAfter(now) }
+    // Only the moment the pause ends reaches the screen, not every tick.
+    val active by remember { derivedStateOf { state?.pause?.until?.takeIf { it.isAfter(now.value) } } }
+    return active
 }
 
 private const val PAUSE_TICK_MS = 5_000L

@@ -2,7 +2,6 @@ package com.sanjith.betterlife.feature.home
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,7 +31,8 @@ public data class DebugTool(@StringRes val label: Int, val onOpen: () -> Unit)
 @Composable
 public fun HealthBanner(problems: List<String>, onOpen: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen),
+        onClick = onOpen,
+        modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         border = BorderStroke(Dimens.borderWidth, BetterLifeColors.StatusBad),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

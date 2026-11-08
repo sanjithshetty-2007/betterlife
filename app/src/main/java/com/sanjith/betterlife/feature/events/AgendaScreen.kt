@@ -2,12 +2,10 @@ package com.sanjith.betterlife.feature.events
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,6 +50,7 @@ import com.sanjith.betterlife.domain.event.AgendaEntry
 import com.sanjith.betterlife.domain.event.AgendaKind
 import com.sanjith.betterlife.domain.model.EventType
 import com.sanjith.betterlife.feature.tasks.DueText
+import com.sanjith.betterlife.ui.nav.tabContentPadding
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
@@ -68,7 +68,6 @@ public sealed interface AgendaTarget {
 /** The agenda list (Prompt 10): the next 60 days by day. Calendar grids come in Prompt 18. */
 @Composable
 public fun AgendaScreen(
-    onBack: () -> Unit,
     onOpen: (AgendaTarget) -> Unit,
     onNewEvent: (EventType) -> Unit,
     onNewReminder: () -> Unit,
@@ -83,9 +82,9 @@ public fun AgendaScreen(
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Header(onBack, onNewEvent, onNewReminder, onOpenDefaults)
+            Header(onNewEvent, onNewReminder, onOpenDefaults)
             if (ui.days.isEmpty()) {
-                Box(Modifier.fillMaxSize().padding(Spacing.lg), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().padding(tabContentPadding()).padding(Spacing.sm), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(R.string.agenda_empty),
                         style = MaterialTheme.typography.bodyLarge,
@@ -95,7 +94,7 @@ public fun AgendaScreen(
                 }
                 return@Column
             }
-            LazyColumn(contentPadding = PaddingValues(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            LazyColumn(contentPadding = tabContentPadding(), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 ui.days.forEach { day ->
                     item(key = day.date.toString()) { DayHeader(day.date, today, dueText) }
                     items(day.entries, key = { it.key }) { entry ->
@@ -114,17 +113,14 @@ private fun targetOf(entry: AgendaEntry): AgendaTarget = when (entry.item.kind) 
 }
 
 @Composable
-private fun Header(onBack: () -> Unit, onNewEvent: (EventType) -> Unit, onNewReminder: () -> Unit, onOpenDefaults: () -> Unit) {
+private fun Header(onNewEvent: (EventType) -> Unit, onNewReminder: () -> Unit, onOpenDefaults: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onBack) {
-            Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.setup_back), tint = MaterialTheme.colorScheme.onBackground)
-        }
+    Row(modifier = Modifier.fillMaxWidth().padding(start = Spacing.md, end = Spacing.sm, top = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.agenda_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).semantics { heading() },
         )
         TextButton(onClick = onOpenDefaults) { Text(stringResource(R.string.agenda_defaults)) }
         Box {
@@ -157,7 +153,8 @@ private fun DayHeader(date: LocalDate, today: LocalDate, dueText: DueText) {
 private fun AgendaRow(entry: AgendaEntry, colorIndex: Int?, dueText: DueText, onClick: () -> Unit) {
     val zone = LocalContext.current.let { (it.applicationContext as BetterLifeApp).container.clock.zone }
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         border = BorderStroke(Dimens.borderWidth, if (entry.conflict) BetterLifeColors.StatusWarn else MaterialTheme.colorScheme.outline),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

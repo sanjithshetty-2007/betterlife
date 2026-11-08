@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.font.FontWeight
 
 // Dark AMOLED is the only scheme for now (context.md section 9).
 private val DarkColors = darkColorScheme(
@@ -24,12 +25,23 @@ private val DarkColors = darkColorScheme(
     inversePrimary = BetterLifeColors.Cherry,
 )
 
+// docs/design: bold headlines and numbers over quiet body text, on the system font.
+private val BetterLifeTypography = Typography().run {
+    copy(
+        headlineLarge = headlineLarge.copy(fontWeight = FontWeight.Bold),
+        headlineMedium = headlineMedium.copy(fontWeight = FontWeight.Bold),
+        headlineSmall = headlineSmall.copy(fontWeight = FontWeight.Bold),
+        titleLarge = titleLarge.copy(fontWeight = FontWeight.SemiBold),
+        titleMedium = titleMedium.copy(fontWeight = FontWeight.SemiBold),
+    )
+}
+
 @Composable
 public fun BetterLifeTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = DarkColors,
         shapes = BetterLifeShapes,
-        typography = Typography(),
+        typography = BetterLifeTypography,
         content = content,
     )
 }

@@ -11,10 +11,12 @@ import com.sanjith.betterlife.data.repository.ReminderLogRepository
 import com.sanjith.betterlife.domain.reminder.CenterFilter
 import com.sanjith.betterlife.domain.reminder.ReminderLogRules
 import com.sanjith.betterlife.domain.time.Clock
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import java.time.Instant
 import java.time.LocalDate
@@ -40,7 +42,7 @@ public class ReminderCenterViewModel(logs: ReminderLogRepository, private val re
 
     public val days: StateFlow<List<CenterDay>?> = combine(logs.observeCenter(since, MAX_ROWS), filter) { rows, f ->
         groupByDay(rows.filter { f.matches(it.log.status) }, realClock.zone)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     public fun today(): LocalDate = realClock.now().atZone(realClock.zone).toLocalDate()
 

@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import com.sanjith.betterlife.BetterLifeApp
 import com.sanjith.betterlife.R
-import com.sanjith.betterlife.core.isReducedMotion
+import com.sanjith.betterlife.core.rememberReducedMotion
 import com.sanjith.betterlife.data.habit.CelebrationEvent
 import com.sanjith.betterlife.domain.mascot.CelebrationMessages
 import com.sanjith.betterlife.domain.mascot.MascotMood
@@ -118,20 +118,20 @@ private fun Confetti(modifier: Modifier) {
             Piece(random.nextFloat(), random.nextFloat(), 0.6f + random.nextFloat() * 0.8f, random.nextFloat() * 360f, random.nextInt(8), random.nextBoolean())
         }
     }
-    val reduced = LocalContext.current.isReducedMotion()
-    val t = if (reduced) {
-        0f
+    val fall = if (rememberReducedMotion()) {
+        null
     } else {
-        val fall by rememberInfiniteTransition(label = "confetti").animateFloat(
+        rememberInfiniteTransition(label = "confetti").animateFloat(
             initialValue = 0f,
             targetValue = 1f,
             animationSpec = infiniteRepeatable(tween(CONFETTI_FALL_MS, easing = LinearEasing), RepeatMode.Restart),
             label = "fall",
         )
-        fall
     }
     val palette = BetterLifeColors.CategoryPalette
     Canvas(modifier) {
+        // Read while drawing: the falling repeats the drawing and recomposes nothing.
+        val t = fall?.value ?: 0f
         val piece = Dimens.confettiPiece.toPx()
         pieces.forEach { p ->
             val y = ((p.start + t * p.speed) % 1f) * size.height

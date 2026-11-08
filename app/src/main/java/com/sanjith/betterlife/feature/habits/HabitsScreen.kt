@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -49,6 +49,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.habit.Consistency
 import com.sanjith.betterlife.ui.feedback.rememberDoneHaptics
+import com.sanjith.betterlife.ui.nav.tabBarClearance
+import com.sanjith.betterlife.ui.nav.tabContentPadding
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
@@ -62,7 +64,6 @@ private const val UNDO_WINDOW_MILLIS = 6_000L
 /** Habits (Prompt 15): one card per habit with its numbers and the 31-box grid of the month shown. */
 @Composable
 public fun HabitsScreen(
-    onBack: () -> Unit,
     onOpenHabit: (String) -> Unit,
     onNewHabit: () -> Unit,
     onOpenCelebrations: () -> Unit = {},
@@ -74,15 +75,15 @@ public fun HabitsScreen(
     val haptics = rememberDoneHaptics()
     UndoSnackbar(undo, snackbar, viewModel)
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = tabBarClearance())) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Header(onBack, onNewHabit, hapticsOn = ui?.haptics == true, onHaptics = viewModel::setHaptics, onOpenCelebrations = onOpenCelebrations)
+            Header(onNewHabit, hapticsOn = ui?.haptics == true, onHaptics = viewModel::setHaptics, onOpenCelebrations = onOpenCelebrations)
             val state = ui ?: return@Column
             MonthRow(state, viewModel)
             QuietMilestoneBanner()
             val cards = state.cards ?: return@Column
             if (cards.isEmpty()) {
-                Box(Modifier.fillMaxSize().padding(Spacing.lg), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().padding(tabContentPadding()).padding(Spacing.sm), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(R.string.habits_empty),
                         style = MaterialTheme.typography.bodyLarge,
@@ -92,7 +93,7 @@ public fun HabitsScreen(
                 }
                 return@Column
             }
-            LazyColumn(contentPadding = PaddingValues(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            LazyColumn(contentPadding = tabContentPadding(), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 items(cards, key = { it.id }, contentType = { "habit" }) { card ->
                     HabitCard(
                         card = card,
@@ -129,12 +130,9 @@ private fun UndoSnackbar(undo: HabitUndo?, snackbar: SnackbarHostState, viewMode
 }
 
 @Composable
-private fun Header(onBack: () -> Unit, onNewHabit: () -> Unit, hapticsOn: Boolean, onHaptics: (Boolean) -> Unit, onOpenCelebrations: () -> Unit) {
+private fun Header(onNewHabit: () -> Unit, hapticsOn: Boolean, onHaptics: (Boolean) -> Unit, onOpenCelebrations: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onBack) {
-            Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.setup_back), tint = MaterialTheme.colorScheme.onBackground)
-        }
+    Row(modifier = Modifier.fillMaxWidth().padding(start = Spacing.md, end = Spacing.sm, top = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.habits_title),
             style = MaterialTheme.typography.headlineMedium,
@@ -205,7 +203,7 @@ private fun HabitCard(card: HabitCardUi, pastMonth: Boolean, onOpen: () -> Unit,
     ) {
         Column(modifier = Modifier.padding(vertical = Spacing.md, horizontal = Spacing.sm), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
             Row(
-                modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget).clickable(onClick = onOpen).padding(horizontal = Spacing.sm),
+                modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget).clip(MaterialTheme.shapes.large).clickable(onClick = onOpen).padding(horizontal = Spacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             ) {

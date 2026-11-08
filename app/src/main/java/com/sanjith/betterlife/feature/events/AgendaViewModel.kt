@@ -25,9 +25,11 @@ import com.sanjith.betterlife.domain.recurrence.RecurrenceRuleText
 import com.sanjith.betterlife.domain.task.TaskDue
 import com.sanjith.betterlife.domain.time.Clock
 import com.sanjith.betterlife.domain.time.today
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import java.time.Instant
 
@@ -56,7 +58,7 @@ public class AgendaViewModel(
             days = Agenda.build(items, clock.today(), DAYS_SHOWN, clock.zone),
             categories = cats.associate { it.name.lowercase() to it.colorIndex },
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), AgendaUi())
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), AgendaUi())
 
     public fun today(): java.time.LocalDate = clock.today()
 

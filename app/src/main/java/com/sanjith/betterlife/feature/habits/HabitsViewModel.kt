@@ -1,5 +1,6 @@
 package com.sanjith.betterlife.feature.habits
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -18,11 +19,13 @@ import com.sanjith.betterlife.domain.habit.PausePeriod
 import com.sanjith.betterlife.domain.habit.StreakCalculator
 import com.sanjith.betterlife.domain.habit.StreakSummary
 import com.sanjith.betterlife.domain.settings.AppSettings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -31,6 +34,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 /** One habit card: who it is, its numbers (consistency first) and the 31 boxes of the month shown. */
+@Immutable
 public data class HabitCardUi(
     val id: String,
     val name: String,
@@ -96,7 +100,7 @@ public class HabitsViewModel(
             doneToday = habitList.count { h -> logs[h.id].orEmpty().any { it.localDate == today && it.status != HabitLogStatus.PAUSED } },
             haptics = s.habitTickHaptics,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     /** Ticks an open box, unticks a filled or paused one; greyed and future boxes do nothing. */
     public fun toggle(card: HabitCardUi, box: GridBox) {

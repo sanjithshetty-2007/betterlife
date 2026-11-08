@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -40,7 +41,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import com.sanjith.betterlife.R
-import com.sanjith.betterlife.core.isReducedMotion
+import com.sanjith.betterlife.core.rememberReducedMotion
 import com.sanjith.betterlife.ui.feedback.drawBurst
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
@@ -81,20 +82,27 @@ private class BoxLook(
 @Composable
 internal fun HabitMonthGrid(boxes: List<GridBox>, color: Color, onTap: (GridBox) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val reducedMotion = context.isReducedMotion()
-    val look = BoxLook(
-        habit = color,
-        open = BetterLifeColors.BoxOpenBorder,
-        future = MaterialTheme.colorScheme.outline,
-        today = MaterialTheme.colorScheme.primary,
-        checkTint = MaterialTheme.colorScheme.background,
-        muted = MaterialTheme.colorScheme.onSurfaceVariant,
-        shape = MaterialTheme.shapes.extraSmall,
-        check = painterResource(R.drawable.ic_check),
-        pause = painterResource(R.drawable.ic_pause_circle),
-        iconSize = Dimens.habitBoxCheck,
-        thin = Dimens.borderWidth,
-    )
+    val reducedMotion = rememberReducedMotion()
+    val colors = MaterialTheme.colorScheme
+    val shape = MaterialTheme.shapes.extraSmall
+    val check = painterResource(R.drawable.ic_check)
+    val pause = painterResource(R.drawable.ic_pause_circle)
+    // Kept between ticks: a box whose look and day did not change is skipped, so a tick redraws one box.
+    val look = remember(color, colors, shape, check, pause) {
+        BoxLook(
+            habit = color,
+            open = BetterLifeColors.BoxOpenBorder,
+            future = colors.outline,
+            today = colors.primary,
+            checkTint = colors.background,
+            muted = colors.onSurfaceVariant,
+            shape = shape,
+            check = check,
+            pause = pause,
+            iconSize = Dimens.habitBoxCheck,
+            thin = Dimens.borderWidth,
+        )
+    }
     Column(modifier) {
         boxes.chunked(HabitGridModel.COLUMNS).forEach { row ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly) {

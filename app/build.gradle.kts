@@ -51,6 +51,16 @@ android {
             // Minification stays off (context.md / Prompt 30).
             isMinifyEnabled = false
         }
+        // The build to judge speed on: release settings with the library baseline profiles applied.
+        // Same id as the debug build, so it installs over it and keeps its data. No debug tools.
+        create("profile") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-profile"
+            signingConfig = signingConfigs.getByName("debug")
+            isProfileable = true
+            matchingFallbacks += listOf("release")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -65,6 +75,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

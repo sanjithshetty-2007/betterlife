@@ -1,5 +1,6 @@
 package com.sanjith.betterlife.feature.habits
 
+import androidx.compose.runtime.Immutable
 import com.sanjith.betterlife.domain.habit.DayState
 import com.sanjith.betterlife.domain.habit.HabitHistory
 import java.time.LocalDate
@@ -28,6 +29,7 @@ public enum class BoxState {
 }
 
 /** One box: [day] 1 to 31, its date (null for a day the month does not have) and state. */
+@Immutable
 public data class GridBox(val day: Int, val date: LocalDate?, val state: BoxState, val isToday: Boolean) {
     /** Only today's box can be ticked or cleared; past days are a record (owner, 2026-11-08). */
     public val tappable: Boolean get() = isToday

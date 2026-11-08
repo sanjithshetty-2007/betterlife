@@ -25,7 +25,6 @@ import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.settings.AppSettings
 import com.sanjith.betterlife.feature.calm.Stepper
 import com.sanjith.betterlife.feature.events.SwitchRow
-import com.sanjith.betterlife.feature.tasks.SectionLabel
 import com.sanjith.betterlife.reminders.engine.RescheduleTrigger
 import com.sanjith.betterlife.ui.theme.Dimens
 import kotlinx.coroutines.launch
@@ -59,42 +58,43 @@ internal fun AlarmSettingsSection(s: AppSettings) {
         }
     }
 
-    SectionLabel(stringResource(R.string.alarm_title))
-    Text(
-        soundName(context, current) ?: stringResource(R.string.alarm_sound_default),
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onBackground,
-    )
-    Button(
-        onClick = { pickSound.launch(pickerIntent(current, context.getString(R.string.alarm_title))) },
-        modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget),
-    ) { Text(stringResource(R.string.alarm_choose_sound)) }
-    OutlinedButton(
-        onClick = { pickFile.launch(arrayOf(AUDIO_FILES)) },
-        modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget),
-    ) { Text(stringResource(R.string.alarm_choose_file)) }
-    Stepper(
-        title = stringResource(R.string.alarm_ring_for),
-        detail = stringResource(R.string.alarm_ring_for_detail),
-        value = stringResource(R.string.quiet_minutes, s.popupTimeoutMinutes),
-        canDecrease = s.popupTimeoutMinutes > 1,
-        canIncrease = s.popupTimeoutMinutes < AppSettings.MAX_RING_MINUTES,
-        sidePadding = 0.dp,
-    ) { delta -> update { it.copy(popupTimeoutMinutes = (it.popupTimeoutMinutes + delta).coerceIn(1, AppSettings.MAX_RING_MINUTES)) } }
-    Stepper(
-        title = stringResource(R.string.alarm_snooze_for),
-        detail = stringResource(R.string.alarm_snooze_for_detail),
-        value = stringResource(R.string.quiet_minutes, s.autoSnoozeMinutes),
-        canDecrease = s.autoSnoozeMinutes > 1,
-        canIncrease = s.autoSnoozeMinutes < AppSettings.MAX_AUTO_SNOOZE_MINUTES,
-        sidePadding = 0.dp,
-    ) { delta -> update { it.copy(autoSnoozeMinutes = (it.autoSnoozeMinutes + delta).coerceIn(1, AppSettings.MAX_AUTO_SNOOZE_MINUTES)) } }
-    SwitchRow(stringResource(R.string.alarm_ring_on_silent), s.popupsRingOnSilent) { on -> update { it.copy(popupsRingOnSilent = on) } }
-    SwitchRow(stringResource(R.string.alarm_normal_rings), s.normalRemindersRing) { on ->
-        scope.launch {
-            container.settingsRepository.update { it.copy(normalRemindersRing = on) }
-            // The alarm kind depends on it.
-            container.reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL)
+    SettingsGroup(stringResource(R.string.alarm_title)) {
+        Text(
+            soundName(context, current) ?: stringResource(R.string.alarm_sound_default),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Button(
+            onClick = { pickSound.launch(pickerIntent(current, context.getString(R.string.alarm_title))) },
+            modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget),
+        ) { Text(stringResource(R.string.alarm_choose_sound)) }
+        OutlinedButton(
+            onClick = { pickFile.launch(arrayOf(AUDIO_FILES)) },
+            modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget),
+        ) { Text(stringResource(R.string.alarm_choose_file)) }
+        Stepper(
+            title = stringResource(R.string.alarm_ring_for),
+            detail = stringResource(R.string.alarm_ring_for_detail),
+            value = stringResource(R.string.quiet_minutes, s.popupTimeoutMinutes),
+            canDecrease = s.popupTimeoutMinutes > 1,
+            canIncrease = s.popupTimeoutMinutes < AppSettings.MAX_RING_MINUTES,
+            sidePadding = 0.dp,
+        ) { delta -> update { it.copy(popupTimeoutMinutes = (it.popupTimeoutMinutes + delta).coerceIn(1, AppSettings.MAX_RING_MINUTES)) } }
+        Stepper(
+            title = stringResource(R.string.alarm_snooze_for),
+            detail = stringResource(R.string.alarm_snooze_for_detail),
+            value = stringResource(R.string.quiet_minutes, s.autoSnoozeMinutes),
+            canDecrease = s.autoSnoozeMinutes > 1,
+            canIncrease = s.autoSnoozeMinutes < AppSettings.MAX_AUTO_SNOOZE_MINUTES,
+            sidePadding = 0.dp,
+        ) { delta -> update { it.copy(autoSnoozeMinutes = (it.autoSnoozeMinutes + delta).coerceIn(1, AppSettings.MAX_AUTO_SNOOZE_MINUTES)) } }
+        SwitchRow(stringResource(R.string.alarm_ring_on_silent), s.popupsRingOnSilent) { on -> update { it.copy(popupsRingOnSilent = on) } }
+        SwitchRow(stringResource(R.string.alarm_normal_rings), s.normalRemindersRing) { on ->
+            scope.launch {
+                container.settingsRepository.update { it.copy(normalRemindersRing = on) }
+                // The alarm kind depends on it.
+                container.reminderEngine.rescheduleAll(RescheduleTrigger.MANUAL)
+            }
         }
     }
 }

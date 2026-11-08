@@ -110,7 +110,8 @@ private fun GroupCard(group: TodayRow.Group, onOpen: (TodayItem) -> Unit, onTick
 @Composable
 private fun RowCard(urgent: Boolean, onClick: () -> Unit, content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         border = BorderStroke(Dimens.borderWidth, if (urgent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

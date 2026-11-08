@@ -16,12 +16,14 @@ import com.sanjith.betterlife.domain.parser.QuickAddResult
 import com.sanjith.betterlife.domain.time.Clock
 import com.sanjith.betterlife.domain.time.today
 import com.sanjith.betterlife.domain.time.zonedNow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -51,7 +53,7 @@ public class TaskListViewModel(
     public val tabs: StateFlow<TaskTabs> =
         combine(tasks.observeActive(), projects.observeActive(), topTasks.observe { clock.today() }, minuteTick) { all, p, top, _ ->
             buildTaskTabs(all, p, top, clock.zonedNow())
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TaskTabs())
+        }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TaskTabs())
 
     public val selectedTab: MutableStateFlow<TaskTab> = MutableStateFlow(TaskTab.TODAY)
 

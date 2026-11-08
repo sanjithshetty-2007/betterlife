@@ -14,6 +14,7 @@ import com.sanjith.betterlife.domain.delivery.PresentationPath
 import com.sanjith.betterlife.domain.delivery.QuietHours
 import com.sanjith.betterlife.domain.delivery.QuietHoursSettings
 import com.sanjith.betterlife.domain.model.Importance
+import com.sanjith.betterlife.domain.popup.SnoozeRules
 import com.sanjith.betterlife.domain.model.ReasonCode
 import com.sanjith.betterlife.domain.model.ReminderItemType
 import com.sanjith.betterlife.domain.model.ReminderLogStatus
@@ -30,6 +31,9 @@ import java.time.Instant
 import java.time.LocalTime
 
 /** What happened when an alarm arrived (returned for tests and the debug log). */
+/** Log detail added to the firing of a snoozed reminder coming back. */
+private const val REPEAT_DETAIL = "repeat"
+
 public enum class FireOutcome { DELIVERED, HELD, DROPPED, FAILED, DUPLICATE, UNKNOWN_REMINDER }
 
 /** Log detail of a reminder delivered in the Pause / Quiet Hours digest. */
@@ -124,6 +128,8 @@ public class ReminderEngine(
         val state = if (context.recurring) ReminderState.SCHEDULED else ReminderState.FIRED
         if (!store.markFired(reminderId, fireAt, state)) return FireOutcome.DUPLICATE
         val now = clock.now()
+        // Re-read after markFired: a normal (not snoozed) firing has just reset the snooze count.
+        val fired = store.fireContext(reminderId) ?: context
         val decision = DeliveryPipeline.decide(
             DeliveryInput(
                 importance = context.importance,
@@ -132,11 +138,11 @@ public class ReminderEngine(
                 callActive = device.callActive(),
                 now = now,
                 calendarItem = context.itemType == ReminderItemType.EVENT,
+                snoozedRepeat = fired.snoozeCount > 0,
                 calm = calmInputs(now),
             ),
         )
-        // Re-read after markFired: a normal (not snoozed) firing has just reset the snooze count.
-        return execute(store.fireContext(reminderId) ?: context, decision)
+        return execute(fired, decision)
     }
 
     /**
@@ -289,15 +295,30 @@ public class ReminderEngine(
         }
     }
 
-    /** No answer before the timeout: a MISSED entry plus one quiet notification (context.md 5.1). */
+    /**
+     * No answer before the ring time ended: it snoozes itself and rings again, until answered (owner,
+     * 2026-11-08). Not counted as ignored: only closing it on purpose is. An event never comes back
+     * past its end; that one becomes a MISSED entry plus one quiet notification.
+     */
     public suspend fun timedOut(reminderId: String, timeoutMinutes: Int) {
         lock.withLock {
             val context = store.fireContext(reminderId) ?: return@withLock
-            store.finish(reminderId, if (context.recurring) ReminderState.SCHEDULED else ReminderState.MISSED)
-            log.append(reminderId, ReminderLogStatus.MISSED, context.importance, null, "no answer in $timeoutMinutes min", clock.now())
-            presenter.postNotification(reminderId, context.title, Importance.NORMAL)
-            recordIgnored()
+            if (!autoSnooze(context)) {
+                store.finish(reminderId, if (context.recurring) ReminderState.SCHEDULED else ReminderState.MISSED)
+                log.append(reminderId, ReminderLogStatus.MISSED, context.importance, null, "no answer in $timeoutMinutes min", clock.now())
+                presenter.postNotification(reminderId, context.title, Importance.NORMAL)
+            }
         }
+        rescheduleAll(RescheduleTrigger.AFTER_FIRE)
+    }
+
+    // Snoozes [context] for the owner's automatic snooze time; false when it must not come back.
+    private suspend fun autoSnooze(context: FireContext): Boolean {
+        val now = clock.now()
+        val until = SnoozeRules.autoSnoozeUntil(now, settings().autoSnoozeMinutes, context.eventEnd) ?: return false
+        val count = store.snooze(context.reminderId, until)
+        log.append(context.reminderId, ReminderLogStatus.SNOOZED, context.importance, null, ReminderLogRules.snoozeDetail(count, until), now)
+        return true
     }
 
     private suspend fun execute(context: FireContext, decision: DeliveryDecision): FireOutcome {
@@ -322,7 +343,11 @@ public class ReminderEngine(
                 return FireOutcome.FAILED
             }
         }
-        log.append(id, ReminderLogStatus.FIRED, decision.level, decision.reasonCode, decision.path.name, now)
+        // A repeat is not a new interruption: its log detail keeps it out of the fatigue count of new pop-ups.
+        val detail = if (context.snoozeCount > 0) "${decision.path.name} $REPEAT_DETAIL" else decision.path.name
+        log.append(id, ReminderLogStatus.FIRED, decision.level, decision.reasonCode, detail, now)
+        // A phone call only delays a pop-up or alarm: it comes back after the call.
+        if (decision.reasonCode == ReasonCode.IN_CALL && context.importance != Importance.NORMAL) autoSnooze(context)
         return FireOutcome.DELIVERED
     }
 }

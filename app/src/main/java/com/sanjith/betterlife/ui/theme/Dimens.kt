@@ -43,6 +43,9 @@ public object Dimens {
     /** Quiet Hours weekday circle (its touch cell is still 48 dp tall). */
     public val dayCircle = 40.dp
 
+    /** The round done mark on task and Today rows, inside its 48 dp target. */
+    public val doneMark = 30.dp
+
     /** Habits (Prompt 15): a grid box inside its 48 dp touch cell, the avatar tile, the editor's big avatar. */
     public val habitBox = 40.dp
     public val habitBoxCheck = 20.dp

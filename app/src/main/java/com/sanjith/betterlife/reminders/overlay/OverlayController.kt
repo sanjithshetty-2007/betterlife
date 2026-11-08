@@ -86,11 +86,13 @@ public class OverlayController(private val context: Context) {
         WindowManager.LayoutParams.MATCH_PARENT,
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
         // Focusable (no FLAG_NOT_FOCUSABLE) so Back and the time input reach us; drawn edge to edge.
-        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+        // The screen stays on at full brightness while a reminder is up (owner, 2026-11-08).
+        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
         PixelFormat.TRANSLUCENT,
     ).apply {
         layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
         setFitInsetsTypes(0)
+        screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
     }
 
     private companion object {

@@ -40,6 +40,7 @@ import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.model.Importance
 import com.sanjith.betterlife.domain.model.Priority
 import com.sanjith.betterlife.domain.time.today
+import com.sanjith.betterlife.ui.feedback.rememberDoneHaptics
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
 
@@ -150,9 +151,18 @@ private fun SubtasksSection(state: TaskEditorState, onAdd: (String) -> Unit, onC
         Text(stringResource(R.string.editor_subtasks_save_first), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         return
     }
+    val haptics = rememberDoneHaptics()
     state.subtasks.forEach { sub ->
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = sub.done, onCheckedChange = { if (it && !sub.done) onComplete(sub.id) })
+            Checkbox(
+                checked = sub.done,
+                onCheckedChange = {
+                    if (it && !sub.done) {
+                        haptics.done()
+                        onComplete(sub.id)
+                    }
+                },
+            )
             Text(sub.title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onBackground)
             IconButton(onClick = { onDelete(sub.id) }) {
                 Icon(painterResource(R.drawable.ic_delete), stringResource(R.string.task_delete), tint = MaterialTheme.colorScheme.onSurfaceVariant)

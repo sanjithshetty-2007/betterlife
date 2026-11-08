@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Alarm settings on More (owner's change, 2026-11-08) -->
+    <string name="alarm_title">Alarm</string>
+    <string name="alarm_sound_default">Phone\'s default alarm sound</string>
+    <string name="alarm_choose_sound">Choose alarm sound</string>
+    <string name="alarm_choose_file">Use my own audio file</string>
+    <string name="alarm_ring_for">Ring for</string>
+    <string name="alarm_ring_for_detail">Sound, strong vibration and a lit screen until you answer.</string>
+    <string name="alarm_snooze_for">Then come back after</string>
+    <string name="alarm_snooze_for_detail">It repeats until you answer.</string>
+    <string name="alarm_ring_on_silent">Pop-ups ring when the phone is on silent</string>
+</resources>

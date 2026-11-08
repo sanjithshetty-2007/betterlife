@@ -2,8 +2,6 @@ package com.sanjith.betterlife.feature.today
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -48,7 +45,8 @@ import com.sanjith.betterlife.BetterLifeApp
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.settings.AppSettings
 import com.sanjith.betterlife.feature.debug.moodLabel
-import com.sanjith.betterlife.ui.theme.BetterLifeColors
+import com.sanjith.betterlife.ui.feedback.DoneMark
+import com.sanjith.betterlife.ui.feedback.rememberDoneHaptics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import com.sanjith.betterlife.domain.habit.HabitLogStatus
@@ -185,8 +183,12 @@ private fun Subtitle(text: String) {
 @Composable
 private fun GentleCard(item: GentleItem, onTick: () -> Unit) {
     val state = stringResource(if (item.done) R.string.habit_box_state_done else R.string.habit_box_state_not_done)
+    val haptics = rememberDoneHaptics()
     Card(
-        onClick = onTick,
+        onClick = {
+            haptics.done()
+            onTick()
+        },
         enabled = !item.done,
         modifier = Modifier.fillMaxWidth().semantics {
             stateDescription = state
@@ -206,15 +208,7 @@ private fun GentleCard(item: GentleItem, onTick: () -> Unit) {
                     textDecoration = if (item.done) TextDecoration.LineThrough else null,
                 )
             }
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(Dimens.iconTile).then(
-                    if (item.done) Modifier.background(MaterialTheme.colorScheme.primary, CircleShape)
-                    else Modifier.border(Dimens.borderWidth * 2, BetterLifeColors.BoxOpenBorder, CircleShape),
-                ),
-            ) {
-                if (item.done) Icon(painterResource(R.drawable.ic_check), null, tint = MaterialTheme.colorScheme.onPrimary)
-            }
+            DoneMark(item.done, Dimens.iconTile)
         }
     }
 }

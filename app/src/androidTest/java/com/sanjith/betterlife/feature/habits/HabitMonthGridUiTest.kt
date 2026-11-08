@@ -53,14 +53,14 @@ public class HabitMonthGridUiTest {
         // 1..9 before the start + 29, 30, 31 that February 2026 does not have.
         assertEquals(12, compose.onAllNodesWithTag(GREYED_TAG, useUnmergedTree = true).fetchSemanticsNodes().size)
         compose.onNodeWithContentDescription("Day 30, not in this month").assertIsNotEnabled()
-        // Greyed, but a tick still counts: it moves the start date back.
-        compose.onNodeWithContentDescription("Day 5, before this habit started").assertIsEnabled()
+        compose.onNodeWithContentDescription("Day 5, before this habit started").assertIsNotEnabled()
     }
 
     @Test
-    public fun everyBoxIsAFortyEightDpTargetAndOnlyRealPastDaysTap() {
+    public fun everyBoxIsAFortyEightDpTargetAndOnlyTodayTaps() {
         show(start = LocalDate.of(2026, 1, 1))
-        compose.onNodeWithContentDescription("Day 12, done").assertIsEnabled().assertHeightIsAtLeast(Dimens.minTouchTarget).assertWidthIsAtLeast(Dimens.minTouchTarget)
+        compose.onNodeWithContentDescription("Day 12, done").assertIsNotEnabled().assertHeightIsAtLeast(Dimens.minTouchTarget).assertWidthIsAtLeast(Dimens.minTouchTarget)
+        compose.onNodeWithContentDescription("Day 13, not done").assertIsNotEnabled().performClick()
         compose.onNodeWithContentDescription("Day 20, today, not done yet").assertIsEnabled().performClick()
         compose.onNodeWithContentDescription("Day 21, still to come").assertIsNotEnabled().performClick()
         assertEquals(listOf(20), tapped)

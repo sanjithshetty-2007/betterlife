@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +29,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.model.Priority
+import com.sanjith.betterlife.ui.feedback.DoneTick
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
@@ -55,19 +55,11 @@ public fun TaskRow(
     Card(
         modifier = modifier.fillMaxWidth().clickable(onClick = onOpen),
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(Dimens.borderWidth, if (row.isTop) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
+        border = BorderStroke(Dimens.borderWidth, if (row.isTop || ticked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Row(modifier = Modifier.padding(Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = ticked,
-                onCheckedChange = { checked ->
-                    if (checked && !ticked) {
-                        ticked = true
-                        onComplete()
-                    }
-                },
-            )
+            DoneTick(stringResource(R.string.today_tick_task, row.title), onDone = onComplete, onTicked = { ticked = true })
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(
                     text = row.title,

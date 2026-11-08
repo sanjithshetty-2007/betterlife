@@ -68,7 +68,7 @@ public class CelebrationTest {
     }
 
     @Test
-    public fun aBackfilledSeventhDayOnlyGetsTheQuietBanner() = runBlocking {
+    public fun aPastDayCannotBeTickedSoItCelebratesNothing() = runBlocking {
         val id = service.create(HabitDraft("Meditation", "#7E8CFF"))
         listOf(14, 15, 16, 18, 19, 20).forEach { d ->
             today = nov(d)
@@ -77,8 +77,16 @@ public class CelebrationTest {
         service.tick(id, nov(17))
 
         assertEquals(emptyList<CelebrationEvent>(), center.full.value)
-        assertEquals(CelebrationEvent(id, "Meditation", 7, quiet = true), center.quiet.value)
-        center.quietSeen(center.quiet.value!!)
+        assertNull(center.quiet.value)
+    }
+
+    @Test
+    public fun aQuietMilestoneGoesToTheBannerAndClears() {
+        val event = CelebrationEvent("h", "Meditation", 7, quiet = true)
+        center.publish(event)
+        assertEquals(event, center.quiet.value)
+        assertEquals(emptyList<CelebrationEvent>(), center.full.value)
+        center.quietSeen(event)
         assertNull(center.quiet.value)
     }
 

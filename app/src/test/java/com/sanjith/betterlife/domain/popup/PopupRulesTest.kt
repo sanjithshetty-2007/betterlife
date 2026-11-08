@@ -103,26 +103,30 @@ public class PopupRulesTest {
     // Escalation
 
     @Test
-    public fun fullScreenStartsGentleAndGetsLouderEveryMinuteUntilTheTimeout() {
-        val steps = Escalation.steps(Importance.FULL_SCREEN, Duration.ofMinutes(5))
-        assertEquals(listOf(0L, 60L, 120L, 180L, 240L), steps.map { it.at.seconds })
-        assertEquals(listOf(0.4f, 0.6f, 0.8f, 1f, 1f), steps.map { it.volume }.map { Math.round(it * 10) / 10f })
-        assertTrue(steps.none { it.loop })
-    }
-
-    @Test
-    public fun nothingPlaysAtOrAfterTheTimeout() {
-        assertEquals(listOf(0L, 60L), Escalation.steps(Importance.FULL_SCREEN, Duration.ofMinutes(2)).map { it.at.seconds })
-    }
-
-    @Test
-    public fun alarmRingsInALoopAtFullVolumeFromTheStart() {
-        assertEquals(listOf(SoundStep(Duration.ZERO, 1f, loop = true)), Escalation.steps(Importance.ALARM, Duration.ofMinutes(5)))
+    public fun popUpsAndAlarmsBothRingInALoopAtFullVolumeFromTheStart() {
+        val ring = listOf(SoundStep(Duration.ZERO, 1f, loop = true))
+        assertEquals(ring, Escalation.steps(Importance.ALARM))
+        assertEquals(ring, Escalation.steps(Importance.FULL_SCREEN))
     }
 
     @Test
     public fun normalLevelIsSilentHere() {
-        assertTrue(Escalation.steps(Importance.NORMAL, Duration.ofMinutes(5)).isEmpty())
+        assertTrue(Escalation.steps(Importance.NORMAL).isEmpty())
+    }
+
+    // Automatic snooze
+
+    @Test
+    public fun anUnansweredPopUpComesBackAfterTheAutomaticSnooze() {
+        val now = Instant.parse("2026-11-08T10:00:00Z")
+        assertEquals(now.plusSeconds(600), SnoozeRules.autoSnoozeUntil(now, 10, eventEnd = null))
+        assertEquals(now.plusSeconds(600), SnoozeRules.autoSnoozeUntil(now, 10, eventEnd = now.plusSeconds(600)))
+    }
+
+    @Test
+    public fun anEventNeverComesBackPastItsEnd() {
+        val now = Instant.parse("2026-11-08T10:00:00Z")
+        assertEquals(null, SnoozeRules.autoSnoozeUntil(now, 10, eventEnd = now.plusSeconds(599)))
     }
 
     // Stack reducer

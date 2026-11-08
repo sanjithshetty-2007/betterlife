@@ -2,7 +2,6 @@ package com.sanjith.betterlife.feature.today
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,24 +11,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.model.Priority
@@ -39,6 +37,7 @@ import com.sanjith.betterlife.domain.today.TodayRow
 import com.sanjith.betterlife.domain.today.TodayTier
 import com.sanjith.betterlife.feature.calm.localTimeText
 import com.sanjith.betterlife.feature.calm.timeText
+import com.sanjith.betterlife.ui.feedback.DoneTick
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
@@ -54,10 +53,18 @@ internal fun TodayRowCard(row: TodayRow, onOpen: (TodayItem) -> Unit, onTick: (T
 
 @Composable
 private fun ItemCard(item: TodayItem, onOpen: (TodayItem) -> Unit, onTick: (TodayItem) -> Unit) {
-    RowCard(urgent = item.tier == TodayTier.URGENT_REMINDER, onClick = { onOpen(item) }) {
-        Leading(item, onTick)
+    var ticked by remember(item.id) { mutableStateOf(false) }
+    RowCard(urgent = item.tier == TodayTier.URGENT_REMINDER || ticked, onClick = { onOpen(item) }) {
+        Leading(item, onTick) { ticked = true }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            Text(item.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(
+                item.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (ticked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                textDecoration = if (ticked) TextDecoration.LineThrough else null,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
             Detail(item)
         }
     }
@@ -77,13 +84,22 @@ private fun GroupCard(group: TodayRow.Group, onOpen: (TodayItem) -> Unit, onTick
                 Text(group.items.joinToString(" · ") { it.title }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             } else {
                 group.items.forEach { item ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                        modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget).clickable { onOpen(item) },
-                    ) {
-                        Leading(item, onTick)
-                        Text(item.title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                    // Keyed: when one item leaves the group, the next must not inherit its tick.
+                    key(item.kind, item.id) {
+                        var ticked by remember { mutableStateOf(false) }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget).clickable { onOpen(item) },
+                        ) {
+                            Leading(item, onTick) { ticked = true }
+                            Text(
+                                item.title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (ticked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                                textDecoration = if (ticked) TextDecoration.LineThrough else null,
+                            )
+                        }
                     }
                 }
             }
@@ -110,12 +126,10 @@ private fun RowCard(urgent: Boolean, onClick: () -> Unit, content: @Composable a
 
 /** A round tick for tasks and habits; an icon tile for events and remind-me items. */
 @Composable
-private fun Leading(item: TodayItem, onTick: (TodayItem) -> Unit) {
+private fun Leading(item: TodayItem, onTick: (TodayItem) -> Unit, onTicked: () -> Unit = {}) {
     if (item.tier.tickable || item.kind == TodayKind.TASK) {
         val label = stringResource(if (item.kind == TodayKind.HABIT) R.string.today_tick_habit else R.string.today_tick_task, item.title)
-        IconButton(onClick = { onTick(item) }, modifier = Modifier.semantics { contentDescription = label }) {
-            Box(Modifier.size(Dimens.iconSize).border(Dimens.borderWidth * 2, BetterLifeColors.BoxOpenBorder, CircleShape))
-        }
+        DoneTick(label, onDone = { onTick(item) }, onTicked = onTicked)
     } else {
         Box(
             contentAlignment = Alignment.Center,

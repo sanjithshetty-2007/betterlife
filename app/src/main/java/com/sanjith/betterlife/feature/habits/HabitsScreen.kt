@@ -38,8 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -50,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.habit.Consistency
+import com.sanjith.betterlife.ui.feedback.rememberDoneHaptics
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
@@ -72,7 +71,7 @@ public fun HabitsScreen(
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val undo by viewModel.undo.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberDoneHaptics()
     UndoSnackbar(undo, snackbar, viewModel)
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
@@ -100,7 +99,7 @@ public fun HabitsScreen(
                         pastMonth = !state.isCurrentMonth,
                         onOpen = { onOpenHabit(card.id) },
                         onTap = { box ->
-                            if (state.haptics) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                            if (box.state == BoxState.OPEN) haptics.done() else haptics.undone()
                             viewModel.toggle(card, box)
                         },
                     )

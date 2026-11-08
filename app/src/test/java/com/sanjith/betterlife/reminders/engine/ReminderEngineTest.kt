@@ -37,6 +37,7 @@ public class ReminderEngineTest {
         var status: ItemStatus = ItemStatus.ACTIVE,
         var deleted: Boolean = false,
     ) {
+        var eventEnd: Instant? = null
         var scheduledFireAt: Instant? = target.scheduledFireAt
         var lastFired: Instant? = target.lastFiredFireAt
         var state: ReminderState = ReminderState.SCHEDULED
@@ -63,7 +64,7 @@ public class ReminderEngineTest {
         override suspend fun fireContext(reminderId: String) = rows[reminderId]?.let {
             FireContext(
                 reminderId, it.target.importance, if (it.deleted) ItemStatus.DELETED else it.status, it.title,
-                it.target.recurrence != null, it.target.offsetMinutes, snoozeCount = it.snoozeCount,
+                it.target.recurrence != null, it.target.offsetMinutes, eventEnd = it.eventEnd, snoozeCount = it.snoozeCount,
             )
         }
         override suspend fun markFired(reminderId: String, fireAt: Instant, state: ReminderState): Boolean {
@@ -406,15 +407,70 @@ public class ReminderEngineTest {
     }
 
     @Test
-    public fun timeoutLogsMissedAndPostsOneQuietNotification() = runTest {
+    public fun noAnswerSnoozesItselfAndRingsAgainUntilAnswered() = runTest {
         val row = add("a", "2026-10-08T18:00", title = "Pills")
         engine.onAlarm("a", at("2026-10-08T18:00"))
 
-        engine.timedOut("a", timeoutMinutes = 5)
+        repeat(3) { round ->
+            clock.instant = at("2026-10-08T18:00").plusSeconds(round * 900L + 300)
+            engine.timedOut("a", timeoutMinutes = 5)
+            val until = clock.instant.plusSeconds(600)
+            assertEquals(ReminderState.SNOOZED, row.state)
+            assertEquals(until, row.snoozedUntil)
+            assertEquals(until, alarms.set["a"]?.first)
+
+            clock.instant = until
+            assertEquals(FireOutcome.DELIVERED, engine.onAlarm("a", until))
+        }
+
+        assertEquals(List(4) { "popup:Pills:FULL_SCREEN" }, presenter.shown)
+        assertEquals(3, logRows.count { it.status == ReminderLogStatus.SNOOZED })
+        assertEquals(0, logRows.count { it.status == ReminderLogStatus.MISSED })
+    }
+
+    @Test
+    public fun theAutomaticSnoozeFollowsTheOwnersSetting() = runTest {
+        appSettings = AppSettings(autoSnoozeMinutes = 3)
+        val row = add("a", "2026-10-08T18:00")
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+        engine.timedOut("a", 5)
+        assertEquals(at("2026-10-08T18:03"), row.snoozedUntil)
+    }
+
+    @Test
+    public fun anEventPastItsEndBecomesMissedInsteadOfRingingAgain() = runTest {
+        val row = add("a", "2026-10-08T18:00", title = "Meeting")
+        row.eventEnd = at("2026-10-08T18:05")
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+
+        engine.timedOut("a", 5)
 
         assertEquals(ReminderState.MISSED, row.state)
-        assertEquals(listOf("popup:Pills:FULL_SCREEN", "notification:Pills:NORMAL"), presenter.shown)
+        assertEquals("notification:Meeting:NORMAL", presenter.shown.last())
         assertEquals(1, logRows.count { it.status == ReminderLogStatus.MISSED })
+    }
+
+    @Test
+    public fun aReminderComingBackIsNeverDowngradedByFatigue() = runTest {
+        calmStore.update { it.copy(calmUntil = at("2026-10-09T18:00")) }
+        add("a", "2026-10-08T18:00", title = "Pills")
+        engine.snooze("a", at("2026-10-08T18:10"))
+
+        clock.instant = at("2026-10-08T18:10")
+        engine.onAlarm("a", at("2026-10-08T18:10"))
+
+        assertEquals(listOf("popup:Pills:FULL_SCREEN"), presenter.shown)
+    }
+
+    @Test
+    public fun aPhoneCallOnlyDelaysAPopUp() = runTest {
+        device.call = true
+        val row = add("a", "2026-10-08T18:00", title = "Pills")
+
+        engine.onAlarm("a", at("2026-10-08T18:00"))
+
+        assertEquals(listOf("notification:Pills:NORMAL"), presenter.shown)
+        assertEquals(at("2026-10-08T18:10"), row.snoozedUntil)
     }
 
     @Test
@@ -534,12 +590,13 @@ public class ReminderEngineTest {
     public fun threeIgnoredPopUpsInARowStartADayOfCalmToldOnce() = runTest {
         listOf("a", "b", "c", "d").forEach { add(it, "2026-10-08T18:00") }
         engine.dismiss("a")
-        engine.timedOut("b", 5)
+        engine.dismiss("b")
         engine.complete("c") // an answer resets the count
         engine.dismiss("a")
         engine.dismiss("b")
+        engine.timedOut("c", 5) // an automatic snooze is not ignoring it
         assertTrue(presenter.shown.none { it.startsWith("calm:") })
-        engine.timedOut("d", 5)
+        engine.dismiss("d")
 
         val calmUntil = at("2026-10-09T18:00")
         assertEquals(1, presenter.shown.count { it == "calm:$calmUntil" })

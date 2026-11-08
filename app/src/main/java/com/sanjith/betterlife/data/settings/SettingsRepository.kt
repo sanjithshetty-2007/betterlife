@@ -40,6 +40,9 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 snoozeTomorrow = prefs.time(SNOOZE_TOMORROW, d.snoozeTomorrow),
                 birthdayFireTime = prefs.time(BIRTHDAY_TIME, d.birthdayFireTime),
                 popupTimeoutMinutes = prefs[POPUP_TIMEOUT] ?: d.popupTimeoutMinutes,
+                autoSnoozeMinutes = prefs[AUTO_SNOOZE] ?: d.autoSnoozeMinutes,
+                alarmSoundUri = prefs[ALARM_SOUND] ?: d.alarmSoundUri,
+                popupsRingOnSilent = prefs[RING_ON_SILENT] ?: d.popupsRingOnSilent,
                 quietHoursEnabled = prefs[QUIET_ENABLED] ?: d.quietHoursEnabled,
                 quietHoursStart = prefs.time(QUIET_START, d.quietHoursStart),
                 quietHoursEnd = prefs.time(QUIET_END, d.quietHoursEnd),
@@ -83,6 +86,9 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         prefs[SNOOZE_TOMORROW] = s.snoozeTomorrow.toMinuteOfDay()
         prefs[BIRTHDAY_TIME] = s.birthdayFireTime.toMinuteOfDay()
         prefs[POPUP_TIMEOUT] = s.popupTimeoutMinutes
+        prefs[AUTO_SNOOZE] = s.autoSnoozeMinutes
+        if (s.alarmSoundUri == null) prefs.remove(ALARM_SOUND) else prefs[ALARM_SOUND] = s.alarmSoundUri
+        prefs[RING_ON_SILENT] = s.popupsRingOnSilent
         prefs[QUIET_ENABLED] = s.quietHoursEnabled
         prefs[QUIET_START] = s.quietHoursStart.toMinuteOfDay()
         prefs[QUIET_END] = s.quietHoursEnd.toMinuteOfDay()
@@ -118,6 +124,9 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         const val MINUTES_PER_HOUR = 60
         val ROLLOVER_HOUR = intPreferencesKey("rollover_hour")
         val HABIT_HAPTICS = booleanPreferencesKey("habit_tick_haptics")
+        val AUTO_SNOOZE = intPreferencesKey("auto_snooze_minutes")
+        val ALARM_SOUND = stringPreferencesKey("alarm_sound_uri")
+        val RING_ON_SILENT = booleanPreferencesKey("popups_ring_on_silent")
         val MASCOT_NAME = stringPreferencesKey("mascot_name")
         val OWNER_NAME = stringPreferencesKey("owner_name")
         val HABIT_NUDGE_ENABLED = booleanPreferencesKey("habit_nudge_enabled")

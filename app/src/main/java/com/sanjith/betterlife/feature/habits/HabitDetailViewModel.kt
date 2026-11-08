@@ -69,7 +69,7 @@ public class HabitDetailViewModel(
 
     public fun toggle(box: GridBox) {
         val date = box.date ?: return
-        if (!box.state.tappable) return
+        if (!box.tappable) return
         viewModelScope.launch {
             if (box.state.filled || box.state == BoxState.PAUSED) service.untick(habitId, date) else service.tick(habitId, date)
         }

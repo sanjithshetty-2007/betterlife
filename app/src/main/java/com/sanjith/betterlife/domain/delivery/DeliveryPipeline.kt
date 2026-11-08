@@ -19,6 +19,8 @@ public data class DeliveryInput(
     val calendarItem: Boolean = false,
     /** Pause, Quiet Hours and fatigue state (Prompt 12). */
     val calm: CalmInputs = CalmInputs.NONE,
+    /** This firing is a snoozed reminder coming back: the owner still has to answer it, so fatigue never downgrades it. */
+    val snoozedRepeat: Boolean = false,
 )
 
 public enum class DeliveryAction {
@@ -143,7 +145,7 @@ public object DeliveryPipeline {
     private fun fatigue(input: DeliveryInput, d: DeliveryDecision): StepResult {
         val f = input.calm.fatigue ?: return StepResult.Continue(d)
         val popsUp = d.path == PresentationPath.OVERLAY || d.path == PresentationPath.FULL_SCREEN_INTENT
-        if (!popsUp || (d.level == Importance.ALARM && f.alarmExempt)) return StepResult.Continue(d)
+        if (!popsUp || input.snoozedRepeat || (d.level == Importance.ALARM && f.alarmExempt)) return StepResult.Continue(d)
         val calm = f.downgradeEnabled && f.calmUntil?.let { input.now.isBefore(it) } == true
         if (calm) return StepResult.Continue(downgrade(input, d))
         val lastGroupStart = f.recentPopups.filter { !it.isAfter(input.now) }.maxOrNull()

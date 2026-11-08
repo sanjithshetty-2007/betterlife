@@ -1,5 +1,10 @@
 package com.sanjith.betterlife.reminders.popup
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.graphicsLayer
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -130,9 +135,12 @@ private fun AnimatedCard(
     var pending by remember(card.key) { mutableStateOf<CardAction?>(null) }
     val shownAt = remember(card.key) { SystemClock.uptimeMillis() }
     val guarded: (CardAction) -> Unit = { action ->
-        if (isTapAllowed(shownAt, SystemClock.uptimeMillis())) {
+        if (pending != null) {
+            // Already answered: the card is on its way out.
+        } else if (isTapAllowed(shownAt, SystemClock.uptimeMillis())) {
             pending = action
-            visibility.targetState = false
+            // Done stays on screen a moment so its check is seen (owner, 2026-11-08).
+            if (action != CardAction.Done || ui.reduceMotion) visibility.targetState = false
         } else {
             onTapIgnored()
         }
@@ -140,7 +148,13 @@ private fun AnimatedCard(
     // Let the exit animation play, then hand the answer over (at once when animations are off).
     LaunchedEffect(pending) {
         val action = pending ?: return@LaunchedEffect
-        if (!ui.reduceMotion) delay(EXIT_MS.toLong())
+        if (!ui.reduceMotion) {
+            if (action == CardAction.Done) {
+                delay(DONE_HOLD_MILLIS)
+                visibility.targetState = false
+            }
+            delay(EXIT_MS.toLong())
+        }
         onAction(card.key, action)
     }
     AnimatedVisibility(
@@ -149,12 +163,12 @@ private fun AnimatedCard(
         enter = if (ui.reduceMotion) EnterTransition.None else fadeIn(tween(ENTER_MS)) + scaleIn(tween(ENTER_MS), ENTER_START_SCALE),
         exit = if (ui.reduceMotion) ExitTransition.None else fadeOut(tween(EXIT_MS)) + scaleOut(tween(EXIT_MS), EXIT_END_SCALE),
     ) {
-        PopupCardView(card, ui, guarded)
+        PopupCardView(card, ui, doneTapped = pending == CardAction.Done, guarded)
     }
 }
 
 @Composable
-private fun PopupCardView(card: PopupCard, ui: PopupUi, onAction: (CardAction) -> Unit) {
+private fun PopupCardView(card: PopupCard, ui: PopupUi, doneTapped: Boolean, onAction: (CardAction) -> Unit) {
     var mode by rememberSaveable(card.key) { mutableStateOf(CardMode.BUTTONS) }
     val title = if (ui.hideTitles) stringResource(R.string.popup_hidden_title) else card.title
     Card(
@@ -191,7 +205,7 @@ private fun PopupCardView(card: PopupCard, ui: PopupUi, onAction: (CardAction) -
                 )
             }
             when (mode) {
-                CardMode.BUTTONS -> MainButtons(card, ui, onAction, onSnooze = { mode = CardMode.SNOOZE })
+                CardMode.BUTTONS -> MainButtons(card, ui, doneTapped, onAction, onSnooze = { mode = CardMode.SNOOZE })
                 CardMode.SNOOZE -> SnoozePanel(
                     options = ui.snoozeOptions(card),
                     formatTime = ui.formatTime,
@@ -223,8 +237,29 @@ private fun CardHeader(card: PopupCard, ui: PopupUi, onWhy: () -> Unit) {
     }
 }
 
+/** Done: a check pops onto the button before the card closes, so the tap is seen (owner, 2026-11-08). */
 @Composable
-private fun MainButtons(card: PopupCard, ui: PopupUi, onAction: (CardAction) -> Unit, onSnooze: () -> Unit) {
+private fun DoneButton(tapped: Boolean, modifier: Modifier, onDone: () -> Unit) {
+    val pop = remember { Animatable(0f) }
+    LaunchedEffect(tapped) {
+        if (tapped) pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
+    }
+    Button(onClick = onDone, modifier = modifier.heightIn(min = Dimens.minTouchTarget)) {
+        if (tapped) {
+            Icon(
+                painterResource(R.drawable.ic_check),
+                contentDescription = null,
+                modifier = Modifier.size(Dimens.iconSize).graphicsLayer { scaleX = pop.value; scaleY = pop.value },
+            )
+        }
+        Text(stringResource(R.string.popup_done))
+    }
+}
+
+private const val DONE_HOLD_MILLIS = 300L
+
+@Composable
+private fun MainButtons(card: PopupCard, ui: PopupUi, doneTapped: Boolean, onAction: (CardAction) -> Unit, onSnooze: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         if (SnoozeRules.suggestMoveToTomorrow(card.snoozeCount)) {
             val tomorrow = ui.snoozeOptions(card).firstOrNull { it.choice == SnoozeChoice.TOMORROW && it.allowed }?.at
@@ -236,9 +271,7 @@ private fun MainButtons(card: PopupCard, ui: PopupUi, onAction: (CardAction) -> 
             OutlinedButton(onClick = onSnooze, modifier = Modifier.weight(1f).heightIn(min = Dimens.minTouchTarget)) {
                 Text(stringResource(R.string.popup_snooze))
             }
-            Button(onClick = { onAction(CardAction.Done) }, modifier = Modifier.weight(1f).heightIn(min = Dimens.minTouchTarget)) {
-                Text(stringResource(R.string.popup_done))
-            }
+            DoneButton(doneTapped, Modifier.weight(1f)) { onAction(CardAction.Done) }
         }
         TextButton(
             onClick = { onAction(CardAction.Reschedule) },

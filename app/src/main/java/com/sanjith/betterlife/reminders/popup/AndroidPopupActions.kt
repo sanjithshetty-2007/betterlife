@@ -4,15 +4,20 @@ import android.content.Context
 import com.sanjith.betterlife.MainActivity
 import com.sanjith.betterlife.domain.popup.PopupCard
 import com.sanjith.betterlife.reminders.engine.ReminderEngine
+import com.sanjith.betterlife.ui.feedback.DoneHaptics
 import java.time.Instant
 
 /** Sends pop-up answers to the reminder engine; Reschedule also opens the item's editor. */
 public class AndroidPopupActions(
     private val context: Context,
+    private val hapticsOn: suspend () -> Boolean,
     private val engine: () -> ReminderEngine,
 ) : PopupActions {
 
     override suspend fun done(reminderId: String) {
+        // After the card left the stack, so the ring's vibration has stopped and this one is felt.
+        val on = hapticsOn()
+        DoneHaptics(context) { on }.done()
         engine().complete(reminderId)
     }
 

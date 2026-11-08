@@ -104,8 +104,9 @@ public class StreakCalculatorTest {
     }
 
     @Test
-    public fun pastDaysAndTodayAreEditableButFutureDaysAreNot() {
-        assertTrue(HabitEditRules.canEdit(nov(1), TODAY))
+    public fun onlyTodayCanBeEdited() {
+        assertFalse(HabitEditRules.canEdit(nov(1), TODAY))
+        assertFalse(HabitEditRules.canEdit(nov(19), TODAY))
         assertTrue(HabitEditRules.canEdit(TODAY, TODAY))
         assertFalse(HabitEditRules.canEdit(nov(21), TODAY))
         assertTrue(HabitEditRules.isBackfill(nov(19), TODAY))

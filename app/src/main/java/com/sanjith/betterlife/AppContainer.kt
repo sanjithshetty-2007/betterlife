@@ -362,8 +362,8 @@ public class AppContainer(appContext: Context) {
     public val popupCoordinator: PopupCoordinator by lazy {
         PopupCoordinator(
             scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
-            actions = AndroidPopupActions(appContext) { reminderEngine },
-            sound = AndroidSoundPlayer(appContext),
+            actions = AndroidPopupActions(appContext, { settingsRepository.current().habitTickHaptics }) { reminderEngine },
+            sound = AndroidSoundPlayer(appContext) { settingsRepository.current() },
             watcher = RoomItemWatcher(database),
             clock = realClock,
             timeoutMinutes = { settingsRepository.current().popupTimeoutMinutes },

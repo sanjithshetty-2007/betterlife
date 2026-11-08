@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.font.FontFamily
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sanjith.betterlife.BetterLifeApp
@@ -201,8 +202,16 @@ private fun PaddedSwitch(text: String, checked: Boolean, onChange: (Boolean) -> 
 }
 
 @Composable
-private fun Stepper(title: String, detail: String, value: String, canDecrease: Boolean, canIncrease: Boolean, onChange: (Int) -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
+internal fun Stepper(
+    title: String,
+    detail: String,
+    value: String,
+    canDecrease: Boolean,
+    canIncrease: Boolean,
+    sidePadding: Dp = Spacing.md,
+    onChange: (Int) -> Unit,
+) {
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = sidePadding, vertical = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
             Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

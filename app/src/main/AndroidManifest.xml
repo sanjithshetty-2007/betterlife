@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Prompt S1: only for Supabase sign-in and sync (sync/ package) and later link previews.
          Reminders never use the network. -->
     <uses-permission android:name="android.permission.INTERNET" />

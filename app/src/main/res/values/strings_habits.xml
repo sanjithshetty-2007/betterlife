@@ -10,7 +10,7 @@
     <string name="habits_title">Habits</string>
     <string name="habits_empty">No habits yet. Tap + to add one.</string>
     <string name="habits_more">More options</string>
-    <string name="habits_vibrate_on_tick">Vibrate on tick</string>
+    <string name="habits_vibrate_on_tick">Vibrate on done</string>
     <string name="habits_previous_month">Previous month</string>
     <string name="habits_next_month">Next month</string>
     <string name="habits_back_to_this_month">Back to this month</string>

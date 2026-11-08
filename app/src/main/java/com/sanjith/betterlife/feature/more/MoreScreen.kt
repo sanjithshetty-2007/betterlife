@@ -81,6 +81,7 @@ public fun MoreScreen(entries: List<MoreEntry>, onBusy: () -> Unit, debugTools: 
                 }
             }
             settings?.let { s ->
+                AlarmSettingsSection(s)
                 SectionLabel(stringResource(R.string.more_your_name))
                 NameRow(s.ownerName) { name -> scope.launch { container.settingsRepository.update { it.copy(ownerName = name) } } }
                 SectionLabel(stringResource(R.string.more_nudge))

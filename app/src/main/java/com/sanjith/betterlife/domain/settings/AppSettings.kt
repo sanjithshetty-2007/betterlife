@@ -14,7 +14,14 @@ public data class AppSettings(
     val snoozeTonight: LocalTime = LocalTime.of(20, 0),
     val snoozeTomorrow: LocalTime = LocalTime.of(9, 0),
     val birthdayFireTime: LocalTime = LocalTime.of(9, 0),
+    /** How long an unanswered pop-up or alarm rings before it snoozes itself (owner, 2026-11-08). */
     val popupTimeoutMinutes: Int = 5,
+    /** How long that automatic snooze lasts; then it rings again, until answered. */
+    val autoSnoozeMinutes: Int = 10,
+    /** The owner's alarm sound as a content URI; null = the phone's default alarm sound. */
+    val alarmSoundUri: String? = null,
+    /** Pop-ups ring on the alarm stream, so also on silent; off = they follow the ringer (vibration always). */
+    val popupsRingOnSilent: Boolean = true,
     val quietHoursEnabled: Boolean = false,
     /** May cross midnight: 22:00 to 07:00 is valid. */
     val quietHoursStart: LocalTime = LocalTime.of(22, 0),
@@ -52,6 +59,7 @@ public data class AppSettings(
     init {
         require(rolloverHour in 0..MAX_ROLLOVER_HOUR) { "rolloverHour must be 0 to $MAX_ROLLOVER_HOUR" }
         require(popupTimeoutMinutes > 0) { "popupTimeoutMinutes must be positive" }
+        require(autoSnoozeMinutes > 0) { "autoSnoozeMinutes must be positive" }
         require(fatigueMaxFullScreenPerHour > 0) { "fatigueMaxFullScreenPerHour must be positive" }
         require(fatigueGroupWindowMinutes >= 0) { "fatigueGroupWindowMinutes cannot be negative" }
         require(fatigueIgnoredLimit > 0) { "fatigueIgnoredLimit must be positive" }
@@ -61,6 +69,10 @@ public data class AppSettings(
 
     public companion object {
         public const val DEFAULT_MASCOT_NAME: String = "Blip"
+
+        /** Upper limits for the alarm steppers on More. */
+        public const val MAX_RING_MINUTES: Int = 30
+        public const val MAX_AUTO_SNOOZE_MINUTES: Int = 60
 
         /** A rollover later than 05:00 would make early-morning ticks land on the wrong day. */
         public const val MAX_ROLLOVER_HOUR: Int = 5

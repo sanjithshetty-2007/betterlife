@@ -37,8 +37,8 @@ public sealed interface HabitEditResult {
     /** Saved. [milestone] is set when this tick reached one (FULL or QUIET). */
     public data class Saved(val milestone: MilestoneEvent? = null) : HabitEditResult
 
-    /** The day is after today: future days cannot be edited. Nothing was written. */
-    public data object FutureDay : HabitEditResult
+    /** The day is not today: only today can be edited. Nothing was written. */
+    public data object NotToday : HabitEditResult
 
     /** No such habit, or it is deleted. Nothing was written. */
     public data object UnknownHabit : HabitEditResult
@@ -164,8 +164,8 @@ public class HabitRepository(
     }
 
     /**
-     * Marks [date] DONE (or KEPT / PAUSED) for the habit and checks milestones in the same
-     * transaction. A tick on a day before the habit's start date moves the start date back to it.
+     * Marks [date], which must be [today], DONE (or KEPT / PAUSED) for the habit and checks milestones
+     * in the same transaction.
      */
     public suspend fun tick(
         habitId: String,
@@ -173,16 +173,12 @@ public class HabitRepository(
         today: LocalDate,
         status: HabitLogStatus = HabitLogStatus.DONE,
     ): HabitEditResult {
-        if (!HabitEditRules.canEdit(date, today)) return HabitEditResult.FutureDay
+        if (!HabitEditRules.canEdit(date, today)) return HabitEditResult.NotToday
         return db.withTransaction {
             val found = habitDao.getAnyById(habitId)?.takeIf { it.deletedAt == null }
                 ?: return@withTransaction HabitEditResult.UnknownHabit
             val now = nowMillis()
-            val habit = if (date.isBefore(found.startDate)) {
-                found.copy(startDate = date, updatedAt = now, syncState = SyncState.DIRTY).also { habitDao.update(it) }
-            } else {
-                found
-            }
+            val habit = found
             val existing = logDao.getForDay(habitId, date)
             when {
                 existing == null -> logDao.insert(
@@ -197,7 +193,7 @@ public class HabitRepository(
 
     /** Clears [date] (soft delete, so the untick syncs). The milestone ledger is not touched. */
     public suspend fun untick(habitId: String, date: LocalDate, today: LocalDate): HabitEditResult {
-        if (!HabitEditRules.canEdit(date, today)) return HabitEditResult.FutureDay
+        if (!HabitEditRules.canEdit(date, today)) return HabitEditResult.NotToday
         return db.withTransaction {
             habitDao.getAnyById(habitId)?.takeIf { it.deletedAt == null } ?: return@withTransaction HabitEditResult.UnknownHabit
             val existing = logDao.getForDay(habitId, date)

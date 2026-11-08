@@ -36,7 +36,7 @@ public interface PopupActions {
 }
 
 public interface SoundPlayer {
-    public fun play(level: Importance, volume: Float, loop: Boolean)
+    public suspend fun play(level: Importance, volume: Float, loop: Boolean)
     public fun stop()
 }
 
@@ -112,8 +112,9 @@ public class PopupCoordinator(
     private suspend fun runTimeout(card: PopupCard) {
         val minutes = timeoutMinutes()
         delay(Duration.ofMinutes(minutes.toLong()).toMillis())
+        // Launched apart from this job: remove() cancels the card's job, which would stop the answer halfway.
+        card.reminderId?.let { id -> scope.launch { actions.timedOut(id, minutes) } }
         remove(card.key)
-        card.reminderId?.let { actions.timedOut(it, minutes) }
     }
 
     private suspend fun watchItem(card: PopupCard) {
@@ -133,9 +134,8 @@ public class PopupCoordinator(
 
     /**
      * Plays the escalation of the loudest card still showing, timed from when that card appeared.
-     * A newly shown card sounds at once (the current step). After an answer the sound stops at once
-     * and comes back only at the next step, except a looping ALARM ring, which resumes immediately
-     * for the alarm cards that are left.
+     * A newly shown card sounds at once. After an answer the sound stops at once; a looping ring
+     * resumes immediately for the cards that are left.
      */
     private fun restartSound(skipPastSteps: Boolean) {
         soundJob?.cancel()
@@ -144,7 +144,7 @@ public class PopupCoordinator(
         val level = current.loudest ?: return
         val shownAt = current.cards.filter { it.importance == level }.minOf { it.shownAt }
         soundJob = scope.launch {
-            val steps = Escalation.steps(level, Duration.ofMinutes(timeoutMinutes().toLong()))
+            val steps = Escalation.steps(level)
             val elapsed = Duration.between(shownAt, clock.now())
             val currentStep = steps.lastOrNull { it.at <= elapsed }
             val upcoming = steps.filter { it.at > elapsed }

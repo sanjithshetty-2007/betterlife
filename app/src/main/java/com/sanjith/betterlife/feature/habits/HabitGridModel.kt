@@ -11,27 +11,27 @@ public enum class BoxState {
     KEPT,
     PAUSED,
 
-    /** A past day (or today) not ticked: tappable. */
+    /** A past day or today, not ticked. */
     OPEN,
 
-    /** After today: shown, never tappable. */
+    /** After today. */
     FUTURE,
 
     /** Day 29 to 31 in a shorter month: greyed. */
     NO_SUCH_DAY,
 
-    /** Before the habit started: greyed, but a tick still counts (it moves the start date back). */
+    /** Before the habit started: greyed. */
     BEFORE_START,
     ;
 
     public val filled: Boolean get() = this == DONE || this == KEPT
-
-    /** Only real days up to today can be ticked or unticked (context.md 5.4). */
-    public val tappable: Boolean get() = this != FUTURE && this != NO_SUCH_DAY
 }
 
 /** One box: [day] 1 to 31, its date (null for a day the month does not have) and state. */
-public data class GridBox(val day: Int, val date: LocalDate?, val state: BoxState, val isToday: Boolean)
+public data class GridBox(val day: Int, val date: LocalDate?, val state: BoxState, val isToday: Boolean) {
+    /** Only today's box can be ticked or cleared; past days are a record (owner, 2026-11-08). */
+    public val tappable: Boolean get() = isToday
+}
 
 /**
  * The 31-box month grid (Prompt 15): always 31 boxes, NOT a labelled calendar. Box N is day N of the

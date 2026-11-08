@@ -28,7 +28,7 @@ public class HabitGridModelTest {
     }
 
     @Test
-    public fun daysBeforeTheStartAreGreyedAndFutureDaysCannotBeTapped() {
+    public fun onlyTodaysBoxCanBeTapped() {
         val history = HabitHistory(LocalDate.of(2026, 11, 10), mapOf(LocalDate.of(2026, 11, 12) to HabitLogStatus.DONE))
         val boxes = HabitGridModel.boxes(history, YearMonth.of(2026, 11), today)
 
@@ -36,11 +36,8 @@ public class HabitGridModelTest {
         assertEquals(BoxState.DONE, boxes[11].state)
         assertEquals(BoxState.OPEN, boxes[10].state)
         assertTrue(boxes[19].isToday)
-        assertTrue(boxes[19].state.tappable)
+        assertEquals(listOf(20), boxes.filter { it.tappable }.map { it.day })
         assertEquals((21..30).toList(), boxes.filter { it.state == BoxState.FUTURE }.map { it.day })
-        assertFalse(BoxState.FUTURE.tappable)
-        assertTrue(BoxState.BEFORE_START.tappable)
-        assertFalse(BoxState.NO_SUCH_DAY.tappable)
         assertEquals(1, HabitGridModel.doneCount(boxes))
     }
 

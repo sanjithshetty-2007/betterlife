@@ -69,8 +69,8 @@ public class HabitRepositoryTest {
     @Test
     public fun futureDaysAndUnknownOrDeletedHabitsWriteNothing() = runTest {
         val id = habits.create(HabitDraft("Meditation", "#7E8CFF"), nov(1))
-        assertEquals(HabitEditResult.FutureDay, habits.tick(id, nov(21), nov(20)))
-        assertEquals(HabitEditResult.FutureDay, habits.untick(id, nov(21), nov(20)))
+        assertEquals(HabitEditResult.NotToday, habits.tick(id, nov(21), nov(20)))
+        assertEquals(HabitEditResult.NotToday, habits.untick(id, nov(21), nov(20)))
         assertEquals(HabitEditResult.UnknownHabit, habits.tick("nope", nov(20), nov(20)))
         habits.softDelete(id)
         assertEquals(HabitEditResult.UnknownHabit, habits.tick(id, nov(20), nov(20)))
@@ -94,25 +94,18 @@ public class HabitRepositoryTest {
     }
 
     @Test
-    public fun aBackfillThatCreatesDaySevenIsQuiet() = runTest {
-        val id = habits.create(HabitDraft("Haircare", "#5EC4D6"), nov(14))
-        listOf(14, 15, 16, 18, 19, 20).forEach { habits.tick(id, nov(it), nov(it)) }
+    public fun pastDaysCanNeitherBeTickedNorCleared() = runTest {
+        val id = habits.create(HabitDraft("Haircare", "#5EC4D6"), nov(10))
+        habits.tick(id, nov(19), today = nov(19))
 
-        val result = habits.tick(id, nov(17), today = nov(20))
+        assertEquals(HabitEditResult.NotToday, habits.tick(id, nov(18), today = nov(20)))
+        assertEquals(HabitEditResult.NotToday, habits.untick(id, nov(19), today = nov(20)))
+        assertEquals(HabitEditResult.NotToday, habits.tick(id, nov(8), today = nov(20)))
 
-        assertEquals(HabitEditResult.Saved(MilestoneEvent(7, CelebrationKind.QUIET, nov(14))), result)
-        assertEquals(true, db.milestoneLedgerDao().getForHabit(id).single().quiet)
-    }
-
-    @Test
-    public fun aTickBeforeTheStartDateMovesTheStartBack() = runTest {
-        val id = habits.create(HabitDraft("Read", "#7BC67E"), nov(10))
-        now = 5_000L
-        habits.tick(id, nov(8), nov(20))
-        val habit = habits.getAnyById(id)!!
-        assertEquals(nov(8), habit.startDate)
-        assertEquals(5_000L, habit.updatedAt)
-        assertEquals(DayState.MISSED, habits.history(id)!!.state(nov(9), nov(20)))
+        assertNull(db.habitLogDao().getForDay(id, nov(18)))
+        assertNull(db.habitLogDao().getForDay(id, nov(19))!!.deletedAt)
+        assertEquals(nov(10), habits.getAnyById(id)!!.startDate)
+        assertEquals(DayState.DONE, habits.history(id)!!.state(nov(19), nov(20)))
     }
 
     @Test

@@ -37,8 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.feature.tasks.SectionLabel
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import com.sanjith.betterlife.ui.feedback.rememberDoneHaptics
 import com.sanjith.betterlife.domain.habit.Consistency
 import com.sanjith.betterlife.domain.habit.DayState
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
@@ -54,7 +53,7 @@ public fun HabitDetailScreen(
     viewModel: HabitDetailViewModel = viewModel(factory = HabitDetailViewModel.Factory),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberDoneHaptics()
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             val state = ui
@@ -88,7 +87,7 @@ public fun HabitDetailScreen(
                 SectionLabel(stringResource(R.string.habit_this_month))
                 SectionCard {
                     HabitMonthGrid(state.boxes, color, onTap = { box ->
-                        if (state.haptics) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                        if (box.state == BoxState.OPEN) haptics.done() else haptics.undone()
                         viewModel.toggle(box)
                     })
                 }

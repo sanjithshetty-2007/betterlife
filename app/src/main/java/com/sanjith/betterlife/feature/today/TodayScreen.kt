@@ -116,7 +116,9 @@ public fun TodayScreen(
                     )
                 }
             }
-            items(snapshot.rows, key = { row -> rowKey(row) }) { row -> TodayRowCard(row, actions.openItem, viewModel::tick) }
+            items(snapshot.rows, key = { row -> rowKey(row) }) { row ->
+                Box(Modifier.animateItem()) { TodayRowCard(row, actions.openItem, viewModel::tick) }
+            }
         }
     }
 }

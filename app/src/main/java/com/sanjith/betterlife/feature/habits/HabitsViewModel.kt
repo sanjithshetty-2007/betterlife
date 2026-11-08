@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.sanjith.betterlife.BetterLifeApp
 import com.sanjith.betterlife.data.db.entity.HabitEntity
 import com.sanjith.betterlife.data.db.entity.HabitLogEntity
+import com.sanjith.betterlife.data.repository.HabitEditResult
 import com.sanjith.betterlife.data.repository.HabitRepository
 import com.sanjith.betterlife.domain.habit.Consistency
 import com.sanjith.betterlife.domain.habit.ConsistencyCalculator
@@ -100,7 +101,7 @@ public class HabitsViewModel(
     /** Ticks an open box, unticks a filled or paused one; greyed and future boxes do nothing. */
     public fun toggle(card: HabitCardUi, box: GridBox) {
         val date = box.date ?: return
-        if (!box.state.tappable) return
+        if (!box.tappable) return
         val before = when (box.state) {
             BoxState.DONE -> HabitLogStatus.DONE
             BoxState.KEPT -> HabitLogStatus.KEPT
@@ -108,8 +109,8 @@ public class HabitsViewModel(
             else -> null
         }
         viewModelScope.launch {
-            if (before == null) service.tick(card.id, date) else service.untick(card.id, date)
-            _undo.value = HabitUndo(card.id, card.name, date, ticked = before == null, before = before)
+            val result = if (before == null) service.tick(card.id, date) else service.untick(card.id, date)
+            if (result is HabitEditResult.Saved) _undo.value = HabitUndo(card.id, card.name, date, ticked = before == null, before = before)
         }
     }
 

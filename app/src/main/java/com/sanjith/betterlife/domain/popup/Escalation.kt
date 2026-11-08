@@ -7,29 +7,15 @@ import java.time.Duration
 public data class SoundStep(val at: Duration, val volume: Float, val loop: Boolean)
 
 /**
- * How a pop-up sounds while unanswered (context.md section 5.1): FULL_SCREEN plays one gentle sound,
- * then repeats every minute a little louder; ALARM rings in a loop at full volume on the alarm
- * stream. Nothing plays at or after the timeout, when the pop-up becomes a missed reminder.
+ * How a pop-up sounds while unanswered (owner's change, 2026-11-08: reminders were too easy to miss).
+ * FULL_SCREEN and ALARM both ring in a loop at full volume, with strong vibration, from the first
+ * moment until answered or until the ring time ends. NORMAL is a notification and plays nothing here.
  */
 public object Escalation {
-
-    public val REPEAT_EVERY: Duration = Duration.ofSeconds(60)
-    public const val START_VOLUME: Float = 0.4f
-    public const val VOLUME_STEP: Float = 0.2f
     public const val MAX_VOLUME: Float = 1f
 
-    /**
-     * Example: FULL_SCREEN with a 5-minute timeout -> 0 s at 0.4, 60 s at 0.6, 120 s at 0.8,
-     * 180 s at 1.0, 240 s at 1.0.
-     */
-    public fun steps(level: Importance, timeout: Duration): List<SoundStep> = when (level) {
+    public fun steps(level: Importance): List<SoundStep> = when (level) {
         Importance.NORMAL -> emptyList()
-        Importance.ALARM -> listOf(SoundStep(Duration.ZERO, MAX_VOLUME, loop = true))
-        Importance.FULL_SCREEN -> generateSequence(0) { it + 1 }
-            .map { i -> SoundStep(REPEAT_EVERY.multipliedBy(i.toLong()), volumeAt(i), loop = false) }
-            .takeWhile { it.at < timeout }
-            .toList()
+        Importance.FULL_SCREEN, Importance.ALARM -> listOf(SoundStep(Duration.ZERO, MAX_VOLUME, loop = true))
     }
-
-    private fun volumeAt(repeat: Int): Float = minOf(MAX_VOLUME, START_VOLUME + VOLUME_STEP * repeat)
 }

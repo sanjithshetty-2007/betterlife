@@ -1,5 +1,9 @@
 package com.sanjith.betterlife.reminders.popup
 
+import android.provider.Settings
+import com.sanjith.betterlife.reminders.fullscreen.FullScreenReminderActivity
+import android.os.PowerManager
+import java.time.Duration
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -46,6 +50,7 @@ public class ReminderPopupService : Service() {
     private val overlay by lazy { OverlayController(this) }
     private var lockScreenPosted = false
     private var watchingStack = false
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -65,6 +70,7 @@ public class ReminderPopupService : Service() {
             // Wait until the card the caller added has reached the stack, then put the stack on screen.
             container.popupCoordinator.state.first { !it.isEmpty }
             present()
+            keepPhoneLit()
         }
         return START_NOT_STICKY
     }
@@ -77,6 +83,21 @@ public class ReminderPopupService : Service() {
         log.add("Could not enter the foreground (${e.javaClass.simpleName}); lock-screen path only")
         ReminderNotifier(this).postPopupStack(getString(R.string.popup_hidden_title), Importance.FULL_SCREEN, hideTitle = true)
         false
+    }
+
+    /**
+     * Wakes the screen and holds it bright while reminders are up, whichever path showed them, so a
+     * phone in a pocket or on a table lights up (owner, 2026-11-08). Taken after [present], because
+     * that decides from whether the screen was on. The time limit is only a safety net.
+     */
+    @Suppress("DEPRECATION") // The only wake lock that turns the screen on from a service.
+    private suspend fun keepPhoneLit() {
+        val limit = Duration.ofMinutes(container.settingsRepository.current().popupTimeoutMinutes.toLong() + 1).toMillis()
+        val lock = wakeLock ?: getSystemService(PowerManager::class.java)
+            .newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP, WAKE_LOCK_TAG)
+            .apply { setReferenceCounted(false) }
+            .also { wakeLock = it }
+        lock.acquire(limit)
     }
 
     /** Re-decided for every new reminder: the screen may have been locked since the overlay appeared. */
@@ -109,6 +130,12 @@ public class ReminderPopupService : Service() {
         val top = container.popupCoordinator.state.value.cards.lastOrNull() ?: return
         val hide = container.settingsRepository.current().hideTitleOnLockScreen
         lockScreenPosted = ReminderNotifier(this).postPopupStack(top.title, top.importance, hide)
+        // Waking the screen can turn the full-screen intent into a mere heads-up on some phones. With
+        // the draw-over-apps permission the app may open the pop-up itself; it is single-instance.
+        if (Settings.canDrawOverlays(this)) {
+            runCatching { startActivity(FullScreenReminderActivity.intent(this)) }
+                .onFailure { log.add("Path B: direct start refused (${it.javaClass.simpleName})") }
+        }
         log.add(if (lockScreenPosted) "Path B: full-screen notification posted" else "Path B: posting refused")
     }
 
@@ -158,6 +185,7 @@ public class ReminderPopupService : Service() {
         .build()
 
     override fun onDestroy() {
+        wakeLock?.takeIf { it.isHeld }?.release()
         overlay.remove()
         ReminderNotifier(this).cancelPopupStack()
         scope.cancel()
@@ -166,6 +194,7 @@ public class ReminderPopupService : Service() {
     }
 
     public companion object {
+        private const val WAKE_LOCK_TAG = "betterlife:reminder"
         private const val EXTRA_TEST_DELAY_MILLIS = "test_delay_millis"
         private const val NO_TEST = -1L
         private const val MILLIS_PER_SECOND = 1_000L

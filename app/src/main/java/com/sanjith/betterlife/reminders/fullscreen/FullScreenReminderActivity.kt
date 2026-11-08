@@ -4,6 +4,7 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -32,6 +33,9 @@ public class FullScreenReminderActivity : ComponentActivity() {
         // Also set in the manifest; set here too because some OEM builds only honour one of them.
         setShowWhenLocked(true)
         setTurnScreenOn(true)
+        // The whole phone stays lit at full brightness while the reminder is up (owner, 2026-11-08).
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        window.attributes = window.attributes.apply { screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL }
         enableEdgeToEdge()
         onBackPressedDispatcher.addCallback(
             this,

@@ -254,6 +254,22 @@ Before you start: Home > Reminder Health shows 10/10 (fix any red row first), an
 
 Owner gate: also use the app normally for 2 to 3 days with real tasks and write anything missed or annoying under Known issues in PROGRESS.md. Keep a backup somewhere safe before Phase 2.
 
+## Owner's change 2026-11-08: stronger alarm, habits locked to today, stronger done feedback
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | More > Alarm: Choose alarm sound, pick one; Reminder Health > Test in 10 s | Your sound rings | |
+| 2 | More > Alarm: Use my own audio file, pick a song or tone; test again; restart the phone; test again | Your file rings both times | |
+| 3 | Lock the phone, Test in 10 s, leave it in a pocket or face down | Screen wakes to the full pop-up at full brightness and stays lit; loud ring and strong vibration, on silent too | **PASS** (AI: pop-up took focus on the locked phone, bright wake lock held, ALARM stream at 15 of 15, vibrating; feel and loudness are yours to judge) |
+| 4 | Do not answer | After 5 min it stops; 10 min later it rings again; the Reminder Center shows Snoozed | **PASS** (AI with 1 and 1 minutes: rang, snoozed, rang again as a repeat; 5 and 10 restored) |
+| 5 | Done on the pop-up | Ring and vibration stop at once, a check pops on the button, a short firm buzz | **PASS** (AI: ring stopped, 269 ms buzz played; the check animation is yours to see) |
+| 6 | Test in 10 s while using another app | The same over the app | **PASS** (AI: overlay window, ringing, vibrating) |
+| 7 | Volume check: note your alarm volume, let a test ring, answer it | The alarm volume is back where it was | |
+| 8 | A phone call while a reminder is due | A quiet notification now, and it rings again 10 min later | **PASS** (unit test) |
+| 9 | Habits: tap a past box (done or not) | Nothing happens; only today's box reacts | **PASS** (AI on the phone: days 5 and 7 unchanged, no Undo) |
+| 10 | Tick today's box, then tick a task, on Habits, Today and Tasks | A firm buzz, a burst of colour, the title struck through before the row leaves | **PASS** (AI: burst and strike-through seen, buzz logged; feel is yours to judge) |
+| 11 | Habits > ⋮ > Vibrate on done off | Ticks are silent to the hand; the alarm still vibrates | |
+
 ## Prompt 17: Today, nudges, comeback, Minimum Day, pause mode (GATE)
 
 Today is the home screen now, with the bottom bar (Today, Tasks, Habits, Calendar, More). Everything that was on the old Home is on More.
@@ -278,7 +294,7 @@ Blip lives on the celebration screen, the reminder pop-up, the quiet banner and 
 |---|---|---|---|
 | 1 | Debug: Time Machine. Create a test habit, then tick it on 7 days in a row, moving the Time Machine forward one day each time (tick on that day's box) | On day 7 the full-screen celebration appears once: confetti, Blip cheering, "7", "days of <habit>!", one message | **PASS** (device test: 7 single-day ticks give one celebration) |
 | 2 | Untick and tick day 7 again | No second celebration | **PASS** (device test) |
-| 3 | Instead of day 7, back-fill a missing earlier day that completes 7 | Only the small banner on the Habits screen ("7 days of ... Nice work.") | **PASS** (device test) |
+| 3 | Replaced 2026-11-08: past days can no longer be ticked | A past box does nothing, and nothing is celebrated | **PASS** (device test) |
 | 4 | Habits > ⋮ > Celebration messages: add two of your own; Debug: mascot > Show a test celebration a few times | One of YOUR lines shows (the built-in ones only while you have none) | |
 | 5 | Debug: mascot: watch it cycle; tap each mood and Pod / Baby | Blip looks good and cute in all five moods; Down is sad, never blaming | **PASS** (AI looked at Proud, Down and the Pod on the phone; your eye decides "cute") |
 | 6 | Developer options > Animator duration scale off; open Debug: mascot and a test celebration | Blip stands still in each mood's pose; the confetti does not move | |
@@ -291,11 +307,11 @@ Home > Habits. Each card: icon, name, consistency on the right ("New" for the fi
 
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 1 | Tick Creatine for today and 3 past days | Boxes fill from the left with a pop and a check mark, the phone gives a short buzz, the streak line updates at once, Undo appears | **PASS** (AI 2026-11-06: 3 to 6 Nov ticked, "4-day streak", Undo shown; the buzz needs a hand on the phone) |
+| 1 | Tick Creatine for today (past days are locked since 2026-11-08) | Boxes fill from the left with a pop and a check mark, the phone gives a short buzz, the streak line updates at once, Undo appears | **PASS** (AI 2026-11-06: 3 to 6 Nov ticked, "4-day streak", Undo shown; the buzz needs a hand on the phone) |
 | 2 | Undo | The day goes back to how it was | **PASS** (device test) |
 | 3 | ⋮ > Vibrate on tick off, tick a box | No buzz | |
 | 4 | Previous month arrow; a 30-day month and February | Day 31 (and 29 to 31 in February) greyed; "Back to this month" chip; the next arrow stops at this month | **PASS** (unit and device tests; September and October seen on the phone in tests) |
-| 5 | + > create "Read 10 pages" today | Days before today are greyed; tapping one still ticks it and moves the start back | **PASS** (unit/device tests) |
+| 5 | + > create "Read 10 pages" today | Days before today are greyed and cannot be tapped (changed 2026-11-08) | **PASS** (unit/device tests) |
 | 6 | Edit a habit: colour, icon, category, Essential, reminder 21:30, Save | The card shows the new look; Reminder Center later shows the habit reminder | |
 | 7 | Let the 21:30 habit reminder fire once without ticking, once after ticking today | Fires when not done; does NOT fire when today is already ticked; Done on the pop-up ticks today | |
 | 8 | Archive, then delete a test habit | Archive hides it; delete asks first and removes it | **PASS** (device test for archive) |

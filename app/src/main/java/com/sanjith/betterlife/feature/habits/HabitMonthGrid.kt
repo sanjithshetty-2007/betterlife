@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -40,6 +41,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.core.isReducedMotion
+import com.sanjith.betterlife.ui.feedback.drawBurst
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
 import kotlin.math.PI
@@ -48,8 +50,8 @@ import kotlin.math.sin
 /** Test tags: every box carries [BOX_TAG]; a greyed one [GREYED_TAG] instead. */
 internal const val BOX_TAG = "habit-box"
 internal const val GREYED_TAG = "habit-box-greyed"
-private const val FILL_MILLIS = 250
-private const val POP = 0.15f
+private const val FILL_MILLIS = 480
+private const val POP = 0.35f
 
 /** The habit's stored #RRGGBB colour, or the first palette colour if the text is not a colour. */
 internal fun habitColor(hex: String): Color =
@@ -97,7 +99,10 @@ internal fun HabitMonthGrid(boxes: List<GridBox>, color: Color, onTap: (GridBox)
         boxes.chunked(HabitGridModel.COLUMNS).forEach { row ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly) {
                 row.forEach { box ->
-                    HabitBox(box, look, reducedMotion, context.resources, onTap = { onTap(box) }, modifier = Modifier.weight(1f))
+                    // Keyed by date: another month's boxes are new, so they appear without the tick animation.
+                    key(box.day, box.date) {
+                        HabitBox(box, look, reducedMotion, context.resources, onTap = { onTap(box) }, modifier = Modifier.weight(1f))
+                    }
                 }
                 repeat(HabitGridModel.COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
             }
@@ -123,11 +128,12 @@ private fun HabitBox(box: GridBox, look: BoxLook, reducedMotion: Boolean, resour
             // Worked out only when something reads the semantics (TalkBack, tests).
             .semantics {
                 contentDescription = describe(resources, box)
-                if (box.state.tappable) {
+                if (box.tappable) {
                     stateDescription = resources.getString(if (filled) R.string.habit_box_state_done else R.string.habit_box_state_not_done)
                 }
             }
-            .clickable(enabled = box.state.tappable, role = Role.Checkbox, onClick = onTap),
+            // No ripple: the box's own fill and burst are the feedback, and a square ripple only adds noise.
+            .clickable(interactionSource = null, indication = null, enabled = box.tappable, role = Role.Checkbox.takeIf { box.tappable }, onClick = onTap),
     ) {
         Spacer(Modifier.size(Dimens.habitBox).drawBehind { drawBox(box, look, fill, popping = filled, greyed = greyed) })
     }
@@ -146,6 +152,8 @@ private fun DrawScope.drawBox(box: GridBox, look: BoxLook, fill: Float, popping:
             box.state == BoxState.OPEN -> drawOutline(outline, look.open, style = Stroke(thin))
             box.state == BoxState.FUTURE -> drawOutline(outline, look.future, style = Stroke(thin))
         }
+        // A ring of colour flying out as the box fills (owner, 2026-11-08).
+        if (popping) drawBurst(fill, size.minDimension / 2)
         val icon = look.iconSize.toPx()
         val at = Offset((size.width - icon) / 2, (size.height - icon) / 2)
         when {

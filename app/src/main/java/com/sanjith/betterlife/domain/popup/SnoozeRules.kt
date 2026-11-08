@@ -18,6 +18,16 @@ public data class SnoozeOption(val choice: SnoozeChoice, val at: Instant?, val a
 /** Snooze maths for the pop-up. Pure, so every boundary is unit tested. */
 public object SnoozeRules {
 
+    /**
+     * The automatic snooze of an unanswered pop-up (owner, 2026-11-08): it comes back after [minutes],
+     * again and again until answered. An event never comes back past its end: null then, and it is
+     * logged as missed.
+     */
+    public fun autoSnoozeUntil(now: Instant, minutes: Int, eventEnd: Instant?): Instant? {
+        val until = now.plus(Duration.ofMinutes(minutes.toLong()))
+        return if (eventEnd != null && until.isAfter(eventEnd)) null else until
+    }
+
     /** After this many snoozes of one reminder the pop-up suggests moving it to tomorrow. */
     public const val SUGGEST_MOVE_AFTER: Int = 3
 

@@ -34,12 +34,16 @@ public class PopupCoordinatorTest {
         override suspend fun snooze(reminderId: String, until: Instant) { calls += "snooze:$reminderId" }
         override suspend fun dismiss(reminderId: String) { calls += "dismiss:$reminderId" }
         override suspend fun reschedule(card: PopupCard) { calls += "reschedule:${card.reminderId}" }
-        override suspend fun timedOut(reminderId: String, timeoutMinutes: Int) { calls += "timeout:$reminderId:$timeoutMinutes" }
+        override suspend fun timedOut(reminderId: String, timeoutMinutes: Int) {
+            // The real engine suspends: the answer must survive the card's job being cancelled.
+            kotlinx.coroutines.yield()
+            calls += "timeout:$reminderId:$timeoutMinutes"
+        }
     }
 
     private class RecordingSound(private val scope: TestScope) : SoundPlayer {
         val events = mutableListOf<String>()
-        override fun play(level: Importance, volume: Float, loop: Boolean) {
+        override suspend fun play(level: Importance, volume: Float, loop: Boolean) {
             events += "${scope.testScheduler.currentTime / 1000}s play $level ${"%.1f".format(volume)}${if (loop) " loop" else ""}"
         }
         override fun stop() {
@@ -89,13 +93,14 @@ public class PopupCoordinatorTest {
         advanceTimeBy(5 * minute - 1)
         assertEquals(1, c.state.value.cards.size)
         advanceTimeBy(2)
+        runCurrent()
 
         assertTrue(c.state.value.isEmpty)
         assertEquals(listOf("timeout:a:5"), actions.calls)
     }
 
     @Test
-    public fun fullScreenSoundEscalatesEveryMinuteThenStops() = runTest {
+    public fun aPopUpRingsInALoopUntilTheRingTimeEnds() = runTest {
         val sound = RecordingSound(this)
         val c = coordinator(RecordingActions(), sound)
         c.show(card("a"))
@@ -103,13 +108,7 @@ public class PopupCoordinatorTest {
 
         advanceTimeBy(5 * minute + 1)
 
-        assertEquals(
-            listOf(
-                "0s play FULL_SCREEN 0.4", "60s play FULL_SCREEN 0.6", "120s play FULL_SCREEN 0.8",
-                "180s play FULL_SCREEN 1.0", "240s play FULL_SCREEN 1.0",
-            ),
-            sound.plays(),
-        )
+        assertEquals(listOf("0s play FULL_SCREEN 1.0 loop"), sound.plays())
         assertEquals("300s stop", sound.events.last())
     }
 
@@ -125,7 +124,7 @@ public class PopupCoordinatorTest {
         advanceTimeBy(5 * minute)
 
         assertEquals("90s stop", sound.events.last())
-        assertEquals(2, sound.plays().size)
+        assertEquals(1, sound.plays().size)
     }
 
     @Test

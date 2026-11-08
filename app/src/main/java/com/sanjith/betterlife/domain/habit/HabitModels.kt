@@ -69,10 +69,14 @@ public class HabitHistory(
     }
 }
 
-/** Past days and today may be edited; future days never (context.md 5.4). */
+/**
+ * Only today's habit day can be ticked or cleared (owner's change, 2026-11-08): past days are a record
+ * and future days have not happened. "Today" follows the rollover hour, so at 01:00 last night's day
+ * can still be ticked.
+ */
 public object HabitEditRules {
-    public fun canEdit(date: LocalDate, today: LocalDate): Boolean = !date.isAfter(today)
+    public fun canEdit(date: LocalDate, today: LocalDate): Boolean = date == today
 
-    /** Editing a day before today. Milestones reached this way are quiet (banner only). */
+    /** A day before today. No tick on the phone can do this now; a milestone from such a log (a pull in S3) is quiet. */
     public fun isBackfill(date: LocalDate, today: LocalDate): Boolean = date.isBefore(today)
 }

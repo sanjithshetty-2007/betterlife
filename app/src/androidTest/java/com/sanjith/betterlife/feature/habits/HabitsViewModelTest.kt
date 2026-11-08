@@ -86,18 +86,23 @@ public class HabitsViewModelTest {
     }
 
     @Test
-    public fun backfillingAPastDayJoinsTheStreak() {
+    public fun pastAndFutureBoxesDoNothing() {
         val id = runBlocking { habits.create(HabitDraft("Skincare", "#FF8FB8"), LocalDate.of(2026, 11, 1)) }
-        runBlocking { listOf(17, 19, 20).forEach { habits.tick(id, LocalDate.of(2026, 11, it), today) } }
-        val gap = ui { card(it).streak.current == 2 }
+        runBlocking {
+            listOf(17, 19).forEach { habits.tick(id, LocalDate.of(2026, 11, it), LocalDate.of(2026, 11, it)) }
+            habits.tick(id, today, today)
+        }
+        val before = ui { card(it).streak.current == 2 }
 
-        viewModel.toggle(card(gap), card(gap).boxes[17])
+        viewModel.toggle(card(before), card(before).boxes[17]) // the missed 18th
+        viewModel.toggle(card(before), card(before).boxes[18]) // the ticked 19th
+        viewModel.toggle(card(before), card(before).boxes[24]) // still to come
 
-        val joined = ui { card(it).streak.current == 4 }
-        assertEquals(4, card(joined).streak.best)
-        // Future and greyed boxes do nothing.
-        viewModel.toggle(card(joined), card(joined).boxes[24])
-        assertEquals(4, card(ui { true }).streak.current)
+        val after = card(ui { true })
+        assertEquals(BoxState.OPEN, after.boxes[17].state)
+        assertEquals(BoxState.DONE, after.boxes[18].state)
+        assertEquals(2, after.streak.current)
+        assertNull(viewModel.undo.value)
     }
 
     @Test

@@ -267,6 +267,14 @@ Owner gate: also use the app normally for 2 to 3 days with real tasks and write 
 | 7 | The build on the phone | "BetterLife Dev", same habits, signed in, Reminder Health 10/10, no Debug tools on More | **PASS** (AI) |
 | 8 | Reminder Health > Test in 10 s on this build | Pop-up, ring on the alarm stream, Done stops it | **PASS** (AI) |
 
+## Device test re-run (pending since the 2026-11-09 handover)
+
+No tests were run at the handover: no code changed and the phone was not connected. The last device run was before the final small fixes of the floating-bar change.
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | AI, phone connected: `gradlew.bat connectedDebugAndroidTest`, then `gradlew.bat installProfile` and the compile command | All 92 device tests pass; the profile build is back on the phone with data kept | |
+
 ## Owner's change 2026-11-08: stronger alarm, habits locked to today, stronger done feedback
 
 | # | Check | Expected | Result |

@@ -437,3 +437,11 @@ The Calendar tab now has Day / Week / Month / Agenda at the top and the category
 | 7 | Day sheet > Add event / Add task | The editor opens with that day already set | **PASS** (UI test for the hand-over; AI on the phone: Add task from today opened "Due Today", Add event from Thu 19 Nov opened on Thu) |
 | 8 | Scroll Week and Agenda with the debug seed (200 events) | Smooth | **MEASURED** (AI 2026-11-15, profile build, 200 seeded events + 1,000 seeded tasks, then wiped: 0 janky frames; Week 90th percentile 13 ms, Agenda 13 ms, Month swipes 14 ms) |
 | 9 | Agenda: scroll | Each day's header sticks at the top until the next day pushes it away | |
+
+## Owner's change 2026-11-15: cherry selected pill
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | Calendar: tap Day, Week, Month, Agenda | The selected one is filled cherry | **PASS** (AI, screenshot of Week on the phone) |
+| 2 | New task: Priority and Level; New event: Type | The selected pill is cherry | **PASS** (AI, screenshot of the task editor's Priority) |
+| 3 | Any selected chip (Repeat "Never", a snooze option) | Unchanged grey-blue (only pills changed) | **PASS** (AI, "Never" seen unchanged) |

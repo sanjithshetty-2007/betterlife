@@ -55,6 +55,7 @@ import com.sanjith.betterlife.feature.tasks.SectionLabel
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
+import com.sanjith.betterlife.ui.theme.pillColors
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -109,7 +110,7 @@ internal fun TypeSection(type: EventType, onPick: (EventType) -> Unit) {
     SectionLabel(stringResource(R.string.event_type))
     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
         EventType.entries.forEachIndexed { i, t ->
-            SegmentedButton(selected = t == type, onClick = { onPick(t) }, shape = SegmentedButtonDefaults.itemShape(i, EventType.entries.size)) {
+            SegmentedButton(selected = t == type, onClick = { onPick(t) }, shape = SegmentedButtonDefaults.itemShape(i, EventType.entries.size), colors = pillColors()) {
                 Text(stringResource(kindLabel(t)), maxLines = 1)
             }
         }

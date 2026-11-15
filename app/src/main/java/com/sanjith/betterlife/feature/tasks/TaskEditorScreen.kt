@@ -43,6 +43,7 @@ import com.sanjith.betterlife.domain.time.today
 import com.sanjith.betterlife.ui.feedback.rememberDoneHaptics
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
+import com.sanjith.betterlife.ui.theme.pillColors
 
 /** The full task editor (context.md 5.3). Saving updates the task, its reminders and the alarms. */
 @Composable
@@ -125,7 +126,7 @@ private fun PrioritySection(priority: Priority, onPick: (Priority) -> Unit) {
     val options = listOf(Priority.NONE, Priority.LOW, Priority.MEDIUM, Priority.HIGH)
     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
         options.forEachIndexed { i, p ->
-            SegmentedButton(selected = p == priority, onClick = { onPick(p) }, shape = SegmentedButtonDefaults.itemShape(i, options.size)) {
+            SegmentedButton(selected = p == priority, onClick = { onPick(p) }, shape = SegmentedButtonDefaults.itemShape(i, options.size), colors = pillColors()) {
                 Text(stringResource(priorityLabel(p)), maxLines = 1)
             }
         }
@@ -137,7 +138,7 @@ internal fun LevelSection(level: Importance, onPick: (Importance) -> Unit) {
     SectionLabel(stringResource(R.string.editor_level))
     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
         Importance.entries.forEachIndexed { i, l ->
-            SegmentedButton(selected = l == level, onClick = { onPick(l) }, shape = SegmentedButtonDefaults.itemShape(i, Importance.entries.size)) {
+            SegmentedButton(selected = l == level, onClick = { onPick(l) }, shape = SegmentedButtonDefaults.itemShape(i, Importance.entries.size), colors = pillColors()) {
                 Text(stringResource(levelLabel(l)), maxLines = 1)
             }
         }

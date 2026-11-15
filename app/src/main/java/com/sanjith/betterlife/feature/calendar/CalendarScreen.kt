@@ -42,6 +42,7 @@ import com.sanjith.betterlife.domain.model.EventType
 import com.sanjith.betterlife.feature.events.CategoryDot
 import com.sanjith.betterlife.feature.tasks.DueText
 import com.sanjith.betterlife.ui.theme.Spacing
+import com.sanjith.betterlife.ui.theme.pillColors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
@@ -136,7 +137,7 @@ private fun ViewSwitcher(selected: CalendarView, onSelect: (CalendarView) -> Uni
     val views = listOf(CalendarView.DAY, CalendarView.WEEK, CalendarView.MONTH, CalendarView.AGENDA)
     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.sm)) {
         views.forEachIndexed { i, view ->
-            SegmentedButton(selected = view == selected, onClick = { onSelect(view) }, shape = SegmentedButtonDefaults.itemShape(i, views.size)) {
+            SegmentedButton(selected = view == selected, onClick = { onSelect(view) }, shape = SegmentedButtonDefaults.itemShape(i, views.size), colors = pillColors()) {
                 Text(stringResource(labelOf(view)), maxLines = 1)
             }
         }

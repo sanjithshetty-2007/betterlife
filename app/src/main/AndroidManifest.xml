@@ -82,6 +82,52 @@
                 android:resource="@xml/habit_widget_info" />
         </receiver>
 
+        <!-- The task and calendar widgets (Prompt 20). -->
+        <receiver
+            android:name=".widgets.TaskWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_tasks_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/task_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.CalendarWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_calendar_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/calendar_widget_info" />
+        </receiver>
+
+        <!-- The task widget's + opens this small popup over the home screen (widgets cannot show a keyboard).
+             Its own task, so it never brings the rest of the app forward. -->
+        <activity
+            android:name=".widgets.QuickAddActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.BetterLife.Dialog"
+            android:windowSoftInputMode="stateVisible|adjustResize" />
+
+        <!-- Asks month grid or next events when a calendar widget is added. The launcher starts it, so it is exported. -->
+        <activity
+            android:name=".widgets.CalendarWidgetConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.BetterLife.Dialog">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <!-- Re-arms alarms after reboot, app updates, clock and time-zone changes. These broadcasts are
              protected (only the system can send them), so exporting the receiver does not let other apps
              trigger it. All four are allowed for manifest receivers on Android 8+. -->

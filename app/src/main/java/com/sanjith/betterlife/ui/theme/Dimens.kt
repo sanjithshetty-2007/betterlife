@@ -86,6 +86,12 @@ public object Dimens {
     public val widgetHeaderHeight = 28.dp
     public val widgetLabelHeight = 16.dp
     public val widgetFooterHeight = 20.dp
+
+    /** The calendar widget's day number box (seven to a row in a 4-cell-wide widget). */
+    public val widgetDayCell = 24.dp
+
+    /** The category stripe beside an entry in the calendar widget's next-events list (two lines of text). */
+    public val widgetAgendaStripe = 32.dp
     public val widgetRoomyFrom = 150.dp
 }
 

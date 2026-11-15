@@ -83,27 +83,15 @@ public class HabitWidget : GlanceAppWidget() {
     }
 }
 
-private val surface = ColorProvider(BetterLifeColors.Surface)
-private val text = ColorProvider(BetterLifeColors.Text)
-private val muted = ColorProvider(BetterLifeColors.TextMuted)
-private val openBorder = ColorProvider(BetterLifeColors.BoxOpenBorder)
-private val cardOutline = ColorProvider(BetterLifeColors.SoftBorder)
+private val surface = WidgetColors.surface
+private val text = WidgetColors.text
+private val muted = WidgetColors.muted
+private val openBorder = WidgetColors.openBorder
 
 @Composable
 private fun HabitWidgetContent(model: HabitWidgetModel?, layout: HabitWidgetLayout) {
     val openApp = actionStartActivity<MainActivity>()
-    // The app's cards have a 1 dp soft outline; Glance has no border, so an outer layer one border width wider draws it.
-    Box(modifier = GlanceModifier.fillMaxSize().cornerRadius(Dimens.widgetCorner).background(cardOutline).padding(Dimens.borderWidth)) {
-        Card(model, layout, openApp)
-    }
-}
-
-@Composable
-private fun Card(model: HabitWidgetModel?, layout: HabitWidgetLayout, openApp: Action) {
-    Column(
-        modifier = GlanceModifier.fillMaxSize().cornerRadius(Dimens.widgetCorner).background(surface)
-            .padding(if (layout.roomy) Spacing.md else Spacing.sm),
-    ) {
+    WidgetCard(padding = if (layout.roomy) Spacing.md else Spacing.sm) {
         Text(headerText(model), style = TextStyle(color = muted, fontSize = WidgetType.header, fontWeight = FontWeight.Bold), maxLines = 1)
         Spacer(GlanceModifier.height(Spacing.sm))
         when {

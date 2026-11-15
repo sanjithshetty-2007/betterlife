@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The calendar widget (Prompt 20): 4x3 by default so a six-week month fits; asks month or next events when added. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_calendar_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:configure="com.sanjith.betterlife.widgets.CalendarWidgetConfigActivity"
+    android:widgetFeatures="reconfigurable"
+    android:minWidth="250dp"
+    android:minHeight="180dp"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="110dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="3"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

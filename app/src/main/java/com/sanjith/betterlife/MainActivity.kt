@@ -66,6 +66,8 @@ public class MainActivity : ComponentActivity() {
         public const val ROUTE_CENTER: String = Routes.CENTER
         public const val ROUTE_QUIET: String = Routes.QUIET
         public const val ROUTE_HABITS: String = Routes.HABITS
+        public const val ROUTE_TASKS: String = Routes.TASKS
+        public const val ROUTE_CALENDAR: String = Routes.AGENDA
 
         public fun openRouteIntent(context: Context, route: String): Intent =
             Intent(context, MainActivity::class.java)

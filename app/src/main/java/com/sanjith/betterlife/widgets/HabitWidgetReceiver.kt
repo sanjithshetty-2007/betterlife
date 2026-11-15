@@ -51,15 +51,17 @@ public class ToggleHabitAction : ActionCallback {
 }
 
 /**
- * Keeps the habit widget current without polling (Prompt 19): it redraws when the habit data or the
- * widget settings change (a tick in the app, a reminder's Done, a sync pull, an edit), and once at the
- * day rollover hour so the morning shows a fresh day. Started when the app's process starts, which
- * includes a start caused by the widget itself.
+ * Keeps every BetterLife widget current without polling (Prompts 19 and 20): each redraws when its own
+ * data or the widget settings change (a tick in the app, a reminder's Done, a sync pull, an edit), and
+ * all of them once at the day rollover hour so the morning shows a fresh day. Started when the app's
+ * process starts, which includes a start caused by a widget itself.
  */
-public class HabitWidgetUpdates(
+public class WidgetUpdates(
     private val context: Context,
     private val scope: CoroutineScope,
-    private val source: HabitWidgetSource,
+    private val habits: HabitWidgetSource,
+    private val tasks: TaskWidgetSource,
+    private val calendar: CalendarWidgetSource,
     private val clock: Clock,
     private val rolloverHour: suspend () -> Int,
 ) {
@@ -68,13 +70,27 @@ public class HabitWidgetUpdates(
     @OptIn(FlowPreview::class)
     public fun start() {
         if (!started.compareAndSet(false, true)) return
+        // The first value is the state each widget was just drawn from; redraw only on changes.
         scope.launch {
-            // The first value is the state the widget was just drawn from; redraw only on changes.
-            source.observe().map { it.habits to it.hideDetails }.distinctUntilChanged().drop(1)
-                .debounce(DEBOUNCE_MS)
-                .collect { HabitWidget().updateAll(context) }
+            habits.observe().map { it.habits to it.hideDetails }.distinctUntilChanged().drop(1)
+                .debounce(DEBOUNCE_MS).collect { HabitWidget().updateAll(context) }
+        }
+        scope.launch {
+            tasks.observe().map { it.tasks to it.hideDetails }.distinctUntilChanged().drop(1)
+                .debounce(DEBOUNCE_MS).collect { TaskWidget().updateAll(context) }
+        }
+        scope.launch {
+            calendar.observe().map { listOf(it.items, it.categories, it.weekStart, it.hideDetails) }.distinctUntilChanged().drop(1)
+                .debounce(DEBOUNCE_MS).collect { CalendarWidget().updateAll(context) }
         }
         scope.launch { scheduleRollover() }
+    }
+
+    /** Every widget at once: the rollover run, and after a restore or a big change. */
+    public suspend fun updateAll() {
+        HabitWidget().updateAll(context)
+        TaskWidget().updateAll(context)
+        CalendarWidget().updateAll(context)
     }
 
     /** One-off work at the next rollover hour; the work redraws the widget and books the next one. */
@@ -97,11 +113,12 @@ public class HabitWidgetUpdates(
     }
 }
 
-/** Runs once at the rollover hour: a fresh day on the widget, then the next day's run is booked. */
+/** Runs once at the rollover hour: a fresh day on every widget, then the next day's run is booked. */
 public class HabitWidgetRolloverWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        HabitWidget().updateAll(applicationContext)
-        (applicationContext as BetterLifeApp).container.habitWidgetUpdates.scheduleRollover()
+        val updates = (applicationContext as BetterLifeApp).container.widgetUpdates
+        updates.updateAll()
+        updates.scheduleRollover()
         return Result.success()
     }
 }

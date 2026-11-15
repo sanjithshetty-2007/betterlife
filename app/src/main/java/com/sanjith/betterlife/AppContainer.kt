@@ -228,8 +228,20 @@ public class AppContainer(appContext: Context) {
     public val habitWidgetToggle: com.sanjith.betterlife.widgets.HabitWidgetToggle by lazy {
         com.sanjith.betterlife.widgets.HabitWidgetToggle(habitService, habitRepository)
     }
-    public val habitWidgetUpdates: com.sanjith.betterlife.widgets.HabitWidgetUpdates by lazy {
-        com.sanjith.betterlife.widgets.HabitWidgetUpdates(appContext, appScope, habitWidgetSource, clock) { settingsRepository.current().rolloverHour }
+    /** The task and calendar widgets (Prompt 20): their data and the task widget's taps (through TaskService). */
+    public val taskWidgetSource: com.sanjith.betterlife.widgets.TaskWidgetSource by lazy {
+        com.sanjith.betterlife.widgets.TaskWidgetSource(taskRepository, settingsRepository.settings, clock)
+    }
+    public val calendarWidgetSource: com.sanjith.betterlife.widgets.CalendarWidgetSource by lazy {
+        com.sanjith.betterlife.widgets.CalendarWidgetSource(eventRepository, taskRepository, eventCategoryStore.categories, settingsRepository.settings, clock)
+    }
+    public val taskWidgetActions: com.sanjith.betterlife.widgets.TaskWidgetActions by lazy { com.sanjith.betterlife.widgets.TaskWidgetActions(taskService) }
+
+    /** Redraws every widget when its data changes and at the rollover hour. */
+    public val widgetUpdates: com.sanjith.betterlife.widgets.WidgetUpdates by lazy {
+        com.sanjith.betterlife.widgets.WidgetUpdates(appContext, appScope, habitWidgetSource, taskWidgetSource, calendarWidgetSource, clock) {
+            settingsRepository.current().rolloverHour
+        }
     }
 
     /** Adds the four starter habits once per install. */

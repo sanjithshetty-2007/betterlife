@@ -462,3 +462,17 @@ Note (Vivo): after a force stop (App info > Force stop) a widget may stay blank 
 | 6 | Make the widget wide (4 cells), then small (2 cells) | One row with names; then two rows of two boxes | |
 | 7 | 01:00: tap a box | It counts for the previous day | **PASS** (device test) |
 | 8 | Widget and app tick at the same moment | Nothing lost, one row per habit and day | **PASS** (device test, 8 habits on many threads) |
+
+## Prompt 20: Task widget, calendar widget and the quick-add popup (GATE)
+
+Add them like the habit widget: long-press an empty spot > Widgets > BetterLife tasks / BetterLife calendar. The calendar widget asks "This month" or "Next events" when you drop it. Names follow More > Widgets > Hide habit names on widgets (it hides task and event titles too).
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | GATE: add all three widgets (habits, tasks, calendar) and use them for two days | They show the right things and keep up | |
+| 2 | Tick a task on the task widget, wait past its reminder time | Its reminder does not ring | (device test: the reminder is no longer scheduled) |
+| 3 | + on the task widget, type "call mom tomorrow 5pm", Add | The popup closes; the app shows "call mom" tomorrow at 5:00 PM | (device test: saved with the day-before and at-time reminders) |
+| 4 | Bin on a task, then Delete | "Delete this task?" first; Delete removes it, Keep leaves it | |
+| 5 | Calendar widget: month, then a second one with next events | Today in yellow, dots under days with events, a cake on birthdays; the next events list with times | |
+| 6 | Restart the phone | All widgets still show data and still work | |
+| 7 | After the gate: Backup > Back up now; the AI tags phase-3 | Backup saved; tag pushed | |

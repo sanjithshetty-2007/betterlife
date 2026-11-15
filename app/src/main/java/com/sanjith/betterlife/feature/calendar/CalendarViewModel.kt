@@ -13,6 +13,8 @@ import com.sanjith.betterlife.data.repository.EventRepository
 import com.sanjith.betterlife.data.repository.StandaloneReminderRepository
 import com.sanjith.betterlife.data.repository.TaskRepository
 import com.sanjith.betterlife.domain.calendar.CalendarFilter
+import com.sanjith.betterlife.domain.calendar.CalendarMarks
+import com.sanjith.betterlife.domain.calendar.DayMarks
 import com.sanjith.betterlife.domain.calendar.CalendarRanges
 import com.sanjith.betterlife.domain.calendar.CalendarView
 import com.sanjith.betterlife.domain.calendar.DateRange
@@ -21,7 +23,6 @@ import com.sanjith.betterlife.domain.calendar.MonthGrid
 import com.sanjith.betterlife.domain.calendar.TimeGridLayout
 import com.sanjith.betterlife.domain.event.Agenda
 import com.sanjith.betterlife.domain.event.AgendaDay
-import com.sanjith.betterlife.domain.event.AgendaKind
 import com.sanjith.betterlife.domain.event.EventCategory
 import com.sanjith.betterlife.domain.time.Clock
 import com.sanjith.betterlife.domain.time.today
@@ -44,9 +45,6 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
-
-/** Dots under a month cell: one per category colour (null = no category, tasks and reminders), and a cake. */
-public data class DayMarks(val colors: List<Int?>, val birthday: Boolean)
 
 /** Everything the Calendar tab draws (Prompt 18). Only the visible range is loaded and laid out. */
 public data class CalendarUi(
@@ -153,18 +151,12 @@ public class CalendarViewModel(
             days = inRange,
             grid = if (gridViews) TimeGridLayout.layout(built.flatMap { it.entries }, range.dates(), zone) else emptyList(),
             monthGrid = if (view == CalendarView.MONTH) CalendarRanges.monthGrid(YearMonth.from(data.anchor), data.weekStart) else null,
-            marks = if (view == CalendarView.MONTH) marks(inRange, data.categories) else emptyMap(),
+            marks = if (view == CalendarView.MONTH) CalendarMarks.of(inRange) { data.categories.colorIndexOf(it) } else emptyMap(),
             categories = data.categories,
             filter = c.filter,
             sheetDay = c.sheetDay,
             loading = false,
         )
-    }
-
-    private fun marks(days: List<AgendaDay>, categories: List<EventCategory>): Map<LocalDate, DayMarks> = days.associate { day ->
-        val colors = day.entries.filter { it.item.kind != AgendaKind.BIRTHDAY }
-            .map { categories.colorIndexOf(it.item.colorCategory) }.distinct().take(MAX_DOTS)
-        day.date to DayMarks(colors, day.entries.any { it.item.kind == AgendaKind.BIRTHDAY })
     }
 
     public fun select(view: CalendarView) {
@@ -206,9 +198,6 @@ public class CalendarViewModel(
 
     public companion object {
         private const val STOP_TIMEOUT_MS = 5_000L
-
-        /** Dots under one month cell; more categories that day still show in the day sheet. */
-        public const val MAX_DOTS: Int = 3
 
         public val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

@@ -88,8 +88,8 @@ public class SyncEngineTest {
             return true
         }
 
-        override suspend fun metas(table: String, ids: List<String>): Map<String, RowMeta> =
-            ids.mapNotNull { id -> rows[table]?.get(id)?.first?.let { id to EntityJson.meta(it) } }.toMap()
+        override suspend fun localVersions(table: String, pulled: List<JsonObject>): Map<String, RowMeta> =
+            pulled.map { EntityJson.meta(it).id }.mapNotNull { id -> rows[table]?.get(id)?.first?.let { id to EntityJson.meta(it) } }.toMap()
 
         override suspend fun applyRemote(table: String, rows: List<JsonObject>) {
             rows.forEach { write(table, it, dirty = false) }

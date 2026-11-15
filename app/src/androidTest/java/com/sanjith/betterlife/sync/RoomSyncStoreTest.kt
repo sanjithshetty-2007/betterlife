@@ -85,7 +85,7 @@ public class RoomSyncStoreTest {
         assertEquals(30, merged.offsetMinutes)
         assertEquals(5_000L, merged.lastFiredFireAt)
         assertEquals(ReminderState.FIRED, merged.state)
-        assertEquals(mapOf(id to com.sanjith.betterlife.domain.sync.RowMeta(id, 9_000L, null)), store.metas(SyncTables.TASKS, listOf(id)))
+        assertEquals(mapOf(id to com.sanjith.betterlife.domain.sync.RowMeta(id, 9_000L, null)), store.localVersions(SyncTables.TASKS, listOf(serverTask)))
     }
 
     @Test

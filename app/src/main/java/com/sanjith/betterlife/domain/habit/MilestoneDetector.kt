@@ -36,4 +36,14 @@ public object MilestoneDetector {
         val kind = if (!isBackfill && run.length == top) CelebrationKind.FULL else CelebrationKind.QUIET
         return MilestoneOutcome(reached, MilestoneEvent(top, kind, run.start))
     }
+
+    /**
+     * Habit logs that arrived through a sync pull never celebrate (context.md 5.4): every milestone
+     * the run reached that the ledger does not know yet is recorded QUIETLY, so a later tick on this
+     * phone does not announce it again.
+     *
+     * Example: a pulled 12-day run with nothing recorded -> [7, 10], both quiet.
+     */
+    public fun reachedByPull(run: StreakRun, alreadyRecorded: Set<Int>): List<Int> =
+        MILESTONES.filter { it <= run.length && it !in alreadyRecorded }
 }

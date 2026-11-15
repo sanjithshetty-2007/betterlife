@@ -288,7 +288,7 @@ No tests were run at the handover: no code changed and the phone was not connect
 
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 1 | AI, phone connected: `gradlew.bat connectedDebugAndroidTest`, then `gradlew.bat installProfile` and the compile command | All 92 device tests pass; the profile build is back on the phone with data kept | |
+| 1 | AI, phone connected: `gradlew.bat connectedDebugAndroidTest`, then `gradlew.bat installProfile` and the compile command | All 92 device tests pass; the profile build is back on the phone with data kept | **PASS** (AI 2026-11-15, during S3: 98 of 98 device tests, profile build reinstalled last and compiled, data and sign-in kept) |
 
 ## Owner's change 2026-11-08: stronger alarm, habits locked to today, stronger done feedback
 
@@ -407,3 +407,17 @@ Sync runs when the app opens, about 5 s after a change, every 6 hours, and on Ac
 | 11 | Leave the phone with the app untouched for 6+ hours online | Last sync moved forward without opening the app | |
 
 Seen during the AI check: right after a force stop, the first sync request timed out after about 47 s and reported "offline"; WorkManager retried a minute later and it worked. Nothing was lost.
+
+## Prompt S3: Habit, habit log and pause range sync
+
+Habits, each day's tick (one row per habit and day), habit pauses and habit reminder times now sync like tasks. A pulled tick never celebrates; its milestones are recorded quietly. Debug seed habits never leave the phone.
+
+| # | Test | Expected | Result |
+|---|---|---|---|
+| 1 | Supabase > Table Editor | habits, habit_logs, pause_ranges exist, each "RLS enabled" | **PASS** (AI 2026-11-15: created by migration 20261115120000_s3_habit_sync) |
+| 2 | SQL editor: run `supabase/tests/rls_test.sql` | Ends with `RLS test passed` and leaves nothing behind | **PASS** (AI: all 8 tables; 0 test users, 0 rows left) |
+| 3 | Security advisor | No warnings except leaked password protection (row Q7) | **PASS** (AI) |
+| 4 | Open the app after this update | Your habits, ticks and habit reminders reach Supabase | **PASS** (AI: synced at 12:45; 4 habits incl. 3 you deleted on 8 Nov as tombstones, 18 habit-day rows, 2 habit reminders) |
+| 5 | Tick today's box, wait a minute, look at habit_logs | The day's row is there (row Q8) | |
+| 6 | Optional: untick today while in airplane mode, then go online | The row gets deleted_at on Supabase | |
+| 7 | Optional, only after a backup: a second phone or a reinstall, sign in | Grids, streaks and consistency look the same; no celebration pops up. (Uninstalling deletes everything that is not synced: notes later, the reminder history, settings.) | |

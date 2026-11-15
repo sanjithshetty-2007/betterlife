@@ -38,7 +38,7 @@ If a migration is risky (renaming or splitting columns, changing types), the AI 
 
 ## Supabase (from Prompt S1)
 
-Server-side tables change through SQL files in `supabase/migrations/`, applied in order and never edited after being applied. A change to a synced table (tasks, projects, events, reminders, standalone reminders, and later habits, habit logs, pause ranges) needs **both**: a Room migration on the phone and a Supabase migration on the server.
+Server-side tables change through SQL files in `supabase/migrations/`, applied in order and never edited after being applied. A change to a synced table (tasks, projects, events, reminders, standalone reminders, habits, habit logs, pause ranges) needs **both**: a Room migration on the phone and a Supabase migration on the server.
 
 Project: **betterlife**, Mumbai (ap-south-1), ref `qprtltwuuihbixbfgspm`.
 
@@ -47,6 +47,7 @@ Project: **betterlife**, Mumbai (ap-south-1), ref `qprtltwuuihbixbfgspm`.
 | `20261106120000_s1_synced_tables.sql` | 2026-11-06 | projects, tasks, events, reminders, standalone_reminders; user_id from auth.uid(); server_updated_at trigger (pull cursor); (user_id, server_updated_at) index; row-level security read/insert/update own rows only; no delete (tombstones); nothing for anon |
 | `20261106130000_s2_sync_support.sql` | 2026-11-06 | server_updated_at from clock_timestamp() (an exact, increasing pull cursor); first version of delete_my_cloud_data |
 | `20261106131000_s2_delete_as_invoker.sql` | 2026-11-06 | delete_my_cloud_data runs as the caller; delete policies only work while that function sets its transaction-local flag |
+| `20261115120000_s3_habit_sync.sql` | 2026-11-15 | habits, habit_logs (unique user_id + habit_id + local_date), pause_ranges with the S1 trigger, pull index and RLS; reminders.item_type allows HABIT; keep_newer_row trigger (an older updated_at never overwrites) on the three habit tables; delete_my_cloud_data includes them |
 
 Column rule: Room's camelCase becomes snake_case; the phone's times stay epoch milliseconds (`bigint`), dates stay `date`, enums stay their names as `text` with a check. `server_updated_at` exists only on the server.
 

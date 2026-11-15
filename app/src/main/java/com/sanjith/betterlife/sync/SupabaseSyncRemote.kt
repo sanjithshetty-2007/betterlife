@@ -26,7 +26,7 @@ public class SupabaseSyncRemote(private val client: SupabaseClient) : SyncRemote
     }
 
     override suspend fun upsert(table: String, rows: List<JsonObject>) {
-        call { client.from(table).upsert(rows) { onConflict = ID } }
+        call { client.from(table).upsert(rows) { onConflict = SyncTables.upsertKey(table) } }
     }
 
     override suspend fun pull(table: String, fromMicros: Long?, limit: Int): List<JsonObject> = call {

@@ -20,7 +20,7 @@ public interface SyncRemote {
     /** The signed-in user's id, or null when signed out. Waits for a saved session to load. */
     public suspend fun signedInUserId(): String?
 
-    /** Inserts or replaces [rows] by id. Throws [SyncFailure]. */
+    /** Inserts or replaces [rows] by [SyncTables.upsertKey] (the id, or habit and day for habit logs). Throws [SyncFailure]. */
     public suspend fun upsert(table: String, rows: List<JsonObject>)
 
     /** Rows with server_updated_at at or after [fromMicros] (all when null), oldest first, at most [limit]. */
@@ -37,7 +37,11 @@ public interface LocalSyncStore {
     /** Marks a pushed row CLEAN, but only if it was not edited again meanwhile; true if it was marked. */
     public suspend fun markClean(table: String, id: String, updatedAt: Long): Boolean
 
-    public suspend fun metas(table: String, ids: List<String>): Map<String, RowMeta>
+    /**
+     * The phone's version of each [pulled] row, keyed by the pulled row's id. Usually the row with the
+     * same id; for habit logs the row of the same habit and day, whatever its id (Prompt S3).
+     */
+    public suspend fun localVersions(table: String, pulled: List<JsonObject>): Map<String, RowMeta>
 
     /** Writes server rows in one transaction, CLEAN, keeping local-only columns. */
     public suspend fun applyRemote(table: String, rows: List<JsonObject>)
@@ -180,7 +184,7 @@ public class SyncEngine(
             val page = remote.pull(table, cursor, PULL_PAGE)
             if (page.isEmpty()) break
             val metas = page.map { EntityJson.meta(it) to (EntityJson.serverMicros(it) ?: 0L) }
-            val plan = SyncPlanner.planPull(metas, local.metas(table, metas.map { it.first.id }))
+            val plan = SyncPlanner.planPull(metas, local.localVersions(table, page))
             if (plan.apply.isNotEmpty()) {
                 val ids = plan.apply.toSet()
                 local.applyRemote(table, page.filter { EntityJson.meta(it).id in ids })

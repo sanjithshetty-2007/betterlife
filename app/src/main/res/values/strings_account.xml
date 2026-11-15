@@ -4,7 +4,7 @@
     <string name="account_home_button">Account &amp; sync</string>
     <string name="account_title">Account &amp; sync</string>
     <string name="account_what_syncs_title">What goes to the cloud</string>
-    <string name="account_what_syncs">Tasks, projects, events, birthdays, remind-me items and reminder settings (and habits later) are copied to your private Supabase project. Notes, journal, body data, photos, voice notes and the reminder history never leave this phone.</string>
+    <string name="account_what_syncs">Tasks, projects, events, birthdays, remind-me items, reminder settings, habits, habit ticks and habit pauses are copied to your private Supabase project. Notes, journal, body data, photos, voice notes and the reminder history never leave this phone.</string>
     <string name="account_optional">Signing in is optional. Everything works without it.</string>
     <string name="account_email">Email</string>
     <string name="account_password">Password</string>

@@ -98,7 +98,12 @@ public class HabitRepository(
         return id
     }
 
-    /** The four starter habits; ones that already exist (even deleted by the owner) are left alone. */
+    /**
+     * The four starter habits; ones that already exist (even deleted by the owner) are left alone.
+     * They are stamped "never edited" ([STARTER_UPDATED_AT]): on a reinstall the starters are seeded
+     * again with the same fixed ids, and the owner's synced version (renamed, recoloured, deleted,
+     * with its real start date) must win over the fresh template (Prompt S3).
+     */
     public suspend fun insertStarters(starters: List<StarterHabit>, names: (StarterHabit.Key) -> String, startDate: LocalDate) {
         val now = nowMillis()
         habitDao.insertIfAbsent(
@@ -106,7 +111,7 @@ public class HabitRepository(
                 HabitEntity(
                     id = s.id, name = names(s.key), colorHex = s.colorHex, avatar = s.avatar, category = s.category,
                     essential = s.essential, archived = false, reminderTime = null, sortOrder = index, startDate = startDate,
-                    createdAt = now, updatedAt = now, deletedAt = null, syncState = SyncState.DIRTY, serverUpdatedAt = null,
+                    createdAt = now, updatedAt = STARTER_UPDATED_AT, deletedAt = null, syncState = SyncState.DIRTY, serverUpdatedAt = null,
                 )
             },
         )
@@ -223,9 +228,39 @@ public class HabitRepository(
         return event
     }
 
+    /**
+     * Habit logs written by a sync pull (called inside the pull's transaction): streaks recompute by
+     * themselves (they are derived), and milestones the pulled runs reached are recorded QUIETLY,
+     * never celebrated and never rewarded (context.md 5.4, Prompt S3).
+     */
+    public suspend fun recordPulledMilestones(logs: List<HabitLogEntity>, today: LocalDate) {
+        val now = nowMillis()
+        logs.filter { it.deletedAt == null }.groupBy { it.habitId }.forEach { (habitId, habitLogs) ->
+            val habit = habitDao.getAnyById(habitId)?.takeIf { it.deletedAt == null } ?: return@forEach
+            val history = loadHistory(habit)
+            val runs = habitLogs.mapNotNull { StreakCalculator.runAround(history, it.localDate, today) }.distinctBy { it.start }
+            runs.forEach { run ->
+                val reached = MilestoneDetector.reachedByPull(run, ledgerDao.recordedFor(habitId, run.start).toSet())
+                ledgerDao.insertAll(
+                    reached.map { milestone ->
+                        MilestoneLedgerEntity(
+                            id = newId(), habitId = habitId, streakStartDate = run.start, milestone = milestone, quiet = true,
+                            celebratedAt = now, createdAt = now, updatedAt = now, deletedAt = null,
+                        )
+                    },
+                )
+            }
+        }
+    }
+
     private suspend fun loadHistory(habit: HabitEntity): HabitHistory = HabitHistory(
         startDate = habit.startDate,
         logs = logDao.getActiveForHabit(habit.id).associate { it.localDate to it.status },
         pauses = pauseDao.getActive().map { PausePeriod(it.startDate, it.endDate) },
     )
+
+    public companion object {
+        /** The "never edited" time of a freshly seeded starter habit: any real edit is newer. */
+        public const val STARTER_UPDATED_AT: Long = 0L
+    }
 }

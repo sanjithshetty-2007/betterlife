@@ -265,7 +265,9 @@ public class AppContainer(appContext: Context) {
      */
     public val syncEngine: SyncEngine? by lazy {
         supabase?.let { client ->
-            SyncEngine(SupabaseSyncRemote(client), RoomSyncStore(database), syncStatusStore, realClock) {
+            // Pulled habit logs never celebrate: their milestones are recorded quietly (Prompt S3).
+            val store = RoomSyncStore(database) { logs -> habitRepository.recordPulledMilestones(logs, habitToday()) }
+            SyncEngine(SupabaseSyncRemote(client), store, syncStatusStore, realClock) {
                 reminderEngine.rescheduleAll(RescheduleTrigger.SYNC_PULL)
             }
         }

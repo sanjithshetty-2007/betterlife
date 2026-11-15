@@ -2,6 +2,21 @@
 
 Results of manual tests on the Vivo V50e (OriginOS 6, Android 16). Each prompt adds its matrix here.
 
+## Required owner checks (owner decision 2026-11-15)
+
+The owner checks only the main, required items below. Every other blank row in this file is **optional**: a record of what could be tried, not a gate. Gates up to Prompt 17 (including the Phase 1 regression R1 to R21 and the 3 days of real use) were closed by the owner on 2026-11-15. Since Prompt 17 the old Home is gone: its buttons are on More, its banners on Today.
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| Q1 | More > Backup > Back up now; copy the file off the phone (PC or cloud drive) | The file is somewhere safe | |
+| Q2 | More > Alarm > Choose alarm sound; Reminder Health > Test in 10 s | Your sound rings; Done stops it | |
+| Q3 | Note your alarm volume, let a test ring, answer it | The alarm volume is back where it was | |
+| Q4 | Ringer on silent, a reminder at Alarm level in 2 min | It rings anyway | |
+| Q5 | A reminder in 10 min, restart the phone, unlock | It still rings on time | |
+| Q6 | More > Your name | Your real name instead of "Friend" | |
+| Q7 | Supabase dashboard > Authentication > leaked password protection | Turned on | |
+| Q8 | Prompt S3: tick today's box on a habit, wait a minute, Supabase > Table Editor > habit_logs | The day's row is there | |
+
 | Date | Prompt | Test | Expected | Result |
 |---|---|---|---|---|
 
@@ -112,7 +127,7 @@ How: Home > Debug: reminder engine, "+1 min Full" (or Alarm). "Complete test tas
 | 6 | Tap ⓘ | Item, due time, rule ("At the time"), level, Edit button | UI test passes on the phone; live tap: owner |
 | 7 | Done | Task completed, no further alarm for it, log COMPLETED | |
 | 8 | Reschedule | App opens on "Edit item" showing the task title; log RESCHEDULED | |
-| 9 | Full: leave it unanswered | One gentle sound, a little louder each minute; after 5 minutes it closes, log MISSED, one quiet notification | |
+| 9 | Full: leave it unanswered | Replaced 2026-11-08: it rings at full volume for 5 min, then snoozes 10 min and rings again until answered (see "Owner's change 2026-11-08" row 4, PASS) | Replaced |
 | 10 | Alarm with the phone on silent | Rings in a loop on the alarm stream and vibrates; stops the instant any button is tapped | |
 | 11 | Two reminders in the same minute (+1 Full and +1 Alarm) | ONE window with "2 reminders" and two cards | |
 | 12 | Pop-up showing, tap "Complete test tasks" in the app behind it (or wait for a completion) | The card closes by itself | |
@@ -224,9 +239,9 @@ Rules in short: Pause beats Quiet Hours beats fatigue. Held reminders come back 
 
 ## Prompt 13: Phase 1 regression checklist (GATE)
 
-Run every row on the V50e with the latest debug build before Phase 2 starts. Tick Result with PASS, or write what happened. Anything that fails goes through Template 4 first. Times are phone time. "Pop-up" means a reminder at the Pop-up level; create test reminders in Tasks (+), Agenda (+ > Remind me) or with Reminder Health's test buttons.
+Optional since 2026-11-15 (owner): the gate is closed; the rows stay as a reference. The required ones are Q1 to Q8 at the top. Tick Result with PASS, or write what happened. Times are phone time. "Pop-up" means a reminder at the Pop-up level; create test reminders in Tasks (+), Calendar (+ > Remind me) or with Reminder Health's test buttons. Buttons that were on Home are on More since Prompt 17; banners are on Today.
 
-Before you start: Home > Reminder Health shows 10/10 (fix any red row first), and Home > Backup > Back up now, saved somewhere safe.
+Before you start: More > Reminder Health shows 10/10 (fix any red row first), and More > Backup > Back up now, saved somewhere safe.
 
 | # | Area | Steps | Expected | Result |
 |---|---|---|---|---|
@@ -245,14 +260,14 @@ Before you start: Home > Reminder Health shows 10/10 (fix any red row first), an
 | R13 | Grouping | 3 Pop-up reminders 3 min apart, do not answer the first | One pop-up window with the cards stacked; Center shows Grouped for the 2nd and 3rd | |
 | R14 | Ignored 3 times | Close 3 pop-ups in a row with Back | A one-time notice "Pop-ups are taking a break"; Quiet & calm shows Calm until … | |
 | R15 | In a call | Call the phone from another phone; while it rings or you talk, a Pop-up reminder fires | Normal notification only; Center: "You were on a call…" | |
-| R16 | Health banner | Phone settings: turn off "Display over other apps" for BetterLife Dev, come back | Red banner on Home naming it; Health row red with Fix; Fix opens the right page | |
+| R16 | Health banner | Phone settings: turn off "Display over other apps" for BetterLife Dev, come back | Red banner on Today naming it; Health row red with Fix; Fix opens the right page | |
 | R17 | Snooze | On a pop-up: Snooze > 10 min | It returns 10 min later; Center shows Snoozed ×1 | AI PASS 2026-11-06 (row seen) |
 | R18 | Edit and delete | Edit a task's time; then delete it | Alarm moves to the new time; after delete no alarm is left | AI PASS 2026-11-04 |
 | R19 | Export and import | Backup > Back up now (save the file). Add one test task. Backup > Restore > pick the file > Restore this backup > Replace and restart | App restarts; the test task is gone, everything from the backup is back, reminders still fire; Debug: database > Check says No broken references | AI PASS 2026-11-06 (counts identical, integrity clean) |
 | R20 | Refuse a bad file | Backup > Restore > pick any other file (a photo) | "This file is not a BetterLife backup." Nothing changes | |
-| R21 | Airplane mode | Airplane mode on for a day of normal use | Everything works; reminders fire (Supabase is not used yet) | |
+| R21 | Airplane mode | Airplane mode on for a day of normal use | Everything works; reminders fire; sync waits and catches up when back online | |
 
-Owner gate: also use the app normally for 2 to 3 days with real tasks and write anything missed or annoying under Known issues in PROGRESS.md. Keep a backup somewhere safe before Phase 2.
+Owner gate (closed by the owner 2026-11-15): use the app normally for 2 to 3 days and note anything missed or annoying under Known issues in PROGRESS.md. A backup kept off the phone is row Q1.
 
 ## Owner's change 2026-11-08: floating bar, smoother app, profile build
 
@@ -299,7 +314,7 @@ Today is the home screen now, with the bottom bar (Today, Tasks, Habits, Calenda
 
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 1 | GATE: use Today as your real home screen for 3 days | It truthfully answers "what should I do right now?" | |
+| 1 | GATE: use Today as your real home screen for 3 days | It truthfully answers "what should I do right now?" | Gate closed by the owner 2026-11-15 (moved on to S3) |
 | 2 | First launch with no name | Blip asks your name; Today greets you with it; More > Your name changes it | **PASS** (AI entered the placeholder "Friend": change it to your name in More) |
 | 3 | Today with a task due today, an overdue high task, a meeting in the next 2 hours and habits | Order: pop-up/alarm reminders due now, overdue high tasks, events soon, today's tasks by priority then time (same minute = one "2:00 PM, 2 items" row), habits | **PASS** (unit tests for every tier and tie-break) |
 | 4 | Bad day? | Three things (top task, Essential habit or the longest streak at risk, a different Self-care habit); ticking all three keeps every other habit as a KEPT day and Blip says "That's enough for today." | **PASS** (device test for keeping the rest; on the phone it picked Meditation and Skincare: no tasks, Creatine already done) |
@@ -307,11 +322,11 @@ Today is the home screen now, with the bottom bar (Today, Tasks, Habits, Calenda
 | 6 | Today banner > End pause | The range ends yesterday (or disappears if it started today); held reminders arrive at once | **PASS** (device test) |
 | 7 | Time Machine 3 days ahead without ticking | Comeback opens once that day: "Welcome back!", two habits and one task, no list of missed days | **PASS** (unit and device tests) |
 | 8 | Leave a habit unticked at 21:00 | "A habit is still waiting" notification; none if all are done; switch and time on More | |
-| 9 | After the gate: Backup > Back up now; the AI tags phase-2 in git | Backup saved; tag pushed | |
+| 9 | After the gate: Backup > Back up now; the AI tags phase-2 in git | Backup saved; tag pushed | Tag phase-2 pushed by the AI 2026-11-15; the backup is row Q1 |
 
 ## Prompt 16: Celebrations and mascot v1
 
-Blip lives on the celebration screen, the reminder pop-up, the quiet banner and Debug: mascot. Your own messages: Habits > ⋮ > Celebration messages (Blip's name is at the top of that screen).
+Blip lives on the celebration screen, the reminder pop-up, the quiet banner and Debug: mascot. Rows that use Debug tools need the debug build (gradlew.bat installDebug), then installProfile again. Your own messages: Habits > ⋮ > Celebration messages (Blip's name is at the top of that screen).
 
 | # | Check | Expected | Result |
 |---|---|---|---|
@@ -351,7 +366,7 @@ No habit screens yet (they come in Prompt 15). The rules are pure code with unit
 | 1 | Install over the old app (database 4 -> 5) | Nothing lost: tasks, events, reminders, remind-me items and the Reminder Center history are all still there | **PASS** (AI 2026-11-06: copy taken first; after the upgrade version 5, integrity ok, same 12 tasks / 4 events / 23 reminders / 3 remind-me / 39 log rows) |
 | 2 | Starter habits | Creatine (Essential, Health), Meditation, Skincare routine, Haircare routine exist once, starting today | **PASS** (AI: read from the phone's database; shown on screen from Prompt 15) |
 | 3 | `gradlew.bat testDebugUnitTest`, then open app/build/reports/tests/testDebugUnitTest/index.html > com.sanjith.betterlife.domain.habit | Every rule from context.md 5.4 has a test name you can read | **PASS** (AI: 25 habit tests, all green) |
-| 4 | Ask the AI to explain the backfill merge in plain words | It matches what you expect | |
+| 4 | Ask the AI to explain the backfill merge in plain words | Replaced 2026-11-08: past days are locked, so a backfill merge can no longer happen on the phone | Replaced |
 | 5 | Debug > Time Machine: jump to 02:00 tomorrow | (from Prompt 15) a tick still lands on today's box | |
 
 ## Prompt S1: Supabase project, schema, row-level security and sign-in

@@ -17,7 +17,7 @@ The exported schema files are a record of exactly what each version looked like.
 
 ## Steps for every schema change
 
-1. **Take a backup first.** Until Prompt 13's export exists, that means: don't install schema changes over data you care about.
+1. **Take a backup first.** More > Backup > Back up now, and keep the file off the phone.
 2. **Change the entity** (add the column or table).
 3. **Bump the version** in `@Database(version = …)` by one.
 4. **Write the migration** in `BetterLifeDatabase.kt` and add it to `ALL_MIGRATIONS`, for example:
@@ -45,6 +45,8 @@ Project: **betterlife**, Mumbai (ap-south-1), ref `qprtltwuuihbixbfgspm`.
 | File | Applied | What |
 |---|---|---|
 | `20261106120000_s1_synced_tables.sql` | 2026-11-06 | projects, tasks, events, reminders, standalone_reminders; user_id from auth.uid(); server_updated_at trigger (pull cursor); (user_id, server_updated_at) index; row-level security read/insert/update own rows only; no delete (tombstones); nothing for anon |
+| `20261106130000_s2_sync_support.sql` | 2026-11-06 | server_updated_at from clock_timestamp() (an exact, increasing pull cursor); first version of delete_my_cloud_data |
+| `20261106131000_s2_delete_as_invoker.sql` | 2026-11-06 | delete_my_cloud_data runs as the caller; delete policies only work while that function sets its transaction-local flag |
 
 Column rule: Room's camelCase becomes snake_case; the phone's times stay epoch milliseconds (`bigint`), dates stay `date`, enums stay their names as `text` with a check. `server_updated_at` exists only on the server.
 

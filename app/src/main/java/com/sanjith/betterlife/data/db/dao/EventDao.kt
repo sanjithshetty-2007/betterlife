@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.sanjith.betterlife.data.db.entity.EventEntity
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 public interface EventDao {
@@ -18,6 +19,23 @@ public interface EventDao {
         """,
     )
     public fun observeActive(): Flow<List<EventEntity>>
+
+    /**
+     * Events the calendar may show between two moments / dates (Prompt 18): every repeating event
+     * (it is expanded for the visible dates only, never stored per occurrence), and one-off events
+     * whose time or days touch the range.
+     */
+    @Query(
+        """
+        SELECT * FROM events WHERE deletedAt IS NULL AND (
+          recurrenceRule IS NOT NULL
+          OR (startAtMillis IS NOT NULL AND startAtMillis < :toMillis AND COALESCE(endAtMillis, startAtMillis) >= :fromMillis)
+          OR (startAtMillis IS NULL AND startDate <= :toDate AND COALESCE(endDate, startDate) >= :fromDate)
+        )
+        ORDER BY startAtMillis IS NULL, startAtMillis, startDate, createdAt
+        """,
+    )
+    public fun observeInRange(fromMillis: Long, toMillis: Long, fromDate: LocalDate, toDate: LocalDate): Flow<List<EventEntity>>
 
     @Query("SELECT * FROM events WHERE id = :id AND deletedAt IS NULL")
     public fun observeById(id: String): Flow<EventEntity?>

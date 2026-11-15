@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -38,9 +39,9 @@ internal fun NavGraphBuilder.tab(route: String, content: @Composable () -> Unit)
     }
 }
 
-/** Any other screen: inside the system bars. */
-internal fun NavGraphBuilder.screen(route: String, content: @Composable () -> Unit) {
-    composable(route) {
+/** Any other screen: inside the system bars. [arguments] declares optional query values such as ?date=. */
+internal fun NavGraphBuilder.screen(route: String, arguments: List<NamedNavArgument> = emptyList(), content: @Composable () -> Unit) {
+    composable(route, arguments) {
         Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)) { content() }
     }
 }

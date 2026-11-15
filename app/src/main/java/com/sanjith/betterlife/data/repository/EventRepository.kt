@@ -18,6 +18,10 @@ public class EventRepository(
 
     public fun observeActive(): Flow<List<EventEntity>> = eventDao.observeActive()
 
+    /** See EventDao.observeInRange: repeating events plus one-offs touching the range. */
+    public fun observeInRange(fromMillis: Long, toMillis: Long, fromDate: java.time.LocalDate, toDate: java.time.LocalDate): Flow<List<EventEntity>> =
+        eventDao.observeInRange(fromMillis, toMillis, fromDate, toDate)
+
     public fun observeById(id: String): Flow<EventEntity?> = eventDao.observeById(id)
 
     public fun observeActiveCount(): Flow<Int> = eventDao.observeActiveCount()

@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.sanjith.betterlife.data.db.entity.TaskEntity
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 public interface TaskDao {
@@ -19,6 +20,18 @@ public interface TaskDao {
         """,
     )
     public fun observeActive(): Flow<List<TaskEntity>>
+
+    /** Open tasks due between two moments (timed) or on days in the range (whole-day) — the calendar (Prompt 18). */
+    @Query(
+        """
+        SELECT * FROM tasks WHERE deletedAt IS NULL AND completedAt IS NULL AND (
+          (dueAtMillis IS NOT NULL AND dueAtMillis >= :fromMillis AND dueAtMillis < :toMillis)
+          OR (dueAtMillis IS NULL AND dueDate >= :fromDate AND dueDate <= :toDate)
+        )
+        ORDER BY dueAtMillis IS NULL, dueAtMillis, dueDate, createdAt
+        """,
+    )
+    public fun observeOpenInRange(fromMillis: Long, toMillis: Long, fromDate: LocalDate, toDate: LocalDate): Flow<List<TaskEntity>>
 
     @Query("SELECT * FROM tasks WHERE id = :id AND deletedAt IS NULL")
     public fun observeById(id: String): Flow<TaskEntity?>

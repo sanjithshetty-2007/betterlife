@@ -45,6 +45,12 @@ internal object BetterLifeColors {
     /** A habit colour at heatmap strength: a kept or paused day is drawn lighter than a done day. */
     const val HEATMAP_SOFT_ALPHA = 0.45f
 
+    /** Calendar grid blocks: the category colour at this strength behind the title (docs/design: 20 %). */
+    const val EVENT_TINT_ALPHA = 0.2f
+
+    /** Calendar month grid: the day numbers of the neighbouring months (in the grid, not in the month). */
+    val OutsideMonthDay = Text.copy(alpha = 0.32f)
+
     /** The border of a habit box that can still be ticked; future boxes use the faint SoftBorder. */
     val BoxOpenBorder = Text.copy(alpha = 0.32f)
 

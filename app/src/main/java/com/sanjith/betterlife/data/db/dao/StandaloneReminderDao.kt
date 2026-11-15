@@ -15,6 +15,10 @@ public interface StandaloneReminderDao {
     @Query("SELECT * FROM standalone_reminders WHERE deletedAt IS NULL AND doneAt IS NULL ORDER BY atMillis")
     public fun observeActive(): Flow<List<StandaloneReminderEntity>>
 
+    /** Open "remind me" items between two moments — the calendar (Prompt 18). */
+    @Query("SELECT * FROM standalone_reminders WHERE deletedAt IS NULL AND doneAt IS NULL AND atMillis >= :fromMillis AND atMillis < :toMillis ORDER BY atMillis")
+    public fun observeInRange(fromMillis: Long, toMillis: Long): Flow<List<StandaloneReminderEntity>>
+
     @Query("SELECT * FROM standalone_reminders WHERE id = :id AND deletedAt IS NULL")
     public fun observeById(id: String): Flow<StandaloneReminderEntity?>
 

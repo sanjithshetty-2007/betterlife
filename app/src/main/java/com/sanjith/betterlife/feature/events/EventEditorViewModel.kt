@@ -28,6 +28,8 @@ import kotlinx.coroutines.launch
 public class EventEditorViewModel(
     private val eventId: String?,
     initialType: EventType,
+    /** A new event from the calendar's day sheet starts on that day (Prompt 18). */
+    initialDate: java.time.LocalDate? = null,
     private val service: EventService,
     private val events: EventRepository,
     private val categoryStore: EventCategoryStore,
@@ -37,7 +39,11 @@ public class EventEditorViewModel(
 
     private var reminderDefaults = ReminderDefaults()
 
-    private val _state = MutableStateFlow(EventEditorState.new(initialType, clock.zonedNow(), reminderDefaults).copy(id = eventId))
+    private val _state = MutableStateFlow(
+        EventEditorState.new(initialType, clock.zonedNow(), reminderDefaults).let { new ->
+            if (eventId == null && initialDate != null) new.copy(date = initialDate) else new
+        }.copy(id = eventId),
+    )
     public val state: StateFlow<EventEditorState> = _state
 
     public val categories: StateFlow<List<EventCategory>> =
@@ -122,7 +128,8 @@ public class EventEditorViewModel(
                 val handle = createSavedStateHandle()
                 val id = handle.get<String>(ARG_EVENT_ID)?.takeIf { it != NEW }
                 val type = handle.get<String>(ARG_TYPE)?.let { name -> EventType.entries.firstOrNull { it.name == name } } ?: EventType.EVENT
-                EventEditorViewModel(id, type, c.eventService, c.eventRepository, c.eventCategoryStore, c.clock) {
+                val date = handle.get<String>(com.sanjith.betterlife.Routes.ARG_DATE)?.let(java.time.LocalDate::parse)
+                EventEditorViewModel(id, type, date, c.eventService, c.eventRepository, c.eventCategoryStore, c.clock) {
                     c.settingsRepository.current().reminderDefaults
                 }
             }

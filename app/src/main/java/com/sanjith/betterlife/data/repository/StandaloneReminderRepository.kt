@@ -21,6 +21,8 @@ public class StandaloneReminderRepository(
 
     public fun observeActive(): Flow<List<StandaloneReminderEntity>> = dao.observeActive()
 
+    public fun observeInRange(fromMillis: Long, toMillis: Long): Flow<List<StandaloneReminderEntity>> = dao.observeInRange(fromMillis, toMillis)
+
     public suspend fun getAnyById(id: String): StandaloneReminderEntity? = dao.getAnyById(id)
 
     public suspend fun create(draft: StandaloneDraft, reminders: List<ReminderDraft>): String {

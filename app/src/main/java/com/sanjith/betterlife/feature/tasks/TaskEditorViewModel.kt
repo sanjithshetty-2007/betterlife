@@ -37,6 +37,8 @@ public class TaskEditorViewModel(
     private val projects: ProjectRepository,
     private val clock: Clock,
     private val defaults: suspend () -> ReminderDefaults = { ReminderDefaults() },
+    /** A new task from the calendar's day sheet starts due on that day (Prompt 18). */
+    private val initialDate: LocalDate? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TaskEditorState(id = taskId))
@@ -87,7 +89,11 @@ public class TaskEditorViewModel(
     private var reminderDefaults = ReminderDefaults()
 
     init {
-        viewModelScope.launch { reminderDefaults = defaults() }
+        viewModelScope.launch {
+            reminderDefaults = defaults()
+            // After the defaults are known, so the new date gets the owner's default reminders.
+            if (taskId == null) initialDate?.let(::setDate)
+        }
     }
 
     public fun edit(change: (TaskEditorState) -> TaskEditorState) {
@@ -167,10 +173,10 @@ public class TaskEditorViewModel(
         public val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val c = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as BetterLifeApp).container
-                val id = createSavedStateHandle().get<String>(ARG_TASK_ID)?.takeIf { it != NEW_TASK }
-                TaskEditorViewModel(id, c.taskService, c.taskRepository, c.projectRepository, c.clock) {
-                    c.settingsRepository.current().reminderDefaults
-                }
+                val handle = createSavedStateHandle()
+                val id = handle.get<String>(ARG_TASK_ID)?.takeIf { it != NEW_TASK }
+                val date = handle.get<String>(com.sanjith.betterlife.Routes.ARG_DATE)?.let(LocalDate::parse)
+                TaskEditorViewModel(id, c.taskService, c.taskRepository, c.projectRepository, c.clock, { c.settingsRepository.current().reminderDefaults }, date)
             }
         }
 

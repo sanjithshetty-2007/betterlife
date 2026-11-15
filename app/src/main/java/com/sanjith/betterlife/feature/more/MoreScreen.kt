@@ -91,6 +91,13 @@ public fun MoreScreen(entries: List<MoreEntry>, onBusy: () -> Unit, debugTools: 
             }
             settings?.let { s ->
                 AlarmSettingsSection(s)
+                SettingsGroup(stringResource(R.string.calendar_settings)) {
+                    SwitchRow(stringResource(R.string.calendar_week_starts_sunday), s.weekStart == java.time.DayOfWeek.SUNDAY) { sunday ->
+                        scope.launch {
+                            container.settingsRepository.update { it.copy(weekStart = if (sunday) java.time.DayOfWeek.SUNDAY else java.time.DayOfWeek.MONDAY) }
+                        }
+                    }
+                }
                 SettingsGroup(stringResource(R.string.more_your_name)) {
                     NameRow(s.ownerName) { name -> scope.launch { container.settingsRepository.update { it.copy(ownerName = name) } } }
                 }

@@ -52,8 +52,9 @@ import com.sanjith.betterlife.feature.debug.DatabaseDebugScreen
 import com.sanjith.betterlife.feature.debug.PopupSpikeScreen
 import com.sanjith.betterlife.feature.debug.ReminderEngineDebugScreen
 import com.sanjith.betterlife.feature.debug.TimeMachineScreen
-import com.sanjith.betterlife.feature.events.AgendaScreen
-import com.sanjith.betterlife.feature.events.AgendaTarget
+import com.sanjith.betterlife.feature.calendar.AgendaTarget
+import com.sanjith.betterlife.feature.calendar.CalendarActions
+import com.sanjith.betterlife.feature.calendar.CalendarScreen
 import com.sanjith.betterlife.feature.events.EventEditorScreen
 import com.sanjith.betterlife.feature.events.EventEditorViewModel
 import com.sanjith.betterlife.feature.events.ReminderDefaultsScreen
@@ -104,10 +105,16 @@ internal object Routes {
     const val TIME_MACHINE = "debug/time-machine"
     const val ENGINE = "debug/reminder-engine"
 
-    fun taskEditor(id: String?): String = "$TASK_EDITOR/${id ?: TaskEditorViewModel.NEW_TASK}"
+    fun taskEditor(id: String?, date: java.time.LocalDate? = null): String =
+        "$TASK_EDITOR/${id ?: TaskEditorViewModel.NEW_TASK}" + dateQuery(date)
 
-    fun eventEditor(id: String?, type: EventType = EventType.EVENT): String =
-        "$EVENT_EDITOR/${type.name}/${id ?: EventEditorViewModel.NEW}"
+    /** "?date=2026-11-12" so a new item from the calendar's day sheet starts on that day (Prompt 18). */
+    private fun dateQuery(date: java.time.LocalDate?): String = date?.let { "?$ARG_DATE=$it" }.orEmpty()
+
+    const val ARG_DATE = "date"
+
+    fun eventEditor(id: String?, type: EventType = EventType.EVENT, date: java.time.LocalDate? = null): String =
+        "$EVENT_EDITOR/${type.name}/${id ?: EventEditorViewModel.NEW}" + dateQuery(date)
 
     fun reminderEditor(id: String?): String = "$REMINDER_EDITOR/${id ?: EventEditorViewModel.NEW}"
 
@@ -217,26 +224,29 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                     onOpenCheckIns = { navController.navigate(Routes.CHECK_INS) },
                 )
             }
-            screen("${Routes.TASK_EDITOR}/{${TaskEditorViewModel.ARG_TASK_ID}}") { TaskEditorScreen(onClose = back) }
+            screen("${Routes.TASK_EDITOR}/{${TaskEditorViewModel.ARG_TASK_ID}}?${Routes.ARG_DATE}={${Routes.ARG_DATE}}", dateArgument) { TaskEditorScreen(onClose = back) }
             screen(Routes.PROJECTS) { ProjectsScreen(onBack = back) }
             screen(Routes.CHECK_INS) { CheckInScreen(onBack = back) }
             tab(Routes.AGENDA) {
-                AgendaScreen(
-                    onOpen = { target ->
-                        navController.navigate(
-                            when (target) {
-                                is AgendaTarget.Event -> Routes.eventEditor(target.id)
-                                is AgendaTarget.Task -> Routes.taskEditor(target.id)
-                                is AgendaTarget.Reminder -> Routes.reminderEditor(target.id)
-                            },
-                        )
-                    },
-                    onNewEvent = { type -> navController.navigate(Routes.eventEditor(null, type)) },
-                    onNewReminder = { navController.navigate(Routes.reminderEditor(null)) },
-                    onOpenDefaults = { navController.navigate(Routes.REMINDER_DEFAULTS) },
+                CalendarScreen(
+                    CalendarActions(
+                        onOpen = { target ->
+                            navController.navigate(
+                                when (target) {
+                                    is AgendaTarget.Event -> Routes.eventEditor(target.id)
+                                    is AgendaTarget.Task -> Routes.taskEditor(target.id)
+                                    is AgendaTarget.Reminder -> Routes.reminderEditor(target.id)
+                                },
+                            )
+                        },
+                        onNewEvent = { type, date -> navController.navigate(Routes.eventEditor(null, type, date)) },
+                        onNewTask = { date -> navController.navigate(Routes.taskEditor(null, date)) },
+                        onNewReminder = { navController.navigate(Routes.reminderEditor(null)) },
+                        onOpenDefaults = { navController.navigate(Routes.REMINDER_DEFAULTS) },
+                    ),
                 )
             }
-            screen("${Routes.EVENT_EDITOR}/{${EventEditorViewModel.ARG_TYPE}}/{${EventEditorViewModel.ARG_EVENT_ID}}") {
+            screen("${Routes.EVENT_EDITOR}/{${EventEditorViewModel.ARG_TYPE}}/{${EventEditorViewModel.ARG_EVENT_ID}}?${Routes.ARG_DATE}={${Routes.ARG_DATE}}", dateArgument) {
                 EventEditorScreen(onClose = back)
             }
             screen("${Routes.REMINDER_EDITOR}/{${StandaloneEditorViewModel.ARG_ID}}") { StandaloneEditorScreen(onClose = back) }
@@ -293,6 +303,15 @@ private fun activePause(): Instant? {
 }
 
 private const val PAUSE_TICK_MS = 5_000L
+
+/** The optional ?date= of the task and event editors: absent for every other way in. */
+private val dateArgument = listOf(
+    androidx.navigation.navArgument(Routes.ARG_DATE) {
+        type = androidx.navigation.NavType.StringType
+        nullable = true
+        defaultValue = null
+    },
+)
 
 @Composable
 private fun PauseSheetHost(onDismiss: () -> Unit) {

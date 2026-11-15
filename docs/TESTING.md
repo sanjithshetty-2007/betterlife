@@ -421,3 +421,19 @@ Habits, each day's tick (one row per habit and day), habit pauses and habit remi
 | 5 | Tick today's box, wait a minute, look at habit_logs | The day's row is there (row Q8) | |
 | 6 | Optional: untick today while in airplane mode, then go online | The row gets deleted_at on Supabase | |
 | 7 | Optional, only after a backup: a second phone or a reinstall, sign in | Grids, streaks and consistency look the same; no celebration pops up. (Uninstalling deletes everything that is not synced: notes later, the reminder history, settings.) | |
+
+## Prompt 18: Calendar views (day, week, month, agenda)
+
+The Calendar tab now has Day / Week / Month / Agenda at the top and the category chips under it (nothing selected shows everything; tasks and remind-me items always show). Tap a day in Month, or a day's header in Week, for its sheet with events AND tasks and Add event / Add task for that day. Week start: More > Calendar.
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | Month, Week, Day and Agenda on the same days | The same events and tasks in each view | (AI: one shared data source for all views, seen with seeded data; your eye decides) |
+| 2 | A birthday and a weekly meeting, then move 2 months ahead in Month | Both on the right days (cake under the birthday) | **PASS** (device test: weekly meeting on every Monday of January 2027, birthday marked on 14 Jan) |
+| 3 | Two overlapping events and a task at the same time, Week and Day | Side by side; Clash on the two events, not on the task; the task is in the day sheet | **PASS** (device and UI tests) |
+| 4 | More > Calendar > Weeks start on Sunday, back to Calendar | Month and Week start on Sunday; switch off for Monday | **PASS** (device test) |
+| 5 | Swipe left/right on the month grid | Next / previous month slides in | |
+| 6 | Week or Day on today | A red line at the current time in today's column, moving each minute | |
+| 7 | Day sheet > Add event / Add task | The editor opens with that day already set | **PASS** (UI test for the hand-over; AI on the phone: Add task from today opened "Due Today", Add event from Thu 19 Nov opened on Thu) |
+| 8 | Scroll Week and Agenda with the debug seed (200 events) | Smooth | **MEASURED** (AI 2026-11-15, profile build, 200 seeded events + 1,000 seeded tasks, then wiped: 0 janky frames; Week 90th percentile 13 ms, Agenda 13 ms, Month swipes 14 ms) |
+| 9 | Agenda: scroll | Each day's header sticks at the top until the next day pushes it away | |

@@ -60,4 +60,15 @@ public object Dimens {
 
     /** Yearly heatmap: the gap between day squares (the squares share the card's width). */
     public val heatmapGap = 2.dp
+
+    /** Calendar (Prompt 18): an hour of the week/day grid, its time labels, a month cell and its dots, the now line. */
+    public val hourHeight = 60.dp
+    public val timeLabelWidth = 48.dp
+    public val monthCellHeight = 56.dp
+    public val calendarDot = 6.dp
+    public val nowLineWidth = 2.dp
+    public val nowDot = 8.dp
+
+    /** The hairline gap between neighbouring blocks and chips in the week/day grid (like heatmapGap). */
+    public val gridBlockGap = 2.dp
 }

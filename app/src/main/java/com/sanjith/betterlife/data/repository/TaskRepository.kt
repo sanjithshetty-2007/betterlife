@@ -26,6 +26,9 @@ public class TaskRepository(
 
     public fun observeActive(): Flow<List<TaskEntity>> = taskDao.observeActive()
 
+    public fun observeOpenInRange(fromMillis: Long, toMillis: Long, fromDate: java.time.LocalDate, toDate: java.time.LocalDate): Flow<List<TaskEntity>> =
+        taskDao.observeOpenInRange(fromMillis, toMillis, fromDate, toDate)
+
     public fun observeById(id: String): Flow<TaskEntity?> = taskDao.observeById(id)
 
     public fun observeActiveCount(): Flow<Int> = taskDao.observeActiveCount()

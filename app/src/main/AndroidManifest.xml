@@ -69,6 +69,19 @@
             android:name=".reminders.daily.DailyPromptReceiver"
             android:exported="false" />
 
+        <!-- The habit widget (Prompt 19). Exported because the launcher sends it the widget broadcasts. -->
+        <receiver
+            android:name=".widgets.HabitWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_habits_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/habit_widget_info" />
+        </receiver>
+
         <!-- Re-arms alarms after reboot, app updates, clock and time-zone changes. These broadcasts are
              protected (only the system can send them), so exporting the receiver does not let other apps
              trigger it. All four are allowed for manifest receivers on Android 8+. -->

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home screen widgets (Prompt 19). -->
+<resources>
+    <string name="widget_habits_label">BetterLife habits</string>
+    <string name="widget_habits_description">Tick today\'s habits from the home screen.</string>
+    <string name="widget_header">HABITS · %1$s</string>
+    <string name="widget_percent">%1$d%%</string>
+    <string name="widget_new">New</string>
+    <string name="widget_habit_number">Habit %1$d</string>
+    <string name="widget_box_done">%1$s, done today. Tap to clear.</string>
+    <string name="widget_box_open">%1$s, not done yet. Tap to tick.</string>
+    <string name="widget_box_paused">%1$s, paused today.</string>
+    <string name="widget_more">+%1$d</string>
+    <string name="widget_more_description">%1$d more habits. Opens BetterLife.</string>
+    <string name="widget_done_count">%1$d of %2$d done</string>
+    <string name="widget_details_hidden">Details hidden · %1$s</string>
+    <string name="widget_empty">No habits yet. Tap to open BetterLife.</string>
+    <string name="widget_settings">Widgets</string>
+    <string name="widget_hide_details">Hide habit names on widgets</string>
+</resources>

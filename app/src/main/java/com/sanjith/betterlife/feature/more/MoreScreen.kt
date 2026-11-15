@@ -91,6 +91,11 @@ public fun MoreScreen(entries: List<MoreEntry>, onBusy: () -> Unit, debugTools: 
             }
             settings?.let { s ->
                 AlarmSettingsSection(s)
+                SettingsGroup(stringResource(R.string.widget_settings)) {
+                    SwitchRow(stringResource(R.string.widget_hide_details), s.hideWidgetDetails) { hide ->
+                        scope.launch { container.settingsRepository.update { it.copy(hideWidgetDetails = hide) } }
+                    }
+                }
                 SettingsGroup(stringResource(R.string.calendar_settings)) {
                     SwitchRow(stringResource(R.string.calendar_week_starts_sunday), s.weekStart == java.time.DayOfWeek.SUNDAY) { sunday ->
                         scope.launch {

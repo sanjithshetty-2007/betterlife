@@ -221,6 +221,17 @@ public class AppContainer(appContext: Context) {
     public val celebrationMessages: CelebrationMessageRepository by lazy { CelebrationMessageRepository(database, nowMillis, newId) }
     public val mascotMood: MascotMoodSource by lazy { MascotMoodSource(database, clock, ::habitToday) }
 
+    /** The habit widget (Prompt 19): its data, its tap, and the redraws on changes and at the rollover hour. */
+    public val habitWidgetSource: com.sanjith.betterlife.widgets.HabitWidgetSource by lazy {
+        com.sanjith.betterlife.widgets.HabitWidgetSource(habitRepository, settingsRepository.settings, clock)
+    }
+    public val habitWidgetToggle: com.sanjith.betterlife.widgets.HabitWidgetToggle by lazy {
+        com.sanjith.betterlife.widgets.HabitWidgetToggle(habitService, habitRepository)
+    }
+    public val habitWidgetUpdates: com.sanjith.betterlife.widgets.HabitWidgetUpdates by lazy {
+        com.sanjith.betterlife.widgets.HabitWidgetUpdates(appContext, appScope, habitWidgetSource, clock) { settingsRepository.current().rolloverHour }
+    }
+
     /** Adds the four starter habits once per install. */
     public suspend fun seedStarterHabits() {
         starterHabitSeeder.seedIfNeeded()

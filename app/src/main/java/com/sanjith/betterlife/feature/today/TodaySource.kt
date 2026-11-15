@@ -139,7 +139,7 @@ public class TodaySource(private val db: BetterLifeDatabase, private val clock: 
             tasksTotal = doneToday + todayTasks.count { it.dueToday },
             habitsDone = gentle.count { it.settledToday },
             habitsTotal = gentle.size,
-            consistency = overallConsistency(histories.values.toList(), today),
+            consistency = ConsistencyCalculator.overall(histories.values.toList(), today),
             bestStreak = gentle.maxOfOrNull { it.currentStreak } ?: 0,
             habits = gentle,
             histories = histories.values.toList(),
@@ -165,17 +165,8 @@ public class TodaySource(private val db: BetterLifeDatabase, private val clock: 
     }
 
     /** All habits together: done or kept days over scheduled days in the last 30; "New" under 7 days of data. */
-    private fun overallConsistency(histories: List<HabitHistory>, today: LocalDate): Consistency {
-        val parts = histories.map { ConsistencyCalculator.calculate(it, today) }.filterIsInstance<Consistency.Percent>()
-        val scheduled = parts.sumOf { it.scheduled }
-        if (scheduled < ConsistencyCalculator.MIN_DAYS_OF_DATA) return Consistency.New
-        val completed = parts.sumOf { it.completed }
-        return Consistency.Percent((completed * PERCENT_DOUBLE / scheduled).roundToInt(), completed, scheduled)
-    }
-
     private companion object {
         const val EVENT_DAYS = 2
-        const val PERCENT_DOUBLE = 100.0
     }
 }
 

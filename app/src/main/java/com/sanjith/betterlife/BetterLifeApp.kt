@@ -14,5 +14,7 @@ public class BetterLifeApp : Application() {
         container = AppContainer(this)
         // Idempotent: creating an existing channel only updates its name.
         NotificationChannels.createAll(this)
+        // The habit widget follows the data from any process start, including one the widget caused.
+        container.habitWidgetUpdates.start()
     }
 }

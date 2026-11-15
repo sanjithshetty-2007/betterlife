@@ -1,6 +1,7 @@
 package com.sanjith.betterlife.ui.theme
 
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /** Spacing scale used for padding and gaps. */
 public object Spacing {
@@ -71,4 +72,27 @@ public object Dimens {
 
     /** The hairline gap between neighbouring blocks and chips in the week/day grid (like heatmapGap). */
     public val gridBlockGap = 2.dp
+
+    /** The habit widget's corner (the cards' large radius, as a size for Glance). */
+    public val widgetCorner = 24.dp
+
+    /** A habit box's corner, as the Habits grid draws it (shapes.extraSmall), as a size for Glance. */
+    public val habitBoxCorner = 12.dp
+
+    /** Habit widget sizes: the smallest (2x2) and the width from which one row of six boxes fits (4x2). */
+    public val widgetMinSize = 110.dp
+
+    /** Habit widget layout: the header line with its gap, a name plus the done line, and the height from which the normal padding fits. */
+    public val widgetHeaderHeight = 28.dp
+    public val widgetLabelAndFooter = 36.dp
+    public val widgetRoomyFrom = 150.dp
+}
+
+/**
+ * Text sizes for home screen widgets (Prompt 19). Glance cannot use the app's MaterialTheme
+ * typography, so the two roles it needs are named here, matching labelLarge and labelMedium.
+ */
+public object WidgetType {
+    public val header = 14.sp
+    public val label = 12.sp
 }

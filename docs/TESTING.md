@@ -445,3 +445,20 @@ The Calendar tab now has Day / Week / Month / Agenda at the top and the category
 | 1 | Calendar: tap Day, Week, Month, Agenda | The selected one is filled cherry | **PASS** (AI, screenshot of Week on the phone) |
 | 2 | New task: Priority and Level; New event: Type | The selected pill is cherry | **PASS** (AI, screenshot of the task editor's Priority) |
 | 3 | Any selected chip (Repeat "Never", a snooze option) | Unchanged grey-blue (only pills changed) | **PASS** (AI, "Never" seen unchanged) |
+
+## Prompt 19: Habit home screen widget
+
+Add it: long-press an empty spot on a home screen > Widgets > BetterLife habits (BetterLife Dev) > drag it onto the screen. Resize it wider for one row of boxes with names. Names are hidden by default: More > Widgets > Hide habit names on widgets.
+
+Note (Vivo): after a force stop (App info > Force stop) a widget may stay blank until the app is opened once. Android does not send widget updates to a force-stopped app.
+
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 1 | Add the widget (steps above) | "HABITS · nn%" (or New), today's habits as boxes, "Details hidden · n of m done" when wide | |
+| 2 | Tap a box on the widget, then open the app | Ticked in the app too, streak updated, same data | (device test: a widget tap = an in-app tick, incl. a milestone) |
+| 3 | Tick a habit in the app, go home | The widget shows it within a few seconds | |
+| 4 | Next morning after 03:00 | The widget shows a fresh day (boxes open) | |
+| 5 | More > Widgets > Hide habit names on widgets off, then on | Names show, then "Habit 1, Habit 2" again | |
+| 6 | Make the widget wide (4 cells), then small (2 cells) | One row with names; then two rows of two boxes | |
+| 7 | 01:00: tap a box | It counts for the previous day | **PASS** (device test) |
+| 8 | Widget and app tick at the same moment | Nothing lost, one row per habit and day | **PASS** (device test, 8 habits on many threads) |

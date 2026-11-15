@@ -87,6 +87,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.glance.appwidget)
     // Supabase sign-in (S1) and the sync engine's database calls (S2). Network is used only by sync/.
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.auth)

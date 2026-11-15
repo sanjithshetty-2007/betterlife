@@ -40,4 +40,18 @@ public object ConsistencyCalculator {
         if (scheduled < MIN_DAYS_OF_DATA) return Consistency.New
         return Consistency.Percent((completed * PERCENT / scheduled).roundToInt(), completed, scheduled)
     }
+
+    /**
+     * One number for all habits together (Today's header and the habit widget): completed habit-days
+     * over scheduled habit-days of every habit's last 30 days. "New" until there are 7 scheduled days.
+     *
+     * Example: Creatine 20 of 25 and Meditation 10 of 15 -> 30 of 40 = 75 %.
+     */
+    public fun overall(histories: List<HabitHistory>, today: LocalDate): Consistency {
+        val parts = histories.map { calculate(it, today) }.filterIsInstance<Consistency.Percent>()
+        val scheduled = parts.sumOf { it.scheduled }
+        if (scheduled < MIN_DAYS_OF_DATA) return Consistency.New
+        val completed = parts.sumOf { it.completed }
+        return Consistency.Percent((completed * PERCENT / scheduled).roundToInt(), completed, scheduled)
+    }
 }

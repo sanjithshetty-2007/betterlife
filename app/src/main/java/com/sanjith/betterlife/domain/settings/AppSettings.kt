@@ -57,6 +57,8 @@ public data class AppSettings(
     /** Evening nudge if any habit is not done yet (Prompt 17). */
     val habitNudgeEnabled: Boolean = true,
     val habitNudgeTime: LocalTime = LocalTime.of(21, 0),
+    /** Widgets show counts and boxes without habit names (context.md 5.8; default ON, Prompt 19). */
+    val hideWidgetDetails: Boolean = true,
 ) {
     init {
         require(rolloverHour in 0..MAX_ROLLOVER_HOUR) { "rolloverHour must be 0 to $MAX_ROLLOVER_HOUR" }

@@ -11,6 +11,8 @@ profileinstaller = "1.4.1"
 datastore = "1.2.1"
 room = "2.8.5"
 work = "2.10.0"
+# Glance for the home screen widgets (checked on developer.android.com/jetpack/androidx/releases/glance 2026-11-15: 1.2.0 is the latest stable).
+glance = "1.2.0"
 coroutines = "1.11.0"
 serialization = "1.12.0"
 # Supabase Kotlin client (checked on Maven Central and its release notes 2026-11-06: built with Kotlin 2.4.21, Ktor 3.6.0).
@@ -45,6 +47,7 @@ androidx-room-runtime = { group = "androidx.room", name = "room-runtime", versio
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }

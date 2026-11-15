@@ -72,6 +72,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 ownerName = prefs[OWNER_NAME] ?: d.ownerName,
                 habitNudgeEnabled = prefs[HABIT_NUDGE_ENABLED] ?: d.habitNudgeEnabled,
                 habitNudgeTime = prefs.time(HABIT_NUDGE_TIME, d.habitNudgeTime),
+                hideWidgetDetails = prefs[HIDE_WIDGET_DETAILS] ?: d.hideWidgetDetails,
             )
         }.getOrDefault(d)
     }
@@ -83,6 +84,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         prefs[OWNER_NAME] = s.ownerName
         prefs[HABIT_NUDGE_ENABLED] = s.habitNudgeEnabled
         prefs[HABIT_NUDGE_TIME] = s.habitNudgeTime.toMinuteOfDay()
+        prefs[HIDE_WIDGET_DETAILS] = s.hideWidgetDetails
         prefs[SNOOZE_TONIGHT] = s.snoozeTonight.toMinuteOfDay()
         prefs[SNOOZE_TOMORROW] = s.snoozeTomorrow.toMinuteOfDay()
         prefs[BIRTHDAY_TIME] = s.birthdayFireTime.toMinuteOfDay()
@@ -134,6 +136,7 @@ public class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val OWNER_NAME = stringPreferencesKey("owner_name")
         val HABIT_NUDGE_ENABLED = booleanPreferencesKey("habit_nudge_enabled")
         val HABIT_NUDGE_TIME = intPreferencesKey("habit_nudge_time")
+        val HIDE_WIDGET_DETAILS = booleanPreferencesKey("hide_widget_details")
         val SNOOZE_TONIGHT = intPreferencesKey("snooze_tonight_minute")
         val SNOOZE_TOMORROW = intPreferencesKey("snooze_tomorrow_minute")
         val BIRTHDAY_TIME = intPreferencesKey("birthday_fire_minute")

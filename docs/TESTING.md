@@ -454,7 +454,7 @@ Note (Vivo): after a force stop (App info > Force stop) a widget may stay blank 
 
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 1 | Add the widget (steps above) | "HABITS · nn%" (or New), today's habits as boxes, "Details hidden · n of m done" when wide | |
+| 1 | Add the widget (steps above) | "HABITS · nn%" (or New), today's habits centred as boxes with "Habit N" under them, "n of m done" at the bottom ("Details hidden ·" in front when wide) | Owner added it on 2026-11-15 and said it looked bad; redone the same day (AI screenshot of the new layout on the owner's 2x2). Your eye decides now |
 | 2 | Tap a box on the widget, then open the app | Ticked in the app too, streak updated, same data | (device test: a widget tap = an in-app tick, incl. a milestone) |
 | 3 | Tick a habit in the app, go home | The widget shows it within a few seconds | |
 | 4 | Next morning after 03:00 | The widget shows a fresh day (boxes open) | |

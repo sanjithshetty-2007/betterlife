@@ -72,9 +72,10 @@ public class HabitWidget : GlanceAppWidget() {
             val input by remember { source.observe() }.collectAsState(initial = null)
             val size = LocalSize.current
             val layout = HabitWidgetLayout.fit(
-                width = size.width.value, height = size.height.value, cell = Dimens.minTouchTarget.value,
-                header = Dimens.widgetHeaderHeight.value, labelAndFooter = Dimens.widgetLabelAndFooter.value,
-                padding = Spacing.md.value, smallPadding = Spacing.sm.value, roomyFrom = Dimens.widgetRoomyFrom.value,
+                width = size.width.value, height = size.height.value, habits = input?.habits?.size ?: 0,
+                cell = Dimens.minTouchTarget.value, header = Dimens.widgetHeaderHeight.value, label = Dimens.widgetLabelHeight.value,
+                footerHeight = Dimens.widgetFooterHeight.value, padding = Spacing.md.value, smallPadding = Spacing.sm.value,
+                roomyFrom = Dimens.widgetRoomyFrom.value,
             )
             val model = input?.let { HabitWidgetBuilder.build(it.habits, it.now, it.zone, it.rolloverHour, it.hideDetails, layout.capacity) }
             HabitWidgetContent(model, layout)
@@ -112,13 +113,14 @@ private fun Card(model: HabitWidgetModel?, layout: HabitWidgetLayout, openApp: A
                 style = TextStyle(color = text, fontSize = WidgetType.label),
                 modifier = GlanceModifier.fillMaxWidth().clickable(openApp),
             )
-            layout.labels -> {
-                Row(modifier = GlanceModifier.fillMaxWidth()) { Cells(model.boxes, model.more, labels = true) }
-                Spacer(GlanceModifier.height(Spacing.sm))
-                Text(footerText(model), style = TextStyle(color = muted, fontSize = WidgetType.label), maxLines = 1)
-            }
-            else -> chunk(model, layout.columns).forEach { (boxes, more) ->
-                Row(modifier = GlanceModifier.fillMaxWidth()) { Cells(boxes, more, labels = false) }
+            else -> {
+                // The boxes sit in the middle of the space under the header, the done line at the bottom.
+                Spacer(GlanceModifier.defaultWeight())
+                chunk(model, layout.columns).forEach { (boxes, more) ->
+                    Row(modifier = GlanceModifier.fillMaxWidth()) { Cells(boxes, more, labels = layout.labels) }
+                }
+                Spacer(GlanceModifier.defaultWeight())
+                if (layout.footer) Text(footerText(model, roomyWidth = layout.columns >= WIDE_COLUMNS), style = TextStyle(color = muted, fontSize = WidgetType.label), maxLines = 1)
             }
         }
     }
@@ -200,8 +202,12 @@ private fun headerText(model: HabitWidgetModel?): String {
 }
 
 @Composable
-private fun footerText(model: HabitWidgetModel): String {
+private fun footerText(model: HabitWidgetModel, roomyWidth: Boolean): String {
     val context = LocalContext.current
     val count = context.getString(R.string.widget_done_count, model.settled, model.total)
-    return if (model.detailsHidden) context.getString(R.string.widget_details_hidden, count) else count
+    // "Details hidden" only where it fits on one line; a narrow widget shows the count alone.
+    return if (model.detailsHidden && roomyWidth) context.getString(R.string.widget_details_hidden, count) else count
 }
+
+/** From this many box columns the widget is wide enough for "Details hidden · n of m done". */
+private const val WIDE_COLUMNS = 4

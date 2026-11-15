@@ -82,9 +82,10 @@ public object Dimens {
     /** Habit widget sizes: the smallest (2x2) and the width from which one row of six boxes fits (4x2). */
     public val widgetMinSize = 110.dp
 
-    /** Habit widget layout: the header line with its gap, a name plus the done line, and the height from which the normal padding fits. */
+    /** Habit widget layout: the header line with its gap, a name under a box, the done line, and the height from which the normal padding fits. */
     public val widgetHeaderHeight = 28.dp
-    public val widgetLabelAndFooter = 36.dp
+    public val widgetLabelHeight = 16.dp
+    public val widgetFooterHeight = 20.dp
     public val widgetRoomyFrom = 150.dp
 }
 

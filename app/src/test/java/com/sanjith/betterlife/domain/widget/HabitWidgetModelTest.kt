@@ -96,35 +96,42 @@ public class HabitWidgetModelTest {
     }
 }
 
-/** The widget measures the space the launcher gives it instead of guessing cell sizes (Prompt 19). */
+/** The widget measures the space the launcher gives it and uses only the rows the habits need (Prompt 19). */
 public class HabitWidgetLayoutTest {
 
-    private fun fit(width: Float, height: Float) =
-        HabitWidgetLayout.fit(width, height, cell = 48f, header = 28f, labelAndFooter = 36f, padding = 16f, smallPadding = 8f, roomyFrom = 150f)
+    private fun fit(width: Float, height: Float, habits: Int) = HabitWidgetLayout.fit(
+        width, height, habits, cell = 48f, header = 28f, label = 16f, footerHeight = 20f, padding = 16f, smallPadding = 8f, roomyFrom = 150f,
+    )
 
     @Test
-    public fun aSquareTwoByTwoGetsTwoRowsOfTwo() {
-        assertEquals(HabitWidgetLayout(columns = 2, rows = 2, labels = false, roomy = true), fit(170f, 170f))
-        assertEquals(4, fit(170f, 170f).capacity)
+    public fun oneHabitInATwoByTwoShowsOneNamedBoxAndTheDoneLine() {
+        // The owner's case on the V50e: a 2x2 of about 150 x 180 dp with one habit.
+        assertEquals(HabitWidgetLayout(columns = 2, rows = 1, labels = true, footer = true, roomy = true), fit(150f, 180f, 1))
     }
 
     @Test
     public fun aWideWidgetGetsOneRowWithNames() {
-        val wide = fit(330f, 170f)
-        assertEquals(1, wide.rows)
-        assertEquals(6, wide.columns)
+        val wide = fit(330f, 170f, 6)
+        assertEquals(1 to 6, wide.rows to wide.columns)
         assertEquals(true, wide.labels)
-        // Wide but short: one row, no room for names.
-        assertEquals(false, fit(330f, 110f).labels)
-        assertEquals(HabitWidgetBuilder.WIDE_CAP, fit(900f, 400f).capacity)
+        assertEquals(true, wide.footer)
+        assertEquals(HabitWidgetBuilder.WIDE_CAP, fit(900f, 400f, 10).capacity)
     }
 
     @Test
-    public fun theSmallestSizeStillShowsABoxWithSmallPadding() {
-        val tiny = fit(110f, 110f)
+    public fun manyHabitsInASquareUseTwoRows() {
+        val square = fit(170f, 220f, 5)
+        assertEquals(2 to 2, square.columns to square.rows)
+        assertEquals(4, square.capacity)
+        // Two rows leave no room for names under both rows at this height.
+        assertEquals(false, fit(170f, 200f, 5).labels)
+    }
+
+    @Test
+    public fun theSmallestSizeStillShowsABox() {
+        val tiny = fit(110f, 110f, 3)
         assertEquals(1, tiny.capacity)
         assertEquals(false, tiny.roomy)
-        // A short 2x2 (some launchers) uses the small padding and one row of two, with names below.
-        assertEquals(HabitWidgetLayout(columns = 2, rows = 1, labels = true, roomy = false), fit(140f, 130f))
+        assertEquals(false, tiny.footer)
     }
 }

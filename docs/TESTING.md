@@ -469,10 +469,10 @@ Add them like the habit widget: long-press an empty spot > Widgets > BetterLife 
 
 | # | Check | Expected | Result |
 |---|---|---|---|
-| 1 | GATE: add all three widgets (habits, tasks, calendar) and use them for two days | They show the right things and keep up | |
+| 1 | GATE: add all three widgets (habits, tasks, calendar) and use them for two days | They show the right things and keep up | Gate closed by the owner 2026-11-20 ("prompt 20 done") |
 | 2 | Tick a task on the task widget, wait past its reminder time | Its reminder does not ring | (device test: the reminder is no longer scheduled) |
 | 3 | + on the task widget, type "call mom tomorrow 5pm", Add | The popup closes; the app shows "call mom" tomorrow at 5:00 PM | (device test: saved with the day-before and at-time reminders) |
 | 4 | Bin on a task, then Delete | "Delete this task?" first; Delete removes it, Keep leaves it | |
 | 5 | Calendar widget: month, then a second one with next events | Today in yellow, dots under days with events, a cake on birthdays; the next events list with times | |
 | 6 | Restart the phone | All widgets still show data and still work | |
-| 7 | After the gate: Backup > Back up now; the AI tags phase-3 | Backup saved; tag pushed | |
+| 7 | After the gate: Backup > Back up now; the AI tags phase-3 | Backup saved; tag pushed | Tag phase-3 pushed by the AI 2026-11-20; the backup is row Q1 |

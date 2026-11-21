@@ -48,7 +48,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.habit.Consistency
-import com.sanjith.betterlife.feature.protein.ProteinHabitsCard
+import com.sanjith.betterlife.domain.tracker.TrackerKind
+import com.sanjith.betterlife.feature.tracker.TrackerHabitsCard
 import com.sanjith.betterlife.ui.feedback.rememberDoneHaptics
 import com.sanjith.betterlife.ui.nav.tabBarClearance
 import com.sanjith.betterlife.ui.nav.tabContentPadding
@@ -68,7 +69,7 @@ public fun HabitsScreen(
     onOpenHabit: (String) -> Unit,
     onNewHabit: () -> Unit,
     onOpenCelebrations: () -> Unit = {},
-    onOpenProtein: () -> Unit = {},
+    onOpenTracker: (TrackerKind) -> Unit = {},
     viewModel: HabitsViewModel = viewModel(factory = HabitsViewModel.Factory),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
@@ -86,7 +87,12 @@ public fun HabitsScreen(
             val cards = state.cards ?: return@Column
             if (cards.isEmpty()) {
                 if (state.isCurrentMonth) {
-                    Box(Modifier.fillMaxWidth().padding(start = Spacing.md, top = Spacing.md, end = Spacing.md)) { ProteinHabitsCard(onOpen = onOpenProtein) }
+                    Column(
+                        Modifier.fillMaxWidth().padding(start = Spacing.md, top = Spacing.md, end = Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    ) {
+                        TrackerKind.entries.forEach { kind -> TrackerHabitsCard(kind, onOpen = { onOpenTracker(kind) }) }
+                    }
                 }
                 Box(Modifier.fillMaxSize().padding(tabContentPadding()).padding(Spacing.sm), contentAlignment = Alignment.Center) {
                     Text(
@@ -99,8 +105,12 @@ public fun HabitsScreen(
                 return@Column
             }
             LazyColumn(contentPadding = tabContentPadding(), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                // Protein sits above the habits (owner, 2026-11-21); it is tracked like a habit but by grams.
-                if (state.isCurrentMonth) item(key = "protein", contentType = "protein") { ProteinHabitsCard(onOpen = onOpenProtein) }
+                // Protein, then sleep below it, sit above the habits (owner, 2026-11-21): tracked like habits, by amount.
+                if (state.isCurrentMonth) {
+                    items(TrackerKind.entries, key = { it.name }, contentType = { "tracker" }) { kind ->
+                        TrackerHabitsCard(kind, onOpen = { onOpenTracker(kind) })
+                    }
+                }
                 items(cards, key = { it.id }, contentType = { "habit" }) { card ->
                     HabitCard(
                         card = card,

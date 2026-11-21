@@ -497,3 +497,17 @@ Built after Prompt 20; the rest of the playbook is dropped. Use the profile buil
 | 12 | Turn the Daily reminder switch off | No protein reminder until it is turned on again | |
 | 13 | Reach the target 2 days running | Current streak 2; month grid boxes filled | |
 
+## Owner's feature 2026-11-21: Sleep tracking
+
+A night counts for the day you went to bed; each morning you log last night. Use the profile build. Rows S1 to S6 are the main checks; the rest are optional. Protein should look and behave exactly as before (rows P1 to P8 still apply).
+
+| # | Step | Expected | Result |
+|---|---|---|---|
+| S1 | Habits tab | A Sleep card just below the Protein card says "Set a sleep target"; tapping it opens Sleep | |
+| S2 | Enter a target (for example 8 h 0 m), pick a reminder time 3 minutes from now, Start tracking | The dashboard shows Last night "0 m of 8 h", Not logged yet, streak tiles, This week, This month | |
+| S3 | Wait for the time | 10 seconds of ring and vibration, then quiet; the card "Sleep target: 8 h / How much did you sleep last night?" with Hours and Minutes boxes stays; Back does nothing | |
+| S4 | Type 7 and 30, Save Sleep | Card closes; Last night shows "7 h 30 m of 8 h", "30 m short"; the week bar is on yesterday's day | |
+| S5 | Sleep > Add the night before, enter 8 h | It is saved on the day before yesterday and counts as a good night | |
+| S6 | Leave a sleep card unanswered | It closes about 2 minutes after it fired and comes back about 15 minutes later, until logged or midnight | |
+| 7 | Both protein and sleep reminders at the same minute | One pop-up window with both cards; each saves on its own | |
+| 8 | Change the sleep target | Last night's progress uses the new target; older nights keep theirs | |

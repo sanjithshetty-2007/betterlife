@@ -1,4 +1,4 @@
-package com.sanjith.betterlife.domain.protein
+package com.sanjith.betterlife.domain.tracker
 
 import java.time.Duration
 import java.time.Instant
@@ -8,7 +8,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 /**
- * When the daily protein reminder fires (owner's feature, 2026-11-21):
+ * When a tracker's daily reminder fires (protein and sleep, owner's features, 2026-11-21):
  * 1. at the chosen time it rings for [RING] (10 s), then the sound and vibration stop;
  * 2. the pop-up stays up to [POPUP] (2 min) from the moment it fired, with no way to dismiss it;
  * 3. unanswered, it comes back [SNOOZE] (15 min) after closing, until the day is logged;
@@ -18,7 +18,7 @@ import java.time.ZonedDateTime
  * Example: time 20:00, never answered: 20:00, 20:17, 20:34 ... 23:43; 00:00 is past midnight, so the
  * next one is 20:00 the next day.
  */
-public object ProteinReminderRules {
+public object TrackerReminderRules {
     public val RING: Duration = Duration.ofSeconds(10)
     public val POPUP: Duration = Duration.ofMinutes(2)
     public val SNOOZE: Duration = Duration.ofMinutes(15)
@@ -32,8 +32,8 @@ public object ProteinReminderRules {
     /**
      * The next alarm. [repeatAt] is a pending repeat (kept on disk): it wins while it is still in the
      * calendar day it was set for and its day is not logged; if its time passed (the phone was off)
-     * it fires now. Otherwise the next [time] whose day is not logged. [logged] answers for a protein
-     * day; [dayOf] turns an instant into its protein day (rollover hour).
+     * it fires now. Otherwise the next [time] whose day is not logged. [logged] answers for a tracker
+     * day; [dayOf] turns an instant into the day it asks about (rollover hour, and for sleep last night).
      */
     public fun nextFire(
         now: Instant,

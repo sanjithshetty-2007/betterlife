@@ -20,3 +20,19 @@ public data class ProteinDayEntity(
     val updatedAt: Long,
     val deletedAt: Long?,
 )
+
+/**
+ * One night of sleep (owner's feature, database version 7), stored on the day you went to bed: the
+ * night from Thu evening to Fri morning is Thursday. At most one row per [localDate]. [targetMinutes]
+ * is the target that applied that night. Local only: never synced.
+ */
+@Entity(tableName = "sleep_days", indices = [Index(value = ["localDate"], unique = true)])
+public data class SleepDayEntity(
+    @PrimaryKey val id: String,
+    val localDate: LocalDate,
+    val minutes: Int,
+    val targetMinutes: Int,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val deletedAt: Long?,
+)

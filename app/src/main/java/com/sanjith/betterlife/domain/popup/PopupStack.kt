@@ -3,6 +3,7 @@ package com.sanjith.betterlife.domain.popup
 import com.sanjith.betterlife.domain.model.Importance
 import com.sanjith.betterlife.domain.model.ReminderItemType
 import java.time.Instant
+import com.sanjith.betterlife.domain.tracker.TrackerKind
 import java.time.LocalDate
 
 /**
@@ -23,12 +24,12 @@ public data class PopupCard(
     val eventEnd: Instant?,
     val snoozeCount: Int,
     val shownAt: Instant,
-    /** Set for the daily protein question: asks for grams instead of Done / Snooze, and cannot be dismissed. */
-    val protein: ProteinPrompt? = null,
+    /** Set for a tracker's daily question (protein, sleep): asks for an amount instead of Done / Snooze, and cannot be dismissed. */
+    val ask: DailyAsk? = null,
 )
 
-/** The protein card's day (the protein day it fired on) and that day's target. */
-public data class ProteinPrompt(val date: LocalDate, val targetGrams: Int)
+/** A tracker card: which tracker, the day it asks about (today, or last night for sleep) and that day's target. */
+public data class DailyAsk(val kind: TrackerKind, val date: LocalDate, val target: Int)
 
 /** All cards showing in the one pop-up window, oldest first. */
 public data class PopupStackState(val cards: List<PopupCard> = emptyList()) {

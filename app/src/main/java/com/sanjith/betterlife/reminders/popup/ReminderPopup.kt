@@ -163,9 +163,9 @@ private fun AnimatedCard(
         enter = if (ui.reduceMotion) EnterTransition.None else fadeIn(tween(ENTER_MS)) + scaleIn(tween(ENTER_MS), ENTER_START_SCALE),
         exit = if (ui.reduceMotion) ExitTransition.None else fadeOut(tween(EXIT_MS)) + scaleOut(tween(EXIT_MS), EXIT_END_SCALE),
     ) {
-        val protein = card.protein
-        if (protein != null) {
-            ProteinPopupCard(protein, card.title, ui.reduceMotion, guarded)
+        val ask = card.ask
+        if (ask != null) {
+            TrackerPopupCard(ask, card.title, ui.reduceMotion, guarded)
         } else {
             PopupCardView(card, ui, doneTapped = pending == CardAction.Done, guarded)
         }

@@ -28,7 +28,7 @@ public class RearmReceiver : BroadcastReceiver() {
             try {
                 container.reminderEngine.rescheduleAll(trigger)
                 container.dailyPrompts.rescheduleAll()
-                container.proteinReminders.replan()
+                container.trackers.replanAll()
                 container.debugLog.add("Reminder engine rescheduled ($trigger)")
                 if (trigger == RescheduleTrigger.BOOT || trigger == RescheduleTrigger.APP_UPDATED) {
                     container.testAlarmController.rearm(if (trigger == RescheduleTrigger.BOOT) "Boot" else "App updated")

@@ -1,4 +1,4 @@
-package com.sanjith.betterlife.feature.protein
+package com.sanjith.betterlife.feature.tracker
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -25,18 +25,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanjith.betterlife.R
+import com.sanjith.betterlife.domain.tracker.TrackerKind
 import com.sanjith.betterlife.feature.habits.HabitAvatar
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
 
 /**
- * Protein at the top of the Habits tab: today's grams of the target and the streak, with a bar.
- * Tapping it opens the protein dashboard. Before a goal is set it invites setting one.
+ * A tracker at the top of the Habits tab (protein, then sleep below it): the latest day's amount of
+ * the target and the streak, with a bar. Tapping it opens the tracker's dashboard. Before a goal is
+ * set it invites setting one.
  */
 @Composable
-public fun ProteinHabitsCard(onOpen: () -> Unit, viewModel: ProteinViewModel = viewModel(factory = ProteinViewModel.Factory)) {
+public fun TrackerHabitsCard(kind: TrackerKind, onOpen: () -> Unit) {
+    val viewModel: TrackerViewModel = viewModel(key = kind.name, factory = TrackerViewModel.factory(kind))
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val state = ui ?: return
+    val texts = textsFor(kind)
     val color = MaterialTheme.colorScheme.primary
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -54,29 +58,33 @@ public fun ProteinHabitsCard(onOpen: () -> Unit, viewModel: ProteinViewModel = v
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                HabitAvatar(stringResource(R.string.protein_avatar), color)
+                HabitAvatar(stringResource(texts.avatar), color)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                    Text(stringResource(R.string.protein_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
-                        text = summary(state),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = stringResource(texts.title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
+                    Text(text = summary(state), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            val target = state.todayTarget
+            val target = state.latestTarget
             if (state.hasGoal && target != null) {
-                LinearProgressIndicator(progress = { ((state.todayGrams ?: 0).toFloat() / target).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                LinearProgressIndicator(progress = { ((state.latestAmount ?: 0).toFloat() / target).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
             }
         }
     }
 }
 
 @Composable
-private fun summary(state: ProteinUi): String {
-    val target = state.todayTarget
-    if (!state.hasGoal || target == null) return stringResource(R.string.protein_card_setup)
-    val today = state.todayGrams?.let { stringResource(R.string.protein_today_amount, it, target) } ?: stringResource(R.string.protein_not_logged)
+private fun summary(state: TrackerUi): String {
+    val texts = textsFor(state.kind)
+    val target = state.latestTarget
+    if (!state.hasGoal || target == null) return stringResource(texts.cardSetup)
+    val latest = state.latestAmount?.let { stringResource(R.string.tracker_amount_of, amountText(state.kind, it), amountText(state.kind, target)) }
+        ?: stringResource(R.string.tracker_not_logged)
     val streak = state.streaks.current
-    return if (streak > 0) today + " · " + pluralStringResource(R.plurals.protein_streak_days, streak, streak) else today
+    return if (streak > 0) latest + " · " + pluralStringResource(texts.streak, streak, streak) else latest
 }

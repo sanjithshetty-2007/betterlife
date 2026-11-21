@@ -61,10 +61,6 @@ import com.sanjith.betterlife.reminders.popup.AndroidPopupActions
 import com.sanjith.betterlife.reminders.popup.AndroidSoundPlayer
 import com.sanjith.betterlife.reminders.popup.PopupCoordinator
 import com.sanjith.betterlife.reminders.popup.RoomItemWatcher
-import com.sanjith.betterlife.reminders.protein.ProteinReminders
-import com.sanjith.betterlife.data.protein.ProteinRepository
-import com.sanjith.betterlife.data.protein.ProteinService
-import com.sanjith.betterlife.data.protein.ProteinSettingsStore
 import com.sanjith.betterlife.sync.AccountRepository
 import com.sanjith.betterlife.sync.createSupabaseOrNull
 import io.github.jan.supabase.SupabaseClient
@@ -340,27 +336,17 @@ public class AppContainer(appContext: Context) {
     /** Morning check-in and evening wrap-up nudges, on the real clock like all real alarms. */
     public val dailyPrompts: DailyPrompts by lazy { DailyPrompts(appContext, settingsRepository, realClock) }
 
-    /** Protein goal, days and the daily protein reminder (owner's feature, 2026-11-21). Local only. */
-    public val proteinSettingsStore: ProteinSettingsStore = ProteinSettingsStore(appContext.settingsDataStore)
-    public val proteinRepository: ProteinRepository by lazy { ProteinRepository(database, nowMillis, newId) }
-
-    /** The app's protein day: habit day after the rollover hour (app time, like habits). */
-    public suspend fun proteinToday(): java.time.LocalDate = habitToday()
-
-    public val proteinService: ProteinService by lazy {
-        ProteinService(proteinRepository, proteinSettingsStore, ::proteinToday) { proteinReminders.replan() }
-    }
-
-    /** The protein alarm runs on the REAL clock, like every alarm. */
-    public val proteinReminders: ProteinReminders by lazy {
-        val device = AndroidDeviceState(appContext)
-        ProteinReminders(
+    /** The daily trackers, protein and sleep (owner's features, 2026-11-21). Local only. */
+    public val trackers: Trackers by lazy {
+        Trackers(
             context = appContext,
-            store = proteinSettingsStore,
-            repository = proteinRepository,
-            clock = realClock,
+            database = { database },
+            settingsDataStore = appContext.settingsDataStore,
+            nowMillis = nowMillis,
+            newId = newId,
+            realClock = realClock,
             rolloverHour = { settingsRepository.current().rolloverHour },
-            callActive = device::callActive,
+            habitToday = ::habitToday,
             coordinator = { popupCoordinator },
             log = debugLog,
         )
@@ -417,9 +403,9 @@ public class AppContainer(appContext: Context) {
     public val popupCoordinator: PopupCoordinator by lazy {
         PopupCoordinator(
             scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
-            actions = AndroidPopupActions(appContext, { settingsRepository.current().habitTickHaptics }, { reminderEngine }) { proteinService },
+            actions = AndroidPopupActions(appContext, { settingsRepository.current().habitTickHaptics }, { reminderEngine }) { kind -> trackers[kind].service },
             sound = AndroidSoundPlayer(appContext) { settingsRepository.current() },
-            watcher = RoomItemWatcher(database),
+            watcher = RoomItemWatcher(database) { kind, date -> trackers[kind].repository.observeDay(date) },
             clock = realClock,
             timeoutMinutes = { settingsRepository.current().popupTimeoutMinutes },
         )

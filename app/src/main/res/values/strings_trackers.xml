@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Daily trackers: protein and sleep (owner's features, 2026-11-21). -->
+<resources>
+    <!-- Shared by both trackers -->
+    <string name="tracker_amount_of">%1$s of %2$s</string>
+    <string name="tracker_not_logged">Not logged yet</string>
+    <string name="tracker_average_none">Average: no days yet</string>
+    <string name="tracker_stat_streak">Current streak</string>
+    <string name="tracker_stat_best">Longest streak</string>
+    <string name="tracker_this_week">This week</string>
+    <string name="tracker_this_month">This month</string>
+    <string name="tracker_last_12_months">Last 12 months</string>
+    <string name="tracker_day_description">%1$s, %2$s</string>
+    <string name="tracker_day_not_logged">%1$s, not logged</string>
+    <string name="tracker_goal_and_reminder">Goal and reminder</string>
+    <string name="tracker_daily_reminder">Daily reminder</string>
+    <string name="tracker_reminder_time">Reminder time</string>
+    <string name="tracker_start">Start tracking</string>
+    <string name="tracker_save">Save</string>
+    <string name="tracker_refused_goal">Set a target first.</string>
+
+    <!-- Protein -->
+    <string name="protein_title">Protein</string>
+    <!-- The protein card's icon on the Habits tab (an emoji, like habit avatars). -->
+    <string name="protein_avatar" translatable="false">🍗</string>
+    <string name="protein_popup_question">How much protein have you consumed today?</string>
+    <string name="protein_popup_target">Daily target: %1$dg</string>
+    <string name="protein_amount_hint">Enter amount in grams</string>
+    <string name="protein_grams_unit">g</string>
+    <string name="protein_grams_value">%1$d g</string>
+    <string name="protein_save_intake">Save Protein Intake</string>
+    <string name="protein_today">Today</string>
+    <string name="protein_left">%1$s to go</string>
+    <string name="protein_goal_reached">Goal reached</string>
+    <string name="protein_progress_description">%1$d percent of today\'s target</string>
+    <string name="protein_log_today">Log today\'s protein</string>
+    <string name="protein_edit_today">Edit today\'s protein</string>
+    <string name="protein_add_yesterday">Add yesterday\'s protein</string>
+    <string name="protein_edit_yesterday">Edit yesterday\'s protein (%1$s)</string>
+    <string name="protein_dialog_today">Today\'s protein</string>
+    <string name="protein_dialog_yesterday">Yesterday\'s protein</string>
+    <string name="protein_stat_total">Successful days</string>
+    <string name="protein_average">Average: %1$s a day</string>
+    <plurals name="protein_goal_days">
+        <item quantity="one">Goal reached on %1$d of %2$d day</item>
+        <item quantity="other">Goal reached on %1$d of %2$d days</item>
+    </plurals>
+    <plurals name="protein_streak_days">
+        <item quantity="one">%1$d day streak</item>
+        <item quantity="other">%1$d day streak</item>
+    </plurals>
+    <string name="protein_daily_target">Daily target</string>
+    <string name="protein_setup_title">Set your daily protein goal</string>
+    <string name="protein_setup_text">Choose your grams for each day and when you want to be asked. The reminder comes every day at that time until you log.</string>
+    <string name="protein_target_hint">Daily target in grams</string>
+    <string name="protein_card_setup">Set a daily goal</string>
+    <string name="protein_refused_old">Only today and yesterday can be changed.</string>
+    <string name="more_protein">Protein</string>
+
+    <!-- Sleep: a night counts for the day you went to bed, logged the morning after -->
+    <string name="sleep_title">Sleep</string>
+    <string name="sleep_avatar" translatable="false">😴</string>
+    <string name="sleep_popup_question">How much did you sleep last night?</string>
+    <string name="sleep_popup_target">Sleep target: %1$s</string>
+    <string name="sleep_hours_hint">Hours</string>
+    <string name="sleep_minutes_hint">Minutes</string>
+    <string name="sleep_hours_unit">h</string>
+    <string name="sleep_minutes_unit">m</string>
+    <string name="sleep_duration_value">%1$d h %2$d m</string>
+    <string name="sleep_hours_value">%1$d h</string>
+    <string name="sleep_minutes_value">%1$d m</string>
+    <string name="sleep_save">Save Sleep</string>
+    <string name="sleep_last_night">Last night</string>
+    <string name="sleep_dialog_last_night">Last night\'s sleep</string>
+    <string name="sleep_dialog_night_before">Sleep the night before</string>
+    <string name="sleep_target_and_reminder">Target and reminder</string>
+    <string name="sleep_night_before">The night before</string>
+    <string name="sleep_short">%1$s short</string>
+    <string name="sleep_reached">Target reached</string>
+    <string name="sleep_progress_description">%1$d percent of your sleep target</string>
+    <string name="sleep_log_last_night">Log last night\'s sleep</string>
+    <string name="sleep_edit_last_night">Edit last night\'s sleep</string>
+    <string name="sleep_add_night_before">Add the night before</string>
+    <string name="sleep_edit_night_before">Edit the night before (%1$s)</string>
+    <string name="sleep_stat_total">Good nights</string>
+    <string name="sleep_average">Average: %1$s a night</string>
+    <plurals name="sleep_goal_nights">
+        <item quantity="one">Target reached on %1$d of %2$d night</item>
+        <item quantity="other">Target reached on %1$d of %2$d nights</item>
+    </plurals>
+    <plurals name="sleep_streak_nights">
+        <item quantity="one">%1$d night streak</item>
+        <item quantity="other">%1$d night streak</item>
+    </plurals>
+    <string name="sleep_target">Sleep target</string>
+    <string name="sleep_setup_title">Set your sleep target</string>
+    <string name="sleep_setup_text">Choose how long you want to sleep each night and when to be asked in the morning. Each morning you log last night; it counts for the day you went to bed.</string>
+    <string name="sleep_card_setup">Set a sleep target</string>
+    <string name="sleep_refused_old">Only last night and the night before can be changed.</string>
+    <string name="more_sleep">Sleep</string>
+</resources>

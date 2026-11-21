@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import com.sanjith.betterlife.data.db.entity.ProteinDayEntity
+import com.sanjith.betterlife.data.db.entity.SleepDayEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -36,6 +37,38 @@ public interface ProteinDao {
             insert(ProteinDayEntity(newId(), date, grams, targetGrams, now, now, deletedAt = null))
         } else {
             update(existing.id, grams, targetGrams, now)
+        }
+    }
+}
+
+@Dao
+public interface SleepDao {
+    @Query("SELECT * FROM sleep_days WHERE deletedAt IS NULL ORDER BY localDate")
+    public fun observeAll(): Flow<List<SleepDayEntity>>
+
+    @Query("SELECT * FROM sleep_days WHERE localDate = :date AND deletedAt IS NULL")
+    public fun observeDay(date: LocalDate): Flow<SleepDayEntity?>
+
+    @Query("SELECT * FROM sleep_days WHERE localDate = :date")
+    public suspend fun getAnyByDate(date: LocalDate): SleepDayEntity?
+
+    @Insert
+    public suspend fun insert(day: SleepDayEntity)
+
+    @Query("UPDATE sleep_days SET minutes = :minutes, targetMinutes = :targetMinutes, updatedAt = :now, deletedAt = NULL WHERE id = :id")
+    public suspend fun update(id: String, minutes: Int, targetMinutes: Int, now: Long)
+
+    @Query("UPDATE sleep_days SET targetMinutes = :targetMinutes, updatedAt = :now WHERE localDate = :date AND deletedAt IS NULL")
+    public suspend fun retarget(date: LocalDate, targetMinutes: Int, now: Long)
+
+    /** Saves a night: updates the night's row if there is one (never a second row for a date). */
+    @Transaction
+    public suspend fun upsertDay(date: LocalDate, minutes: Int, targetMinutes: Int, now: Long, newId: () -> String) {
+        val existing = getAnyByDate(date)
+        if (existing == null) {
+            insert(SleepDayEntity(newId(), date, minutes, targetMinutes, now, now, deletedAt = null))
+        } else {
+            update(existing.id, minutes, targetMinutes, now)
         }
     }
 }

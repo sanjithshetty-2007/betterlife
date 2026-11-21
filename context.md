@@ -86,6 +86,13 @@ XP is an append-only ledger (reversible). XP is awarded once per item per day, u
 - Protein dashboard (card at the top of the Habits tab, also in More): today with progress and what is left; this week and this month (average with unlogged days as 0 g, from the period start or first protein day through yesterday, plus today once logged; goal days); current streak, longest streak, successful days (habit streak rules); 31-box month grid and 12-month heatmap.
 - Local only (never synced), included in backups.
 
+### 5.11 Sleep tracking (owner's addition, 2026-11-21)
+- Built on the same daily tracker as protein (5.10): a sleep target (hours and minutes), one amount per night, a night succeeds at or above that night's target.
+- A night counts for the day you went to bed: Fri night to Sat morning is Friday. Each morning you log last night; you may also add or fix the night before; nothing older. Tonight is never a miss.
+- Morning reminder at a chosen time (default 09:00), the same pop-up behaviour as protein (10 s ring, no dismiss, closes after 2 min, back every 15 min until logged or midnight), asking "How much did you sleep last night?" with hours and minutes boxes.
+- Dashboard as protein (last night, the night before, week and month averages per night with unlogged nights as 0, good nights, streaks, month grid, year). Card just below Protein on the Habits tab; also in More.
+- Local only (never synced), included in backups. This is the owner's exception to "sleep tracking" in section 12.
+
 ## 6. Mascot
 Round alien blob, maroon body, big glossy eyes, stubby arms, one antenna with a glowing yellow bulb (the mood light). Moods: cheering, proud, curious (idle), sleepy (late night), disappointed (missed habits: sits down, bulb dim; never guilt-trips; perks up instantly). Mood reflects the last 24 to 72 hours only. Five PERMANENT evolution stages from total consistent days (never goes down): 1 glowing egg/pod, 2 baby blob, 3 teen with bigger antenna and small legs, 4 adult with cape or glowing markings, 5 legend with full glow and aura. Drawn with Compose Canvas. Appears on Today, pop-ups, celebrations, report card and widgets (small).
 
@@ -96,7 +103,7 @@ Round alien blob, maroon body, big glossy eyes, stubby arms, one antenna with a 
 - Recurrence: monthly on the 31st falls to the last day of shorter months; every weekday; skip this occurrence; edit this / this and following / all.
 
 ## 8. Data model (Room)
-Separate tables: Task, Event (includes birthdays), Habit, Note, JournalEntry, plus Reminder (itemType, itemId, offset, importance, state), ReminderLog (append-only, with reason code), Attachment (itemType, itemId, file), Link (fromType, fromId, toType, toId), Tag + join table, HabitLog (habitId, localDate, status), MilestoneLedger, PauseRange, XpLedger (append-only), ProteinDay (one row per local date, grams + that day's target), WeightEntry, CalorieEntry, ProgressPhoto, CelebrationMessage, LinkPreview. Every row: UUID id, createdAt, updatedAt, deletedAt. Synced tables (section 11a) also have syncState (CLEAN / DIRTY) and serverUpdatedAt. Settings in Preferences DataStore. Polymorphic references (itemType + itemId) are validated in the repository layer.
+Separate tables: Task, Event (includes birthdays), Habit, Note, JournalEntry, plus Reminder (itemType, itemId, offset, importance, state), ReminderLog (append-only, with reason code), Attachment (itemType, itemId, file), Link (fromType, fromId, toType, toId), Tag + join table, HabitLog (habitId, localDate, status), MilestoneLedger, PauseRange, XpLedger (append-only), ProteinDay (one row per local date, grams + that day's target), SleepDay (one row per night on the bedtime date, minutes + that night's target), WeightEntry, CalorieEntry, ProgressPhoto, CelebrationMessage, LinkPreview. Every row: UUID id, createdAt, updatedAt, deletedAt. Synced tables (section 11a) also have syncState (CLEAN / DIRTY) and serverUpdatedAt. Settings in Preferences DataStore. Polymorphic references (itemType + itemId) are validated in the repository layer.
 
 ## 9. Design system
 - Mood: modern Gen Z, fun, rounded, soft thin borders, layered cards, avatars, lots of motion. Dark/AMOLED default.
@@ -116,7 +123,7 @@ POST_NOTIFICATIONS, USE_EXACT_ALARM (verify canScheduleExactAlarms at runtime; f
 ## 11a. Supabase sync
 - Project: a NEW Supabase project in the Mumbai region (ap-south-1), created by the owner. Its project ref is recorded in PROGRESS.md. (The existing Tokyo project "sanjithshetty-2007's Project" is NOT used.)
 - Auth: email + password (Supabase Auth). Sign-in is optional; the app works fully signed out. One account, the owner's.
-- Synced tables ONLY: Task, Project, Event, Reminder (definitions: item, offset, importance; NOT fire state), Habit, HabitLog, PauseRange. Everything else is local only: ReminderLog, notes, journal, tags, links, attachments, voice notes, photos, weight, calories, XP, milestones, celebration messages, settings, vault, protein days.
+- Synced tables ONLY: Task, Project, Event, Reminder (definitions: item, offset, importance; NOT fire state), Habit, HabitLog, PauseRange. Everything else is local only: ReminderLog, notes, journal, tags, links, attachments, voice notes, photos, weight, calories, XP, milestones, celebration messages, settings, vault, protein days, sleep days.
 - Security: every Supabase table has user_id (default auth.uid()) and row-level security enabled with policies allowing select/insert/update only where user_id = auth.uid(). No delete policy: deletes sync as soft-delete tombstones (deleted_at). The app ships only the publishable (anon) key. No end-to-end encryption (owner decision).
 - Model: offline-first outbox. Local writes set syncState DIRTY in the same transaction. Push: upsert dirty rows, then mark CLEAN. Pull: fetch rows whose server updated_at is newer than the last pull cursor. Conflict rule: last write wins on the whole row by updatedAt. Tombstones are pushed before the 30-day Trash purge removes a row locally.
 - Timing: automatic when online. Push shortly after changes (debounced), pull on app open, plus a periodic WorkManager job with a network constraint and retry with backoff. Never on the main thread, never inside a reminder receiver.
@@ -125,7 +132,7 @@ POST_NOTIFICATIONS, USE_EXACT_ALARM (verify canScheduleExactAlarms at runtime; f
 - Settings: account (sign in / out), last sync time, pending changes count, "Sync now", and "Delete my cloud data" (asks twice, deletes only server rows).
 
 ## 12. Out of scope (do not build)
-Workout logs, body measurements, (protein tracking in 5.10 is the owner's one exception to "number habits" and "goals"), water and sleep tracking, a separate supplement tracker, number habits, "x times per week" habits, per-day habit notes, countdown timers, streak freeze and rest days (undecided), focus timer, routines, goals (undecided), any AI, syncing data not listed in section 11a, Google sign-in, multi-user / sharing, a web dashboard, tablet layouts, brand-specific setup guides for non-Vivo phones, Play Store release, Vivo Dynamic Island.
+Workout logs, body measurements, (protein tracking in 5.10 and sleep tracking in 5.11 are the owner's exceptions to "number habits", "goals" and "sleep tracking"), water and sleep tracking, a separate supplement tracker, number habits, "x times per week" habits, per-day habit notes, countdown timers, streak freeze and rest days (undecided), focus timer, routines, goals (undecided), any AI, syncing data not listed in section 11a, Google sign-in, multi-user / sharing, a web dashboard, tablet layouts, brand-specific setup guides for non-Vivo phones, Play Store release, Vivo Dynamic Island.
 
 ## 13. Open decisions and defaults
 Mascot name Blip. Rollover hour 03:00. Snooze Tonight 20:00 and Tomorrow 09:00. Fatigue 3 per hour and 10 minute grouping. Widget detail hiding ON. Pause/vacation mode ON. Encrypted backups OFF. Keep 7 backups. Sync automatic when online. Source code on the phone: view-only via a private repository (not part of the app).

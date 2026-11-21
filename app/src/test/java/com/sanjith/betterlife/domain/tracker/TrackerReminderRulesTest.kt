@@ -1,4 +1,4 @@
-package com.sanjith.betterlife.domain.protein
+package com.sanjith.betterlife.domain.tracker
 
 import com.sanjith.betterlife.domain.time.habitDay
 import org.junit.Assert.assertEquals
@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 
-public class ProteinReminderRulesTest {
+public class TrackerReminderRulesTest {
 
     private val zone = ZoneId.of("Asia/Kolkata")
     private val eight = LocalTime.of(20, 0)
@@ -19,13 +19,13 @@ public class ProteinReminderRulesTest {
     private fun dayOf(instant: Instant): LocalDate = habitDay(instant, zone, rolloverHour = 3)
 
     private fun next(now: String, repeatAt: Instant? = null, logged: Set<String> = emptySet()) =
-        ProteinReminderRules.nextFire(at(now), zone, eight, repeatAt, ::dayOf) { it.toString() in logged }
+        TrackerReminderRules.nextFire(at(now), zone, eight, repeatAt, ::dayOf) { it.toString() in logged }
 
     @Test
     public fun timingsAreTenSecondsTwoMinutesAndFifteenMinutes() {
-        assertEquals(10, ProteinReminderRules.RING.seconds)
-        assertEquals(2, ProteinReminderRules.POPUP.toMinutes())
-        assertEquals(15, ProteinReminderRules.SNOOZE.toMinutes())
+        assertEquals(10, TrackerReminderRules.RING.seconds)
+        assertEquals(2, TrackerReminderRules.POPUP.toMinutes())
+        assertEquals(15, TrackerReminderRules.SNOOZE.toMinutes())
     }
 
     @Test
@@ -42,10 +42,10 @@ public class ProteinReminderRulesTest {
 
     @Test
     public fun repeatComesSeventeenMinutesAfterFiringUntilMidnight() {
-        assertEquals(at("2026-11-21T20:17"), ProteinReminderRules.repeatAfterFire(at("2026-11-21T20:00"), zone))
-        assertEquals(at("2026-11-21T23:59"), ProteinReminderRules.repeatAfterFire(at("2026-11-21T23:42"), zone))
-        assertNull(ProteinReminderRules.repeatAfterFire(at("2026-11-21T23:43"), zone))
-        assertEquals(at("2026-11-21T20:15"), ProteinReminderRules.repeatAfterCall(at("2026-11-21T20:00"), zone))
+        assertEquals(at("2026-11-21T20:17"), TrackerReminderRules.repeatAfterFire(at("2026-11-21T20:00"), zone))
+        assertEquals(at("2026-11-21T23:59"), TrackerReminderRules.repeatAfterFire(at("2026-11-21T23:42"), zone))
+        assertNull(TrackerReminderRules.repeatAfterFire(at("2026-11-21T23:43"), zone))
+        assertEquals(at("2026-11-21T20:15"), TrackerReminderRules.repeatAfterCall(at("2026-11-21T20:00"), zone))
     }
 
     @Test
@@ -66,7 +66,17 @@ public class ProteinReminderRulesTest {
     public fun theScheduleFollowsATimeZoneChange() {
         val dubai = ZoneId.of("Asia/Dubai")
         val now = at("2026-11-21T09:00")
-        val fire = ProteinReminderRules.nextFire(now, dubai, eight, null, { habitDay(it, dubai, 3) }) { false }
+        val fire = TrackerReminderRules.nextFire(now, dubai, eight, null, { habitDay(it, dubai, 3) }) { false }
         assertEquals(LocalDateTime.parse("2026-11-21T20:00"), fire.atZone(dubai).toLocalDateTime())
+    }
+
+    @Test
+    public fun aSleepReminderAsksAboutLastNightAndSkipsWhenItIsLogged() {
+        val nine = LocalTime.of(9, 0)
+        val sleepDay = { at: Instant -> TrackerRules.latestDay(TrackerKind.SLEEP, dayOf(at)) }
+        // Sat 21, 07:00; last night (Fri 20) is already logged: next is Sun 22 09:00, asking about Sat 21.
+        val fire = TrackerReminderRules.nextFire(at("2026-11-21T07:00"), zone, nine, null, sleepDay) { it.toString() == "2026-11-20" }
+        assertEquals(at("2026-11-22T09:00"), fire)
+        assertEquals(LocalDate.parse("2026-11-21"), sleepDay(fire))
     }
 }

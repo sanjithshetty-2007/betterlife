@@ -1,4 +1,4 @@
-package com.sanjith.betterlife.feature.protein
+package com.sanjith.betterlife.feature.tracker
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -33,10 +33,10 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.sanjith.betterlife.R
-import com.sanjith.betterlife.data.protein.ProteinSettings
-import com.sanjith.betterlife.domain.protein.DayBar
-import com.sanjith.betterlife.domain.protein.PeriodStats
-import com.sanjith.betterlife.domain.protein.ProteinRules
+import com.sanjith.betterlife.data.tracker.TrackerSettings
+import com.sanjith.betterlife.domain.tracker.DayBar
+import com.sanjith.betterlife.domain.tracker.PeriodStats
+import com.sanjith.betterlife.domain.tracker.TrackerKind
 import com.sanjith.betterlife.feature.habits.SectionCard
 import com.sanjith.betterlife.feature.tasks.DueText
 import com.sanjith.betterlife.ui.theme.BetterLifeColors
@@ -47,82 +47,87 @@ import java.time.LocalTime
 import java.time.format.TextStyle
 import java.util.Locale
 
-/** The first visit: target in grams and the reminder time; Start turns the daily reminder on. */
+/** The first visit: the target and the reminder time; Start turns the daily reminder on. */
 @Composable
-internal fun GoalSetupCard(defaultTime: LocalTime, onStart: (Int, LocalTime) -> Unit) {
-    var text by rememberSaveable { mutableStateOf("") }
+internal fun GoalSetupCard(kind: TrackerKind, defaultTime: LocalTime, onStart: (Int, LocalTime) -> Unit) {
+    val texts = textsFor(kind)
+    var first by rememberSaveable { mutableStateOf("") }
+    var second by rememberSaveable { mutableStateOf("") }
     var time by rememberSaveable { mutableStateOf(defaultTime) }
     var picking by remember { mutableStateOf(false) }
-    val target = ProteinRules.parseTarget(text)
+    val target = parseTarget(kind, first, second)
     SectionCard {
         Column(Modifier.padding(Spacing.sm), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-            Text(stringResource(R.string.protein_setup_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-            Text(stringResource(R.string.protein_setup_text), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            GramsField(text, { text = it }, stringResource(R.string.protein_target_hint), onDone = { target?.let { onStart(it, time) } })
+            Text(stringResource(texts.setupTitle), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+            Text(stringResource(texts.setupText), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            AmountFields(kind, first, { first = it }, second, { second = it }, stringResource(R.string.protein_target_hint), onDone = { target?.let { onStart(it, time) } })
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.protein_reminder_time), modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
+                Text(stringResource(R.string.tracker_reminder_time), modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
                 TextButton(onClick = { picking = true }, modifier = Modifier.heightIn(min = Dimens.minTouchTarget)) { Text(formatTime(time)) }
             }
             Button(
                 onClick = { target?.let { onStart(it, time) } },
                 enabled = target != null,
                 modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget),
-            ) { Text(stringResource(R.string.protein_start)) }
+            ) { Text(stringResource(R.string.tracker_start)) }
         }
     }
     if (picking) ReminderTimeDialog(time, onPick = { time = it; picking = false }, onDismiss = { picking = false })
 }
 
-/** Today: grams of target, a progress bar, what is left, and the two log buttons. */
+/** The latest day (today, or last night): amount of target, a progress bar, what is left, and the two log buttons. */
 @Composable
-internal fun TodayCard(state: ProteinUi, onLogToday: () -> Unit, onYesterday: () -> Unit) {
-    val target = state.todayTarget ?: return
-    val grams = state.todayGrams
-    val percent = ((grams ?: 0) * PERCENT / target).coerceAtMost(PERCENT)
+internal fun LatestCard(state: TrackerUi, onLog: () -> Unit, onEarlier: () -> Unit) {
+    val kind = state.kind
+    val texts = textsFor(kind)
+    val target = state.latestTarget ?: return
+    val amount = state.latestAmount
+    val percent = ((amount ?: 0) * PERCENT / target).coerceAtMost(PERCENT)
     SectionCard {
         Column(Modifier.padding(Spacing.sm), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-            Text(stringResource(R.string.protein_today), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(texts.latestHeading), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
-                text = stringResource(R.string.protein_today_amount, grams ?: 0, target),
+                text = stringResource(R.string.tracker_amount_of, amountText(kind, amount ?: 0), amountText(kind, target)),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            val progressText = stringResource(R.string.protein_progress_description, percent)
+            val progressText = stringResource(texts.progress, percent)
             LinearProgressIndicator(
                 progress = { percent / PERCENT.toFloat() },
                 modifier = Modifier.fillMaxWidth().semantics { contentDescription = progressText },
             )
             Text(
                 text = when {
-                    grams == null -> stringResource(R.string.protein_not_logged)
-                    grams >= target -> stringResource(R.string.protein_goal_reached)
-                    else -> stringResource(R.string.protein_left, target - grams)
+                    amount == null -> stringResource(R.string.tracker_not_logged)
+                    amount >= target -> stringResource(texts.reached)
+                    else -> stringResource(texts.left, amountText(kind, target - amount))
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Button(onClick = onLogToday, modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget)) {
-                Text(stringResource(if (grams == null) R.string.protein_log_today else R.string.protein_edit_today))
+            Button(onClick = onLog, modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget)) {
+                Text(stringResource(if (amount == null) texts.logLatest else texts.editLatest))
             }
-            OutlinedButton(onClick = onYesterday, modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget)) {
-                Text(state.yesterdayGrams?.let { stringResource(R.string.protein_edit_yesterday, it) } ?: stringResource(R.string.protein_add_yesterday))
+            OutlinedButton(onClick = onEarlier, modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget)) {
+                Text(state.earlierAmount?.let { stringResource(texts.editEarlier, amountText(kind, it)) } ?: stringResource(texts.addEarlier))
             }
         }
     }
 }
 
-/** A week or month: the average (empty days count as 0 g), goal days, then the period's overview. */
+/** A week or month: the average (empty days count as 0), goal days, then the period's overview. */
 @Composable
-internal fun PeriodCard(stats: PeriodStats, overview: @Composable () -> Unit) {
+internal fun PeriodCard(kind: TrackerKind, stats: PeriodStats, overview: @Composable () -> Unit) {
+    val texts = textsFor(kind)
     SectionCard {
         Column(Modifier.padding(Spacing.sm), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
             Text(
-                text = stats.averageGrams?.let { stringResource(R.string.protein_average, it) } ?: stringResource(R.string.protein_average_none),
+                text = stats.average?.let { stringResource(texts.average, amountText(kind, it)) } ?: stringResource(R.string.tracker_average_none),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = pluralStringResource(R.plurals.protein_goal_days, stats.countedDays, stats.goalDays, stats.countedDays),
+                text = pluralStringResource(texts.goalDays, stats.countedDays, stats.goalDays, stats.countedDays),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -133,20 +138,20 @@ internal fun PeriodCard(stats: PeriodStats, overview: @Composable () -> Unit) {
 
 /** Seven bars, one per day: filled up to the day's share of its target, full colour when the goal was met. */
 @Composable
-internal fun WeekBars(days: List<DayBar>, today: LocalDate) {
+internal fun WeekBars(kind: TrackerKind, days: List<DayBar>, latest: LocalDate) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         days.forEach { day ->
             val name = day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
-            val description = day.grams?.let { stringResource(R.string.protein_day_description, name, it) }
-                ?: stringResource(R.string.protein_day_not_logged, name)
+            val description = day.amount?.let { stringResource(R.string.tracker_day_description, name, amountText(kind, it)) }
+                ?: stringResource(R.string.tracker_day_not_logged, name)
             Column(
                 modifier = Modifier.weight(1f).clearAndSetSemantics { contentDescription = description },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(Spacing.xs),
             ) {
-                val share = day.grams?.let { grams -> day.targetGrams?.let { (grams.toFloat() / it).coerceIn(0f, 1f) } } ?: 0f
+                val share = day.amount?.let { amount -> day.target?.let { (amount.toFloat() / it).coerceIn(0f, 1f) } } ?: 0f
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(Dimens.proteinBarHeight).clip(MaterialTheme.shapes.small).background(BetterLifeColors.Greyed),
+                    modifier = Modifier.fillMaxWidth().height(Dimens.trackerBarHeight).clip(MaterialTheme.shapes.small).background(BetterLifeColors.Greyed),
                     contentAlignment = Alignment.BottomCenter,
                 ) {
                     if (share > 0f) {
@@ -157,7 +162,7 @@ internal fun WeekBars(days: List<DayBar>, today: LocalDate) {
                 Text(
                     text = name,
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (day.date == today) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (day.date == latest) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
             }
@@ -165,19 +170,19 @@ internal fun WeekBars(days: List<DayBar>, today: LocalDate) {
     }
 }
 
-/** The goal (Edit opens the grams dialog) and the daily reminder (time and on/off). */
+/** The goal (tapping it opens the amount dialog) and the daily reminder (time and on/off). */
 @Composable
-internal fun GoalAndReminder(settings: ProteinSettings, onEditTarget: () -> Unit, onReminder: (Boolean, LocalTime) -> Unit) {
+internal fun GoalAndReminder(kind: TrackerKind, settings: TrackerSettings, onEditTarget: () -> Unit, onReminder: (Boolean, LocalTime) -> Unit) {
     var picking by remember { mutableStateOf(false) }
     Column(Modifier.padding(horizontal = Spacing.sm)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = Dimens.minTouchTarget)) {
-            Text(stringResource(R.string.protein_daily_target), modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
+            Text(stringResource(textsFor(kind).targetLabel), modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
             TextButton(onClick = onEditTarget, modifier = Modifier.heightIn(min = Dimens.minTouchTarget)) {
-                Text(stringResource(R.string.protein_target_value, settings.targetGrams ?: 0))
+                Text(amountText(kind, settings.target ?: 0))
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = Dimens.minTouchTarget)) {
-            Text(stringResource(R.string.protein_daily_reminder), modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
+            Text(stringResource(R.string.tracker_daily_reminder), modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
             TextButton(onClick = { picking = true }, modifier = Modifier.heightIn(min = Dimens.minTouchTarget)) { Text(formatTime(settings.reminderTime)) }
             Switch(checked = settings.reminderOn, onCheckedChange = { onReminder(it, settings.reminderTime) })
         }

@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import com.sanjith.betterlife.domain.today.TodayKind
-import com.sanjith.betterlife.feature.protein.ProteinScreen
+import com.sanjith.betterlife.domain.tracker.TrackerKind
+import com.sanjith.betterlife.feature.tracker.TrackerScreen
 import com.sanjith.betterlife.feature.home.HealthBanner
 import com.sanjith.betterlife.feature.more.MoreEntry
 import com.sanjith.betterlife.feature.more.MoreScreen
@@ -91,6 +92,7 @@ internal object Routes {
     const val HABIT_EDITOR = "habit"
     const val HABIT_DETAIL = "habit-detail"
     const val PROTEIN = "protein"
+    const val SLEEP = "sleep"
     const val CELEBRATION = "celebration"
     const val CELEBRATION_MESSAGES = "celebration-messages"
     const val MASCOT = "debug/mascot"
@@ -191,6 +193,7 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                         MoreEntry(R.drawable.ic_check_circle, R.string.more_health) { navController.navigate(Routes.SETUP) },
                         MoreEntry(R.drawable.ic_tune, R.string.more_quiet) { navController.navigate(Routes.QUIET) },
                         MoreEntry(R.drawable.ic_spa, R.string.more_protein) { navController.navigate(Routes.PROTEIN) },
+                        MoreEntry(R.drawable.ic_timer, R.string.more_sleep) { navController.navigate(Routes.SLEEP) },
                         MoreEntry(R.drawable.ic_local_fire, R.string.more_celebrations) { navController.navigate(Routes.CELEBRATION_MESSAGES) },
                         MoreEntry(R.drawable.ic_layers, R.string.more_backup) { navController.navigate(Routes.BACKUP) },
                         MoreEntry(R.drawable.ic_refresh, R.string.more_account) { navController.navigate(Routes.ACCOUNT) },
@@ -259,10 +262,11 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                     onOpenHabit = { id -> navController.navigate(Routes.habitDetail(id)) },
                     onNewHabit = { navController.navigate(Routes.habitEditor(null)) },
                     onOpenCelebrations = { navController.navigate(Routes.CELEBRATION_MESSAGES) },
-                    onOpenProtein = { navController.navigate(Routes.PROTEIN) },
+                    onOpenTracker = { kind -> navController.navigate(if (kind == TrackerKind.PROTEIN) Routes.PROTEIN else Routes.SLEEP) },
                 )
             }
-            screen(Routes.PROTEIN) { ProteinScreen(onBack = back) }
+            screen(Routes.PROTEIN) { TrackerScreen(TrackerKind.PROTEIN, onBack = back) }
+            screen(Routes.SLEEP) { TrackerScreen(TrackerKind.SLEEP, onBack = back) }
             screen("${Routes.HABIT_EDITOR}/{${HabitEditorViewModel.ARG_ID}}") { HabitEditorScreen(onClose = back) }
             screen(Routes.CELEBRATION_MESSAGES) { CelebrationMessagesScreen(onBack = back) }
             screen(Routes.CELEBRATION) {

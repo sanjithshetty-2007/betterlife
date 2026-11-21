@@ -2,7 +2,8 @@ package com.sanjith.betterlife.reminders.popup
 
 import android.content.Context
 import com.sanjith.betterlife.MainActivity
-import com.sanjith.betterlife.data.protein.ProteinService
+import com.sanjith.betterlife.data.tracker.TrackerService
+import com.sanjith.betterlife.domain.tracker.TrackerKind
 import com.sanjith.betterlife.domain.popup.PopupCard
 import com.sanjith.betterlife.reminders.engine.ReminderEngine
 import com.sanjith.betterlife.ui.feedback.DoneHaptics
@@ -14,7 +15,7 @@ public class AndroidPopupActions(
     private val context: Context,
     private val hapticsOn: suspend () -> Boolean,
     private val engine: () -> ReminderEngine,
-    private val protein: () -> ProteinService,
+    private val trackers: (TrackerKind) -> TrackerService,
 ) : PopupActions {
 
     override suspend fun done(reminderId: String) {
@@ -42,9 +43,9 @@ public class AndroidPopupActions(
         engine().timedOut(reminderId, timeoutMinutes)
     }
 
-    override suspend fun saveProtein(date: LocalDate, grams: Int) {
+    override suspend fun saveAmount(kind: TrackerKind, date: LocalDate, amount: Int) {
         val on = hapticsOn()
         DoneHaptics(context) { on }.done()
-        protein().save(date, grams)
+        trackers(kind).save(date, amount)
     }
 }

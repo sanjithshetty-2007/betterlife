@@ -22,21 +22,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.sanjith.betterlife.R
-import com.sanjith.betterlife.domain.popup.ProteinPrompt
-import com.sanjith.betterlife.domain.protein.ProteinRules
-import com.sanjith.betterlife.feature.protein.GramsField
+import com.sanjith.betterlife.domain.popup.DailyAsk
+import com.sanjith.betterlife.domain.tracker.TrackerKind
+import com.sanjith.betterlife.feature.tracker.AmountFields
+import com.sanjith.betterlife.feature.tracker.amountText
+import com.sanjith.betterlife.feature.tracker.parseAmount
+import com.sanjith.betterlife.feature.tracker.textsFor
 import com.sanjith.betterlife.ui.theme.Dimens
 import com.sanjith.betterlife.ui.theme.Spacing
 
 /**
- * The daily protein question (owner's feature, 2026-11-21): the day's target, one grams box and Save.
- * No Snooze, Done or dismiss: it closes on Save, when the day is logged elsewhere, or after 2 minutes.
+ * A tracker's daily question (owner's features, 2026-11-21): the target, the amount boxes (grams, or
+ * hours and minutes of sleep) and Save. No Snooze, Done or dismiss: it closes on Save, when the day is
+ * logged elsewhere, or after 2 minutes.
  */
 @Composable
-internal fun ProteinPopupCard(prompt: ProteinPrompt, title: String, reduceMotion: Boolean, onAction: (CardAction) -> Unit) {
-    var text by rememberSaveable(prompt.date.toString()) { mutableStateOf("") }
-    val grams = ProteinRules.parseGrams(text)
-    val save = { grams?.let { onAction(CardAction.SaveProtein(it)) } }
+internal fun TrackerPopupCard(ask: DailyAsk, title: String, reduceMotion: Boolean, onAction: (CardAction) -> Unit) {
+    val key = ask.kind.name + ask.date
+    var first by rememberSaveable(key) { mutableStateOf("") }
+    var second by rememberSaveable(key) { mutableStateOf("") }
+    val amount = parseAmount(ask.kind, first, second)
+    val save = { amount?.let { onAction(CardAction.SaveAmount(it)) } }
+    val target = when (ask.kind) {
+        // The owner's own wording for protein: "Daily target: 120g".
+        TrackerKind.PROTEIN -> stringResource(R.string.protein_popup_target, ask.target)
+        TrackerKind.SLEEP -> stringResource(R.string.sleep_popup_target, amountText(ask.kind, ask.target))
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -51,7 +62,7 @@ internal fun ProteinPopupCard(prompt: ProteinPrompt, title: String, reduceMotion
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 PopupMascot(reduceMotion = reduceMotion, description = stringResource(R.string.popup_mascot_description))
                 Text(
-                    text = stringResource(R.string.protein_popup_target, prompt.targetGrams),
+                    text = target,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = Spacing.sm).weight(1f),
@@ -63,17 +74,20 @@ internal fun ProteinPopupCard(prompt: ProteinPrompt, title: String, reduceMotion
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
             )
-            GramsField(
-                value = text,
-                onValueChange = { text = it },
+            AmountFields(
+                kind = ask.kind,
+                first = first,
+                onFirst = { first = it },
+                second = second,
+                onSecond = { second = it },
                 label = stringResource(R.string.protein_amount_hint),
                 onDone = { save() },
             )
             Button(
                 onClick = { save() },
-                enabled = grams != null,
+                enabled = amount != null,
                 modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget),
-            ) { Text(stringResource(R.string.protein_save_intake)) }
+            ) { Text(stringResource(textsFor(ask.kind).save)) }
         }
     }
 }

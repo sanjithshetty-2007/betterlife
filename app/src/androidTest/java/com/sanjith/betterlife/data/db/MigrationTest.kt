@@ -185,6 +185,32 @@ public class MigrationTest {
         }
     }
 
+    @Test
+    public fun migration6To7AddsAnEmptySleepTableAndKeepsProtein() {
+        helper.createDatabase(DB_NAME, 6).use { db ->
+            db.execSQL(
+                "INSERT INTO protein_days (id, localDate, grams, targetGrams, createdAt, updatedAt, deletedAt) " +
+                    "VALUES ('p-1', '2026-11-21', 90, 120, 1, 1, NULL)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME, 7, true, BetterLifeDatabase.MIGRATION_6_7).use { db ->
+            assertEquals("90", db.single("SELECT grams FROM protein_days WHERE id = 'p-1'"))
+            assertEquals("0", db.single("SELECT COUNT(*) FROM sleep_days"))
+            db.execSQL(
+                "INSERT INTO sleep_days (id, localDate, minutes, targetMinutes, createdAt, updatedAt, deletedAt) " +
+                    "VALUES ('s-1', '2026-11-20', 450, 480, 1, 1, NULL)",
+            )
+            val duplicate = runCatching {
+                db.execSQL(
+                    "INSERT INTO sleep_days (id, localDate, minutes, targetMinutes, createdAt, updatedAt, deletedAt) " +
+                        "VALUES ('s-2', '2026-11-20', 400, 480, 1, 1, NULL)",
+                )
+            }
+            assertTrue(duplicate.isFailure)
+        }
+    }
+
     private fun androidx.sqlite.db.SupportSQLiteDatabase.single(sql: String): String =
         query(sql).use { c ->
             c.moveToFirst()

@@ -3,7 +3,8 @@ package com.sanjith.betterlife.reminders.popup
 import com.sanjith.betterlife.domain.model.Importance
 import com.sanjith.betterlife.domain.model.ReminderItemType
 import com.sanjith.betterlife.domain.popup.PopupCard
-import com.sanjith.betterlife.domain.popup.ProteinPrompt
+import com.sanjith.betterlife.domain.popup.DailyAsk
+import com.sanjith.betterlife.domain.tracker.TrackerKind
 import com.sanjith.betterlife.domain.time.Clock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,7 +42,7 @@ public class PopupCoordinatorTest {
             kotlinx.coroutines.yield()
             calls += "timeout:$reminderId:$timeoutMinutes"
         }
-        override suspend fun saveProtein(date: LocalDate, grams: Int) { calls += "protein:$date:$grams" }
+        override suspend fun saveAmount(kind: TrackerKind, date: LocalDate, amount: Int) { calls += "${kind.name.lowercase()}:$date:$amount" }
     }
 
     private class RecordingSound(private val scope: TestScope) : SoundPlayer {
@@ -209,13 +210,13 @@ public class PopupCoordinatorTest {
         assertTrue(actions.calls.isEmpty())
     }
 
-    // The daily protein card (owner's feature, 2026-11-21).
+    // A tracker card (protein here; sleep uses the same card; owner's features, 2026-11-21).
 
     private val proteinDay = LocalDate.parse("2026-10-08")
 
     private fun TestScope.proteinCard() = PopupCard(
         "protein-$proteinDay", null, "How much protein?", null, Importance.ALARM, null, null, null, false, 0, null, 0,
-        start.plusMillis(testScheduler.currentTime), protein = ProteinPrompt(proteinDay, 120),
+        start.plusMillis(testScheduler.currentTime), ask = DailyAsk(TrackerKind.PROTEIN, proteinDay, 120),
     )
 
     @Test
@@ -259,7 +260,7 @@ public class PopupCoordinatorTest {
         c.show(card)
         runCurrent()
 
-        c.act(card.key, CardAction.SaveProtein(95))
+        c.act(card.key, CardAction.SaveAmount(95))
         runCurrent()
 
         assertTrue(c.state.value.isEmpty)

@@ -1,4 +1,4 @@
-package com.sanjith.betterlife.feature.protein
+package com.sanjith.betterlife.feature.tracker
 
 import android.text.format.DateFormat
 import androidx.compose.material3.AlertDialog
@@ -15,18 +15,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.sanjith.betterlife.R
+import com.sanjith.betterlife.domain.tracker.TrackerKind
 import java.time.LocalTime
 
-/** One grams box in a dialog (today's or yesterday's amount, or the target). Save is off until [parse] accepts it. */
+/** The amount boxes in a dialog (an amount, or the target). Save is off until [parse] accepts them. */
 @Composable
-internal fun GramsDialog(title: String, label: String, initial: Int?, parse: (String) -> Int?, onSave: (Int) -> Unit, onDismiss: () -> Unit) {
-    var text by rememberSaveable { mutableStateOf(initial?.toString().orEmpty()) }
-    val value = parse(text)
+internal fun AmountDialog(
+    kind: TrackerKind,
+    title: String,
+    initial: Int?,
+    parse: (TrackerKind, String, String) -> Int?,
+    onSave: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val (startFirst, startSecond) = splitAmount(kind, initial)
+    var first by rememberSaveable { mutableStateOf(startFirst) }
+    var second by rememberSaveable { mutableStateOf(startSecond) }
+    val value = parse(kind, first, second)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        text = { GramsField(text, { text = it }, label, onDone = { value?.let(onSave) }) },
-        confirmButton = { TextButton(onClick = { value?.let(onSave) }, enabled = value != null) { Text(stringResource(R.string.protein_save)) } },
+        text = {
+            AmountFields(kind, first, { first = it }, second, { second = it }, stringResource(R.string.protein_amount_hint), onDone = { value?.let(onSave) })
+        },
+        confirmButton = { TextButton(onClick = { value?.let(onSave) }, enabled = value != null) { Text(stringResource(R.string.tracker_save)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

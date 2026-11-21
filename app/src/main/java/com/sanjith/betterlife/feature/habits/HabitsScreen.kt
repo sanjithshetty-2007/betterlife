@@ -48,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.habit.Consistency
+import com.sanjith.betterlife.feature.protein.ProteinHabitsCard
 import com.sanjith.betterlife.ui.feedback.rememberDoneHaptics
 import com.sanjith.betterlife.ui.nav.tabBarClearance
 import com.sanjith.betterlife.ui.nav.tabContentPadding
@@ -67,6 +68,7 @@ public fun HabitsScreen(
     onOpenHabit: (String) -> Unit,
     onNewHabit: () -> Unit,
     onOpenCelebrations: () -> Unit = {},
+    onOpenProtein: () -> Unit = {},
     viewModel: HabitsViewModel = viewModel(factory = HabitsViewModel.Factory),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
@@ -83,6 +85,9 @@ public fun HabitsScreen(
             QuietMilestoneBanner()
             val cards = state.cards ?: return@Column
             if (cards.isEmpty()) {
+                if (state.isCurrentMonth) {
+                    Box(Modifier.fillMaxWidth().padding(start = Spacing.md, top = Spacing.md, end = Spacing.md)) { ProteinHabitsCard(onOpen = onOpenProtein) }
+                }
                 Box(Modifier.fillMaxSize().padding(tabContentPadding()).padding(Spacing.sm), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(R.string.habits_empty),
@@ -94,6 +99,8 @@ public fun HabitsScreen(
                 return@Column
             }
             LazyColumn(contentPadding = tabContentPadding(), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                // Protein sits above the habits (owner, 2026-11-21); it is tracked like a habit but by grams.
+                if (state.isCurrentMonth) item(key = "protein", contentType = "protein") { ProteinHabitsCard(onOpen = onOpenProtein) }
                 items(cards, key = { it.id }, contentType = { "habit" }) { card ->
                     HabitCard(
                         card = card,

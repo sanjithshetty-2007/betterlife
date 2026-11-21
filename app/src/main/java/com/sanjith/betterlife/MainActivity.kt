@@ -54,6 +54,7 @@ public class MainActivity : ComponentActivity() {
             container.seedStarterHabits()
             container.reminderEngine.rescheduleAll(RescheduleTrigger.APP_LAUNCH)
             container.dailyPrompts.rescheduleAll()
+            container.proteinReminders.replan()
         }
         // Pull on app open and keep sync running; it never blocks anything (Prompt S2).
         container.startSync()

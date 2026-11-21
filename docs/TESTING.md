@@ -476,3 +476,24 @@ Add them like the habit widget: long-press an empty spot > Widgets > BetterLife 
 | 5 | Calendar widget: month, then a second one with next events | Today in yellow, dots under days with events, a cake on birthdays; the next events list with times | |
 | 6 | Restart the phone | All widgets still show data and still work | |
 | 7 | After the gate: Backup > Back up now; the AI tags phase-3 | Backup saved; tag pushed | Tag phase-3 pushed by the AI 2026-11-20; the backup is row Q1 |
+
+## Owner's feature 2026-11-21: Protein tracking
+
+Built after Prompt 20; the rest of the playbook is dropped. Use the profile build. Rows P1 to P8 are the main checks; the rest are optional.
+
+| # | Step | Expected | Result |
+|---|---|---|---|
+| P1 | Habits tab | A Protein card at the top says "Set a daily goal"; tapping it opens Protein | |
+| P2 | Enter your target (for example 120), pick a reminder time 3 minutes from now, Start tracking | The dashboard shows Today "0 g of 120 g", Not logged yet, streak tiles, This week, This month, Goal and reminder | |
+| P3 | Wait for the time (phone in use) | Alarm sound and vibration for about 10 seconds, then quiet; the card "Daily target: 120g / How much protein have you consumed today?" stays | |
+| P4 | Press Back on the card | Nothing happens (no close, no skip) | |
+| P5 | Leave it | About 2 minutes after it fired the card closes; about 15 minutes later it rings again | |
+| P6 | Type an amount, Save Protein Intake | Card closes; dashboard and the Habits card show the amount; no more reminders today | |
+| P7 | Next day, Protein > Add yesterday's protein, enter an amount | It is saved for yesterday: the week bars and month grid change on yesterday, not today | |
+| P8 | Phone locked when the reminder fires | Screen wakes with the same card over the lock screen; the keyboard opens for the grams box | |
+| 9 | Change the target | Today's progress uses the new target; past days keep theirs | |
+| 10 | Reboot during a repeat (before midnight) | The reminder comes back after the reboot | |
+| 11 | Ignore it until late evening | No reminder after midnight; the next one comes at your time the next day | |
+| 12 | Turn the Daily reminder switch off | No protein reminder until it is turned on again | |
+| 13 | Reach the target 2 days running | Current streak 2; month grid boxes filled | |
+

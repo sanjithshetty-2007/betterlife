@@ -2,16 +2,19 @@ package com.sanjith.betterlife.reminders.popup
 
 import android.content.Context
 import com.sanjith.betterlife.MainActivity
+import com.sanjith.betterlife.data.protein.ProteinService
 import com.sanjith.betterlife.domain.popup.PopupCard
 import com.sanjith.betterlife.reminders.engine.ReminderEngine
 import com.sanjith.betterlife.ui.feedback.DoneHaptics
 import java.time.Instant
+import java.time.LocalDate
 
 /** Sends pop-up answers to the reminder engine; Reschedule also opens the item's editor. */
 public class AndroidPopupActions(
     private val context: Context,
     private val hapticsOn: suspend () -> Boolean,
     private val engine: () -> ReminderEngine,
+    private val protein: () -> ProteinService,
 ) : PopupActions {
 
     override suspend fun done(reminderId: String) {
@@ -37,5 +40,11 @@ public class AndroidPopupActions(
 
     override suspend fun timedOut(reminderId: String, timeoutMinutes: Int) {
         engine().timedOut(reminderId, timeoutMinutes)
+    }
+
+    override suspend fun saveProtein(date: LocalDate, grams: Int) {
+        val on = hapticsOn()
+        DoneHaptics(context) { on }.done()
+        protein().save(date, grams)
     }
 }

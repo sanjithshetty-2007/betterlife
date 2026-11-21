@@ -156,6 +156,35 @@ public class MigrationTest {
         }
     }
 
+    @Test
+    public fun migration5To6AddsAnEmptyProteinTableAndKeepsHabits() {
+        helper.createDatabase(DB_NAME, 5).use { db ->
+            db.execSQL(INSERT_V1_TASK)
+            db.execSQL(
+                "INSERT INTO habit_logs (id, habitId, localDate, status, createdAt, updatedAt, deletedAt, syncState, serverUpdatedAt) " +
+                    "VALUES ('l-1', 'h-1', '2026-11-20', 'DONE', 1, 1, NULL, 'CLEAN', 5)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME, 6, true, BetterLifeDatabase.MIGRATION_5_6).use { db ->
+            assertEquals("Written by version 1", db.single("SELECT title FROM tasks WHERE id = 'task-1'"))
+            assertEquals("CLEAN", db.single("SELECT syncState FROM habit_logs WHERE id = 'l-1'"))
+            assertEquals("0", db.single("SELECT COUNT(*) FROM protein_days"))
+            // One row per day: a second row for the same date is refused.
+            db.execSQL(
+                "INSERT INTO protein_days (id, localDate, grams, targetGrams, createdAt, updatedAt, deletedAt) " +
+                    "VALUES ('p-1', '2026-11-21', 90, 120, 1, 1, NULL)",
+            )
+            val duplicate = runCatching {
+                db.execSQL(
+                    "INSERT INTO protein_days (id, localDate, grams, targetGrams, createdAt, updatedAt, deletedAt) " +
+                        "VALUES ('p-2', '2026-11-21', 130, 120, 1, 1, NULL)",
+                )
+            }
+            assertTrue(duplicate.isFailure)
+        }
+    }
+
     private fun androidx.sqlite.db.SupportSQLiteDatabase.single(sql: String): String =
         query(sql).use { c ->
             c.moveToFirst()

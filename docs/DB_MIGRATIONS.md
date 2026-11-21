@@ -72,3 +72,4 @@ This installs a small test app next to BetterLife Dev and runs the tests on the 
 | 3 | 8 | reminders.snoozeCount, snoozedUntil |
 | 4 | 10 | New table standalone_reminders ("remind me" items) |
 | 5 | 14 | New tables habits, habit_logs (one row per habit and day: unique habitId + localDate), milestone_ledger, pause_ranges, celebration_messages. The SQL is copied from schema 5.json (HabitSchemaV5.kt). The four starter habits are added by the app after the upgrade, not by the migration |
+| 6 | Owner's protein feature (2026-11-21) | New table protein_days (one row per local date: unique localDate; grams and that day's targetGrams). Local only. The SQL is in ProteinSchemaV6.kt, checked against schema 6.json |

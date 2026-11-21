@@ -3,6 +3,7 @@ package com.sanjith.betterlife.reminders.popup
 import com.sanjith.betterlife.domain.model.Importance
 import com.sanjith.betterlife.domain.model.ReminderItemType
 import com.sanjith.betterlife.domain.popup.PopupCard
+import com.sanjith.betterlife.domain.popup.ProteinPrompt
 import com.sanjith.betterlife.domain.time.Clock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -39,6 +41,7 @@ public class PopupCoordinatorTest {
             kotlinx.coroutines.yield()
             calls += "timeout:$reminderId:$timeoutMinutes"
         }
+        override suspend fun saveProtein(date: LocalDate, grams: Int) { calls += "protein:$date:$grams" }
     }
 
     private class RecordingSound(private val scope: TestScope) : SoundPlayer {
@@ -204,5 +207,93 @@ public class PopupCoordinatorTest {
         assertEquals(2, c.drain().size)
         assertTrue(c.state.value.isEmpty)
         assertTrue(actions.calls.isEmpty())
+    }
+
+    // The daily protein card (owner's feature, 2026-11-21).
+
+    private val proteinDay = LocalDate.parse("2026-10-08")
+
+    private fun TestScope.proteinCard() = PopupCard(
+        "protein-$proteinDay", null, "How much protein?", null, Importance.ALARM, null, null, null, false, 0, null, 0,
+        start.plusMillis(testScheduler.currentTime), protein = ProteinPrompt(proteinDay, 120),
+    )
+
+    @Test
+    public fun proteinCardRingsForTenSecondsOnly() = runTest {
+        val sound = RecordingSound(this)
+        val c = coordinator(RecordingActions(), sound)
+        c.show(proteinCard())
+        runCurrent()
+
+        advanceTimeBy(9_999)
+        assertEquals(listOf("0s play ALARM 1.0 loop"), sound.plays())
+        assertTrue(sound.events.none { it == "10s stop" })
+        advanceTimeBy(2)
+
+        assertEquals("10s stop", sound.events.last())
+        assertEquals(1, c.state.value.cards.size) // the card itself stays up
+    }
+
+    @Test
+    public fun proteinCardCannotBeDismissedOrSnoozed() = runTest {
+        val actions = RecordingActions()
+        val c = coordinator(actions, RecordingSound(this))
+        val card = proteinCard()
+        c.show(card)
+        runCurrent()
+
+        c.act(card.key, CardAction.Dismiss)
+        c.act(card.key, CardAction.Snooze(start.plusSeconds(600)))
+        c.act(card.key, CardAction.Done)
+        runCurrent()
+
+        assertEquals(1, c.state.value.cards.size)
+        assertTrue(actions.calls.isEmpty())
+    }
+
+    @Test
+    public fun proteinSaveClosesTheCardAndSavesForItsDay() = runTest {
+        val actions = RecordingActions()
+        val c = coordinator(actions, RecordingSound(this))
+        val card = proteinCard()
+        c.show(card)
+        runCurrent()
+
+        c.act(card.key, CardAction.SaveProtein(95))
+        runCurrent()
+
+        assertTrue(c.state.value.isEmpty)
+        assertEquals(listOf("protein:2026-10-08:95"), actions.calls)
+    }
+
+    @Test
+    public fun unansweredProteinCardClosesAfterTwoMinutesWithoutAnAnswer() = runTest {
+        val actions = RecordingActions()
+        val c = coordinator(actions, RecordingSound(this))
+        c.show(proteinCard())
+        runCurrent()
+
+        advanceTimeBy(2 * minute - 1)
+        assertEquals(1, c.state.value.cards.size)
+        advanceTimeBy(2)
+        runCurrent()
+
+        assertTrue(c.state.value.isEmpty)
+        // Its repeat 15 minutes later is already on disk (ProteinReminders), so nothing is sent here.
+        assertTrue(actions.calls.isEmpty())
+    }
+
+    @Test
+    public fun aReminderUnderTheProteinCardKeepsRingingAfterTenSeconds() = runTest {
+        val sound = RecordingSound(this)
+        val c = coordinator(RecordingActions(), sound)
+        c.show(card("a"))
+        c.show(proteinCard())
+        runCurrent()
+
+        advanceTimeBy(11_000)
+
+        // At 10 s the protein ring ends and the reminder's loop takes over at once.
+        assertEquals("10s play FULL_SCREEN 1.0 loop", sound.plays().last())
     }
 }

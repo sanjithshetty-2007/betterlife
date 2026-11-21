@@ -6,6 +6,7 @@ import com.sanjith.betterlife.domain.popup.PopupCard
 import com.sanjith.betterlife.domain.popup.PopupStackEvent
 import com.sanjith.betterlife.domain.popup.PopupStackState
 import com.sanjith.betterlife.domain.popup.reducePopupStack
+import com.sanjith.betterlife.domain.protein.ProteinReminderRules
 import com.sanjith.betterlife.domain.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 
 /** What the owner did on a card. */
 public sealed interface CardAction {
@@ -24,6 +26,9 @@ public sealed interface CardAction {
     public data class Snooze(val until: Instant) : CardAction
     public data object Reschedule : CardAction
     public data object Dismiss : CardAction
+
+    /** The protein card's Save: [grams] for the card's day. */
+    public data class SaveProtein(val grams: Int) : CardAction
 }
 
 /** Where card answers go (the reminder engine, in the app). */
@@ -33,6 +38,9 @@ public interface PopupActions {
     public suspend fun dismiss(reminderId: String)
     public suspend fun reschedule(card: PopupCard)
     public suspend fun timedOut(reminderId: String, timeoutMinutes: Int)
+
+    /** The protein card's answer: saves [grams] for [date], which also stops that day's reminders. */
+    public suspend fun saveProtein(date: LocalDate, grams: Int)
 }
 
 public interface SoundPlayer {
@@ -93,12 +101,21 @@ public class PopupCoordinator(
         cardJobs[card.key] = scope.launch {
             launch { runTimeout(card) }
             launch { watchItem(card) }
+            if (card.protein != null) launch { stopRingAfterLimit(card) }
         }
         restartSound(skipPastSteps = false)
     }
 
     private suspend fun actNow(key: String, action: CardAction) {
         val card = _state.value.cards.firstOrNull { it.key == key } ?: return
+        card.protein?.let { prompt ->
+            // The protein card has no dismiss or skip (owner, 2026-11-21): only Save closes it early.
+            if (action !is CardAction.SaveProtein) return
+            remove(key)
+            actions.saveProtein(prompt.date, action.grams)
+            return
+        }
+        if (action is CardAction.SaveProtein) return
         remove(key)
         val reminderId = card.reminderId ?: return // debug test cards have nothing to update
         when (action) {
@@ -106,10 +123,17 @@ public class PopupCoordinator(
             is CardAction.Snooze -> actions.snooze(reminderId, action.until)
             CardAction.Reschedule -> actions.reschedule(card)
             CardAction.Dismiss -> actions.dismiss(reminderId)
+            is CardAction.SaveProtein -> Unit
         }
     }
 
     private suspend fun runTimeout(card: PopupCard) {
+        if (card.protein != null) {
+            // Closes 2 minutes after it fired; its next repeat is already set (ProteinReminders).
+            delay(remaining(card, ProteinReminderRules.POPUP))
+            remove(card.key)
+            return
+        }
         val minutes = timeoutMinutes()
         delay(Duration.ofMinutes(minutes.toLong()).toMillis())
         // Launched apart from this job: remove() cancels the card's job, which would stop the answer halfway.
@@ -126,6 +150,19 @@ public class PopupCoordinator(
         }
     }
 
+    /** The protein card rings only for its first 10 seconds; then the sound follows the other cards. */
+    private suspend fun stopRingAfterLimit(card: PopupCard) {
+        delay(remaining(card, ProteinReminderRules.RING))
+        restartSound(skipPastSteps = true)
+    }
+
+    private fun remaining(card: PopupCard, limit: Duration): Long =
+        limit.minus(Duration.between(card.shownAt, clock.now())).toMillis().coerceAtLeast(0)
+
+    /** A protein card past its ring time is silent; every other card rings until answered. */
+    private fun ringing(card: PopupCard): Boolean =
+        card.protein == null || Duration.between(card.shownAt, clock.now()) < ProteinReminderRules.RING
+
     private fun remove(key: String) {
         _state.update { reducePopupStack(it, PopupStackEvent.Removed(key)) }
         cardJobs.remove(key)?.cancel()
@@ -140,9 +177,9 @@ public class PopupCoordinator(
     private fun restartSound(skipPastSteps: Boolean) {
         soundJob?.cancel()
         sound.stop()
-        val current = _state.value
-        val level = current.loudest ?: return
-        val shownAt = current.cards.filter { it.importance == level }.minOf { it.shownAt }
+        val cards = _state.value.cards.filter(::ringing)
+        val level = cards.maxOfOrNull { it.importance } ?: return
+        val shownAt = cards.filter { it.importance == level }.minOf { it.shownAt }
         soundJob = scope.launch {
             val steps = Escalation.steps(level)
             val elapsed = Duration.between(shownAt, clock.now())

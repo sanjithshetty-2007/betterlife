@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Protein tracking (owner's feature, 2026-11-21). -->
+<resources>
+    <string name="protein_title">Protein</string>
+    <string name="more_protein">Protein</string>
+    <!-- The protein card's icon on the Habits tab (an emoji, like habit avatars). -->
+    <string name="protein_avatar" translatable="false">🍗</string>
+
+    <!-- Pop-up -->
+    <string name="protein_popup_question">How much protein have you consumed today?</string>
+    <string name="protein_popup_target">Daily target: %1$dg</string>
+    <string name="protein_amount_hint">Enter amount in grams</string>
+    <string name="protein_grams_unit">g</string>
+    <string name="protein_save_intake">Save Protein Intake</string>
+
+    <!-- Dashboard: today -->
+    <string name="protein_today">Today</string>
+    <string name="protein_today_amount">%1$d g of %2$d g</string>
+    <string name="protein_not_logged">Not logged yet</string>
+    <string name="protein_left">%1$d g to go</string>
+    <string name="protein_goal_reached">Goal reached</string>
+    <string name="protein_progress_description">%1$d percent of today\'s target</string>
+    <string name="protein_log_today">Log today\'s protein</string>
+    <string name="protein_edit_today">Edit today\'s protein</string>
+    <string name="protein_add_yesterday">Add yesterday\'s protein</string>
+    <string name="protein_edit_yesterday">Edit yesterday\'s protein (%1$d g)</string>
+
+    <!-- Dashboard: streaks and periods -->
+    <string name="protein_stat_streak">Current streak</string>
+    <string name="protein_stat_best">Longest streak</string>
+    <string name="protein_stat_total">Successful days</string>
+    <string name="protein_this_week">This week</string>
+    <string name="protein_this_month">This month</string>
+    <string name="protein_last_12_months">Last 12 months</string>
+    <string name="protein_average">Average: %1$d g a day</string>
+    <string name="protein_average_none">Average: no days yet</string>
+    <plurals name="protein_goal_days">
+        <item quantity="one">Goal reached on %1$d of %2$d day</item>
+        <item quantity="other">Goal reached on %1$d of %2$d days</item>
+    </plurals>
+    <string name="protein_day_description">%1$s, %2$d g</string>
+    <string name="protein_day_not_logged">%1$s, not logged</string>
+    <plurals name="protein_streak_days">
+        <item quantity="one">%1$d day streak</item>
+        <item quantity="other">%1$d day streak</item>
+    </plurals>
+
+    <!-- Goal and reminder -->
+    <string name="protein_goal_and_reminder">Goal and reminder</string>
+    <string name="protein_daily_target">Daily target</string>
+    <string name="protein_target_value">%1$d g</string>
+    <string name="protein_daily_reminder">Daily reminder</string>
+    <string name="protein_reminder_time">Reminder time</string>
+    <string name="protein_setup_title">Set your daily protein goal</string>
+    <string name="protein_setup_text">Choose your grams for each day and when you want to be asked. The reminder comes every day at that time until you log.</string>
+    <string name="protein_target_hint">Daily target in grams</string>
+    <string name="protein_start">Start tracking</string>
+    <string name="protein_card_setup">Set a daily goal</string>
+
+    <!-- Dialogs and messages -->
+    <string name="protein_dialog_today">Today\'s protein</string>
+    <string name="protein_dialog_yesterday">Yesterday\'s protein</string>
+    <string name="protein_save">Save</string>
+    <string name="protein_refused_old">Only today and yesterday can be changed.</string>
+    <string name="protein_refused_goal">Set a daily target first.</string>
+</resources>

@@ -61,6 +61,10 @@ import com.sanjith.betterlife.reminders.popup.AndroidPopupActions
 import com.sanjith.betterlife.reminders.popup.AndroidSoundPlayer
 import com.sanjith.betterlife.reminders.popup.PopupCoordinator
 import com.sanjith.betterlife.reminders.popup.RoomItemWatcher
+import com.sanjith.betterlife.reminders.protein.ProteinReminders
+import com.sanjith.betterlife.data.protein.ProteinRepository
+import com.sanjith.betterlife.data.protein.ProteinService
+import com.sanjith.betterlife.data.protein.ProteinSettingsStore
 import com.sanjith.betterlife.sync.AccountRepository
 import com.sanjith.betterlife.sync.createSupabaseOrNull
 import io.github.jan.supabase.SupabaseClient
@@ -336,6 +340,32 @@ public class AppContainer(appContext: Context) {
     /** Morning check-in and evening wrap-up nudges, on the real clock like all real alarms. */
     public val dailyPrompts: DailyPrompts by lazy { DailyPrompts(appContext, settingsRepository, realClock) }
 
+    /** Protein goal, days and the daily protein reminder (owner's feature, 2026-11-21). Local only. */
+    public val proteinSettingsStore: ProteinSettingsStore = ProteinSettingsStore(appContext.settingsDataStore)
+    public val proteinRepository: ProteinRepository by lazy { ProteinRepository(database, nowMillis, newId) }
+
+    /** The app's protein day: habit day after the rollover hour (app time, like habits). */
+    public suspend fun proteinToday(): java.time.LocalDate = habitToday()
+
+    public val proteinService: ProteinService by lazy {
+        ProteinService(proteinRepository, proteinSettingsStore, ::proteinToday) { proteinReminders.replan() }
+    }
+
+    /** The protein alarm runs on the REAL clock, like every alarm. */
+    public val proteinReminders: ProteinReminders by lazy {
+        val device = AndroidDeviceState(appContext)
+        ProteinReminders(
+            context = appContext,
+            store = proteinSettingsStore,
+            repository = proteinRepository,
+            clock = realClock,
+            rolloverHour = { settingsRepository.current().rolloverHour },
+            callActive = device::callActive,
+            coordinator = { popupCoordinator },
+            log = debugLog,
+        )
+    }
+
     /** Debug screens only. */
     public val seedDataGenerator: SeedDataGenerator by lazy { SeedDataGenerator(database, nowMillis, newId) }
 
@@ -387,7 +417,7 @@ public class AppContainer(appContext: Context) {
     public val popupCoordinator: PopupCoordinator by lazy {
         PopupCoordinator(
             scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
-            actions = AndroidPopupActions(appContext, { settingsRepository.current().habitTickHaptics }) { reminderEngine },
+            actions = AndroidPopupActions(appContext, { settingsRepository.current().habitTickHaptics }, { reminderEngine }) { proteinService },
             sound = AndroidSoundPlayer(appContext) { settingsRepository.current() },
             watcher = RoomItemWatcher(database),
             clock = realClock,

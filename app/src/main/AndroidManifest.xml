@@ -69,6 +69,11 @@
             android:name=".reminders.daily.DailyPromptReceiver"
             android:exported="false" />
 
+        <!-- The daily protein reminder (owner's feature). Not exported: only our own alarm reaches it. -->
+        <receiver
+            android:name=".reminders.protein.ProteinReminderReceiver"
+            android:exported="false" />
+
         <!-- The habit widget (Prompt 19). Exported because the launcher sends it the widget broadcasts. -->
         <receiver
             android:name=".widgets.HabitWidgetReceiver"

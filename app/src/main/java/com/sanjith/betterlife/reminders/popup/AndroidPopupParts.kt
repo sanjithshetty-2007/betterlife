@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.map
 /** Watches a card's task, event or standalone item in Room, so the pop-up closes or updates when it changes elsewhere. */
 public class RoomItemWatcher(private val db: BetterLifeDatabase) : ItemWatcher {
     override fun watch(card: PopupCard): Flow<WatchedItem?> {
+        // The protein card closes when its day is logged anywhere (the dashboard, another card).
+        card.protein?.let { prompt ->
+            return db.proteinDao().observeDay(prompt.date).map { day -> if (day == null) WatchedItem(card.title) else null }
+        }
         val id = card.itemId ?: return flowOf(WatchedItem(card.title))
         return when (card.itemType) {
             ReminderItemType.TASK -> db.taskDao().observeById(id).map { task ->

@@ -117,7 +117,7 @@ private fun Header(title: String, onBack: () -> Unit, onEdit: () -> Unit) {
 }
 
 @Composable
-private fun StatTile(value: String, label: String, modifier: Modifier) {
+internal fun StatTile(value: String, label: String, modifier: Modifier) {
     Card(
         modifier = modifier,
         shape = MaterialTheme.shapes.large,
@@ -132,7 +132,7 @@ private fun StatTile(value: String, label: String, modifier: Modifier) {
 }
 
 @Composable
-private fun SectionCard(content: @Composable () -> Unit) {
+internal fun SectionCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -146,7 +146,7 @@ private fun SectionCard(content: @Composable () -> Unit) {
  * in the habit colour, kept and paused days lighter, missed days faint. Month names underneath.
  */
 @Composable
-private fun HeatmapCard(heatmap: Heatmap, color: Color) {
+internal fun HeatmapCard(heatmap: Heatmap, color: Color) {
     val summary = stringResource(R.string.habit_heatmap_description, heatmap.doneDays)
     val soft = color.copy(alpha = BetterLifeColors.HEATMAP_SOFT_ALPHA)
     val missed = BetterLifeColors.Greyed

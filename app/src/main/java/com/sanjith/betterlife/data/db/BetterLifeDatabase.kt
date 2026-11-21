@@ -16,6 +16,7 @@ import com.sanjith.betterlife.data.db.dao.MilestoneLedgerDao
 import com.sanjith.betterlife.data.db.dao.PauseRangeDao
 import com.sanjith.betterlife.data.db.dao.ProjectDao
 import com.sanjith.betterlife.data.db.dao.ProteinDao
+import com.sanjith.betterlife.data.db.dao.SilentReminderDao
 import com.sanjith.betterlife.data.db.dao.SleepDao
 import com.sanjith.betterlife.data.db.dao.ReminderDao
 import com.sanjith.betterlife.data.db.dao.ReminderLogDao
@@ -31,6 +32,7 @@ import com.sanjith.betterlife.data.db.entity.MilestoneLedgerEntity
 import com.sanjith.betterlife.data.db.entity.PauseRangeEntity
 import com.sanjith.betterlife.data.db.entity.ProjectEntity
 import com.sanjith.betterlife.data.db.entity.ProteinDayEntity
+import com.sanjith.betterlife.data.db.entity.SilentReminderEntity
 import com.sanjith.betterlife.data.db.entity.SleepDayEntity
 import com.sanjith.betterlife.data.db.entity.ReminderEntity
 import com.sanjith.betterlife.data.db.entity.ReminderLogEntity
@@ -61,6 +63,7 @@ import com.sanjith.betterlife.data.db.entity.TaskEntity
         CelebrationMessageEntity::class,
         ProteinDayEntity::class,
         SleepDayEntity::class,
+        SilentReminderEntity::class,
     ],
 )
 @TypeConverters(Converters::class)
@@ -81,12 +84,13 @@ public abstract class BetterLifeDatabase : RoomDatabase() {
     public abstract fun celebrationMessageDao(): CelebrationMessageDao
     public abstract fun proteinDao(): ProteinDao
     public abstract fun sleepDao(): SleepDao
+    public abstract fun silentReminderDao(): SilentReminderDao
 
     public companion object {
         public const val FILE_NAME: String = "betterlife.db"
 
         /** The current schema version; backups from a newer one are refused (Prompt 13). */
-        public const val VERSION: Int = 7
+        public const val VERSION: Int = 8
 
         /** Version 2 (Prompt 7): the reminder engine's local schedule columns. Both start empty. */
         public val MIGRATION_1_2: Migration = object : Migration(1, 2) {
@@ -143,8 +147,17 @@ public abstract class BetterLifeDatabase : RoomDatabase() {
             }
         }
 
+        /** Version 8 (owner's silent reminders): one new, empty table; nothing existing changes. */
+        public val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                SilentSchemaV8.STATEMENTS.forEach(db::execSQL)
+            }
+        }
+
         /** Every migration ever written, in order. */
-        public val ALL_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+        public val ALL_MIGRATIONS: Array<Migration> = arrayOf(
+            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
+        )
 
         public fun build(context: Context): BetterLifeDatabase =
             Room.databaseBuilder(context, BetterLifeDatabase::class.java, FILE_NAME)

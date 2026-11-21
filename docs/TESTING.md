@@ -511,3 +511,19 @@ A night counts for the day you went to bed; each morning you log last night. Use
 | S6 | Leave a sleep card unanswered | It closes about 2 minutes after it fired and comes back about 15 minutes later, until logged or midnight | |
 | 7 | Both protein and sleep reminders at the same minute | One pop-up window with both cards; each saves on its own | |
 | 8 | Change the sleep target | Last night's progress uses the new target; older nights keep theirs | |
+
+## Owner's feature 2026-11-21: Silent reminders
+
+Vibration only. Use the profile build. Rows V1 to V6 are the main checks; the rest are optional.
+
+| # | Step | Expected | Result |
+|---|---|---|---|
+| V1 | Tasks > Silent | "No silent reminders yet..." and the + button says New silent reminder; the quick-add bar is hidden | |
+| V2 | +, name Mewing, add a time 2 minutes from now, Pulse, Try it | A 2-second pulse you can feel | |
+| V3 | Length 20 s, Save, lock the phone, wait | At the time it vibrates in pulses for about 20 seconds, then stops; no sound, no pop-up, no notification | |
+| V4 | Same with 30 s after swiping the app away from recents | It still buzzes for the whole 30 seconds (if it stops early, tell the AI) | |
+| V5 | Turn its switch off before a time | No buzz at that time | |
+| V6 | Two reminders at the same minute with different patterns | One buzz pattern, a short pause, then the other | |
+| 7 | Delete from the list, then Undo | It comes back with its times | |
+| 8 | Restart the phone before a time | It still buzzes at the time | |
+| 9 | Try each pattern | Steady, Pulse, Heartbeat, Triple tap and Wave feel different | |

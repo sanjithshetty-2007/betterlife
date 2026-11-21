@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.sanjith.betterlife.BetterLifeApp
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.data.tracker.TrackerSettings
 import com.sanjith.betterlife.domain.tracker.DayBar
@@ -196,7 +197,8 @@ internal fun GoalAndReminder(kind: TrackerKind, settings: TrackerSettings, onEdi
 @Composable
 internal fun formatTime(time: LocalTime): String {
     val context = LocalContext.current
-    val text = remember(context) { DueText(context) { java.time.ZoneOffset.UTC } }
+    val container = (context.applicationContext as BetterLifeApp).container
+    val text = remember(context) { DueText(context) { container.clock.zone } }
     return text.time(time)
 }
 

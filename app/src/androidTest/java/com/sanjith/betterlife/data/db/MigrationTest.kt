@@ -211,6 +211,26 @@ public class MigrationTest {
         }
     }
 
+    @Test
+    public fun migration7To8AddsAnEmptySilentRemindersTableAndKeepsSleep() {
+        helper.createDatabase(DB_NAME, 7).use { db ->
+            db.execSQL(
+                "INSERT INTO sleep_days (id, localDate, minutes, targetMinutes, createdAt, updatedAt, deletedAt) " +
+                    "VALUES ('s-1', '2026-11-20', 450, 480, 1, 1, NULL)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB_NAME, 8, true, BetterLifeDatabase.MIGRATION_7_8).use { db ->
+            assertEquals("450", db.single("SELECT minutes FROM sleep_days WHERE id = 's-1'"))
+            assertEquals("0", db.single("SELECT COUNT(*) FROM silent_reminders"))
+            db.execSQL(
+                "INSERT INTO silent_reminders (id, name, times, pattern, seconds, enabled, createdAt, updatedAt, deletedAt) " +
+                    "VALUES ('r-1', 'Mewing', '10:00,18:30', 'PULSE', 20, 1, 1, 1, NULL)",
+            )
+            assertEquals("10:00,18:30", db.single("SELECT times FROM silent_reminders WHERE id = 'r-1'"))
+        }
+    }
+
     private fun androidx.sqlite.db.SupportSQLiteDatabase.single(sql: String): String =
         query(sql).use { c ->
             c.moveToFirst()

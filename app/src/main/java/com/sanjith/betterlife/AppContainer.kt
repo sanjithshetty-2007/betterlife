@@ -352,6 +352,16 @@ public class AppContainer(appContext: Context) {
         )
     }
 
+    /** Silent reminders: vibration only, at set times every day (owner's feature, 2026-11-21). Local only. */
+    public val silentReminderRepository: com.sanjith.betterlife.data.silent.SilentReminderRepository by lazy {
+        com.sanjith.betterlife.data.silent.SilentReminderRepository(database, nowMillis, newId) { silentReminders.replan() }
+    }
+    public val silentBuzzer: com.sanjith.betterlife.reminders.silent.SilentBuzzer by lazy { com.sanjith.betterlife.reminders.silent.SilentBuzzer(appContext) }
+    public val silentReminders: com.sanjith.betterlife.reminders.silent.SilentReminders by lazy {
+        val device = AndroidDeviceState(appContext)
+        com.sanjith.betterlife.reminders.silent.SilentReminders(appContext, { silentReminderRepository.active() }, realClock, device::callActive, silentBuzzer, debugLog)
+    }
+
     /** Debug screens only. */
     public val seedDataGenerator: SeedDataGenerator by lazy { SeedDataGenerator(database, nowMillis, newId) }
 

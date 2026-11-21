@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Silent reminders: vibration only (owner's feature, 2026-11-21). -->
+<resources>
+    <string name="tab_silent">Silent</string>
+    <string name="silent_new">New silent reminder</string>
+    <string name="silent_edit">Edit silent reminder</string>
+    <string name="silent_name">What to remember (for example Mewing)</string>
+    <string name="silent_times">Times every day</string>
+    <string name="silent_add_time">Add time</string>
+    <string name="silent_remove_time">Remove %1$s</string>
+    <string name="silent_times_none">No times yet</string>
+    <string name="silent_pattern">Vibration</string>
+    <string name="silent_pattern_steady">Steady</string>
+    <string name="silent_pattern_pulse">Pulse</string>
+    <string name="silent_pattern_heartbeat">Heartbeat</string>
+    <string name="silent_pattern_triple_tap">Triple tap</string>
+    <string name="silent_pattern_wave">Wave</string>
+    <string name="silent_try">Try it</string>
+    <string name="silent_length">Length</string>
+    <string name="silent_seconds">%1$d s</string>
+    <string name="silent_enabled">On</string>
+    <string name="silent_hint">Vibrates only, for the length you choose, then stops by itself. No sound, no pop-up, and it never repeats.</string>
+    <string name="silent_empty">No silent reminders yet. Tap + to add one, like Mewing at 10:00 and 18:00. They only vibrate: no sound, no pop-up.</string>
+    <string name="silent_row_detail">%1$s · %2$s</string>
+    <string name="silent_delete_description">Delete %1$s</string>
+    <string name="silent_switch_description">%1$s on or off</string>
+    <string name="silent_deleted_snack">Deleted %1$s</string>
+</resources>

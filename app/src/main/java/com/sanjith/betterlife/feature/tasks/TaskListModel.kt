@@ -11,7 +11,8 @@ import com.sanjith.betterlife.domain.task.TaskRules
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
-public enum class TaskTab { TODAY, UPCOMING, OVERDUE, INBOX }
+/** The Tasks sub-tabs. SILENT lists silent reminders (owner's feature, 2026-11-21), not tasks. */
+public enum class TaskTab { TODAY, UPCOMING, OVERDUE, INBOX, SILENT }
 
 /** One row of a task list. */
 public data class TaskRowUi(
@@ -38,6 +39,7 @@ public data class TaskTabs(
         TaskTab.UPCOMING -> upcoming
         TaskTab.OVERDUE -> overdue
         TaskTab.INBOX -> inbox
+        TaskTab.SILENT -> emptyList()
     }
 }
 

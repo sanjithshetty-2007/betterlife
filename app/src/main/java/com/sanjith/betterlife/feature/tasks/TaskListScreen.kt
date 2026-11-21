@@ -35,6 +35,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sanjith.betterlife.feature.silent.SilentList
+import com.sanjith.betterlife.feature.silent.SilentListViewModel
 import com.sanjith.betterlife.BetterLifeApp
 import com.sanjith.betterlife.R
 import com.sanjith.betterlife.domain.time.today
@@ -53,7 +55,9 @@ public fun TaskListScreen(
     onOpenTask: (String?) -> Unit,
     onOpenProjects: () -> Unit,
     onOpenCheckIns: () -> Unit,
+    onOpenSilent: (String?) -> Unit = {},
     viewModel: TaskListViewModel = viewModel(factory = TaskListViewModel.Factory),
+    silentViewModel: SilentListViewModel = viewModel(factory = SilentListViewModel.Factory),
 ) {
     val context = LocalContext.current
     val container = (context.applicationContext as BetterLifeApp).container
@@ -63,13 +67,15 @@ public fun TaskListScreen(
     val text by viewModel.text.collectAsStateWithLifecycle()
     val preview by viewModel.preview.collectAsStateWithLifecycle()
     val undo by viewModel.undo.collectAsStateWithLifecycle()
+    val silent by silentViewModel.reminders.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     UndoSnackbar(undo, snackbar, viewModel)
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = tabBarClearance())) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Header(onOpenTask, onOpenProjects, onOpenCheckIns)
-            QuickAddBar(
+            // On the Silent tab, + makes a silent reminder and the quick-add bar (tasks only) is hidden.
+            Header(onAdd = { if (tab == TaskTab.SILENT) onOpenSilent(null) else onOpenTask(null) }, addSilent = tab == TaskTab.SILENT, onOpenProjects, onOpenCheckIns)
+            if (tab != TaskTab.SILENT) QuickAddBar(
                 text = text,
                 preview = preview,
                 formatDate = { dueText.day(it, container.clock.today()) },
@@ -79,16 +85,19 @@ public fun TaskListScreen(
                 onSubmit = viewModel::submitQuickAdd,
                 modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm),
             )
-            // Scrollable: four labels with counts do not fit across a phone screen.
+            // Scrollable: five labels with counts do not fit across a phone screen.
             PrimaryScrollableTabRow(selectedTabIndex = tab.ordinal, containerColor = MaterialTheme.colorScheme.background, edgePadding = Spacing.md) {
                 TaskTab.entries.forEach { t ->
                     Tab(selected = t == tab, onClick = { viewModel.selectedTab.value = t }, text = {
-                        Text(stringResource(R.string.task_tab, stringResource(tabLabel(t)), tabs.rows(t).size), maxLines = 1)
+                        val count = if (t == TaskTab.SILENT) silent.size else tabs.rows(t).size
+                        Text(stringResource(R.string.task_tab, stringResource(tabLabel(t)), count), maxLines = 1)
                     })
                 }
             }
             val rows = tabs.rows(tab)
-            if (rows.isEmpty()) {
+            if (tab == TaskTab.SILENT) {
+                SilentList(silentViewModel, snackbar, onOpen = onOpenSilent)
+            } else if (rows.isEmpty()) {
                 Box(Modifier.fillMaxSize().padding(tabContentPadding()).padding(Spacing.sm), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(emptyText(tab)),
@@ -137,7 +146,7 @@ private fun UndoSnackbar(undo: UndoOffer?, snackbar: SnackbarHostState, viewMode
 }
 
 @Composable
-private fun Header(onOpenTask: (String?) -> Unit, onOpenProjects: () -> Unit, onOpenCheckIns: () -> Unit) {
+private fun Header(onAdd: () -> Unit, addSilent: Boolean, onOpenProjects: () -> Unit, onOpenCheckIns: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().padding(start = Spacing.md, end = Spacing.sm, top = Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.tasks_title),
@@ -147,8 +156,8 @@ private fun Header(onOpenTask: (String?) -> Unit, onOpenProjects: () -> Unit, on
         )
         TextButton(onClick = onOpenProjects) { Text(stringResource(R.string.projects_title)) }
         TextButton(onClick = onOpenCheckIns) { Text(stringResource(R.string.check_ins_short)) }
-        IconButton(onClick = { onOpenTask(null) }) {
-            Icon(painterResource(R.drawable.ic_add), stringResource(R.string.task_new), tint = MaterialTheme.colorScheme.primary)
+        IconButton(onClick = onAdd) {
+            Icon(painterResource(R.drawable.ic_add), stringResource(if (addSilent) R.string.silent_new else R.string.task_new), tint = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -158,6 +167,7 @@ private fun tabLabel(tab: TaskTab): Int = when (tab) {
     TaskTab.UPCOMING -> R.string.tab_upcoming
     TaskTab.OVERDUE -> R.string.tab_overdue
     TaskTab.INBOX -> R.string.tab_inbox
+    TaskTab.SILENT -> R.string.tab_silent
 }
 
 private fun emptyText(tab: TaskTab): Int = when (tab) {
@@ -165,4 +175,5 @@ private fun emptyText(tab: TaskTab): Int = when (tab) {
     TaskTab.UPCOMING -> R.string.empty_upcoming
     TaskTab.OVERDUE -> R.string.empty_overdue
     TaskTab.INBOX -> R.string.empty_inbox
+    TaskTab.SILENT -> R.string.silent_empty
 }

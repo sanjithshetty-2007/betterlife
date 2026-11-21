@@ -74,6 +74,11 @@
             android:name=".reminders.tracker.TrackerReminderReceiver"
             android:exported="false" />
 
+        <!-- Silent reminders: vibration only (owner's feature). Not exported: only our own alarm reaches it. -->
+        <receiver
+            android:name=".reminders.silent.SilentReminderReceiver"
+            android:exported="false" />
+
         <!-- The habit widget (Prompt 19). Exported because the launcher sends it the widget broadcasts. -->
         <receiver
             android:name=".widgets.HabitWidgetReceiver"

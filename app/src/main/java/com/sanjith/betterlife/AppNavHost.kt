@@ -7,6 +7,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import com.sanjith.betterlife.domain.today.TodayKind
 import com.sanjith.betterlife.domain.tracker.TrackerKind
+import com.sanjith.betterlife.feature.silent.SilentEditorScreen
+import com.sanjith.betterlife.feature.silent.SilentEditorViewModel
 import com.sanjith.betterlife.feature.tracker.TrackerScreen
 import com.sanjith.betterlife.feature.home.HealthBanner
 import com.sanjith.betterlife.feature.more.MoreEntry
@@ -98,6 +100,7 @@ internal object Routes {
     const val MASCOT = "debug/mascot"
     const val EVENT_EDITOR = "event"
     const val REMINDER_EDITOR = "remind"
+    const val SILENT_EDITOR = "silent"
     const val REMINDER_DEFAULTS = "reminder-defaults"
     const val CENTER = "reminder-center"
     const val QUIET = "quiet-calm"
@@ -121,6 +124,7 @@ internal object Routes {
         "$EVENT_EDITOR/${type.name}/${id ?: EventEditorViewModel.NEW}" + dateQuery(date)
 
     fun reminderEditor(id: String?): String = "$REMINDER_EDITOR/${id ?: EventEditorViewModel.NEW}"
+    fun silentEditor(id: String?): String = "$SILENT_EDITOR/${id ?: SilentEditorViewModel.NEW}"
 
     fun habitEditor(id: String?): String = "$HABIT_EDITOR/${id ?: HabitEditorViewModel.NEW}"
 
@@ -228,8 +232,10 @@ internal fun AppNavHost(routeToOpen: String?, onRouteOpened: () -> Unit) {
                     onOpenTask = { id -> navController.navigate(Routes.taskEditor(id)) },
                     onOpenProjects = { navController.navigate(Routes.PROJECTS) },
                     onOpenCheckIns = { navController.navigate(Routes.CHECK_INS) },
+                    onOpenSilent = { id -> navController.navigate(Routes.silentEditor(id)) },
                 )
             }
+            screen("${Routes.SILENT_EDITOR}/{${SilentEditorViewModel.ARG_ID}}") { SilentEditorScreen(onClose = back) }
             screen("${Routes.TASK_EDITOR}/{${TaskEditorViewModel.ARG_TASK_ID}}?${Routes.ARG_DATE}={${Routes.ARG_DATE}}", dateArgument) { TaskEditorScreen(onClose = back) }
             screen(Routes.PROJECTS) { ProjectsScreen(onBack = back) }
             screen(Routes.CHECK_INS) { CheckInScreen(onBack = back) }
